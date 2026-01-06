@@ -50,9 +50,36 @@ const RowItem: React.FC<RowItemProps> = ({ row }) => {
                 <div className="p-2 flex items-center justify-center border-r border-gray-100/50">
                     <button
                         onClick={() => setActiveModal('DR')}
-                        className="p-3 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all shadow-sm active:scale-95"
+                        className="group relative flex items-center justify-center transition-transform active:scale-95"
                     >
-                        <FileText size={20} strokeWidth={2} />
+                        {(() => {
+                            const match = row.DR && row.DR.match(/id=([a-zA-Z0-9_-]+)/);
+                            if (match && match[1]) {
+                                return (
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 overflow-hidden rounded-lg shadow-sm bg-gray-100 border border-gray-200">
+                                        <img
+                                            src={`https://lh3.googleusercontent.com/d/${match[1]}=s200`}
+                                            className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                                            referrerPolicy="no-referrer"
+                                            loading="lazy"
+                                            onError={(e) => {
+                                                e.currentTarget.style.display = 'none';
+                                                e.currentTarget.parentElement?.classList.add('hidden');
+                                            }}
+                                        />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 transition-colors">
+                                            {/* Fallback icon if image fails or just overlay */}
+                                        </div>
+                                    </div>
+                                );
+                            }
+                            const isEmpty = !row.DR || row.DR.trim() === '';
+                            return (
+                                <div className={`p-3 rounded-xl transition-colors shadow-sm ${isEmpty ? 'text-gray-300 bg-gray-50' : 'text-blue-600 bg-blue-50 group-hover:bg-blue-100'}`}>
+                                    <FileText size={20} strokeWidth={2} />
+                                </div>
+                            );
+                        })()}
                     </button>
                 </div>
 
@@ -70,9 +97,33 @@ const RowItem: React.FC<RowItemProps> = ({ row }) => {
                 <div className="p-2 flex items-center justify-center">
                     <button
                         onClick={() => setActiveModal('CBM')}
-                        className="p-3 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all shadow-sm active:scale-95"
+                        className="group relative flex items-center justify-center transition-transform active:scale-95"
                     >
-                        <Package size={20} strokeWidth={2} />
+                        {(() => {
+                            const match = row.CBM && row.CBM.match(/id=([a-zA-Z0-9_-]+)/);
+                            if (match && match[1]) {
+                                return (
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 overflow-hidden rounded-lg shadow-sm bg-gray-100 border border-gray-200">
+                                        <img
+                                            src={`https://lh3.googleusercontent.com/d/${match[1]}=s200`}
+                                            className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                                            referrerPolicy="no-referrer"
+                                            loading="lazy"
+                                            onError={(e) => {
+                                                e.currentTarget.style.display = 'none';
+                                                e.currentTarget.parentElement?.classList.add('hidden');
+                                            }}
+                                        />
+                                    </div>
+                                );
+                            }
+                            const isEmpty = !row.CBM || row.CBM.trim() === '';
+                            return (
+                                <div className={`p-3 rounded-xl transition-colors shadow-sm ${isEmpty ? 'text-gray-300 bg-gray-50' : 'text-purple-600 bg-purple-50 group-hover:bg-purple-100'}`}>
+                                    <Package size={20} strokeWidth={2} />
+                                </div>
+                            );
+                        })()}
                     </button>
                 </div>
             </div>
