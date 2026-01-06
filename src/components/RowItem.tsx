@@ -9,12 +9,11 @@ interface RowItemProps {
 
 const RowItem: React.FC<RowItemProps> = ({ row }) => {
     const [activeModal, setActiveModal] = useState<'DR' | 'CBM' | null>(null);
+    const [drThumbFailed, setDrThumbFailed] = useState(false);
+    const [cbmThumbFailed, setCbmThumbFailed] = useState(false);
 
     // Logic: Color is red if Remarks (Col Y) is empty
     const isColorAlert = !row.Remarks || row.Remarks.trim() === '';
-
-    // Also logic: the user said "COL X (color red if COL Y is empty)"
-    // So we display COL X (row.Color) in red if row.Remarks is empty.
 
     return (
         <>
@@ -54,7 +53,7 @@ const RowItem: React.FC<RowItemProps> = ({ row }) => {
                     >
                         {(() => {
                             const match = row.DR && row.DR.match(/id=([a-zA-Z0-9_-]+)/);
-                            if (match && match[1]) {
+                            if (match && match[1] && !drThumbFailed) {
                                 return (
                                     <div className="w-10 h-10 sm:w-12 sm:h-12 overflow-hidden rounded-lg shadow-sm bg-gray-100 border border-gray-200">
                                         <img
@@ -62,14 +61,8 @@ const RowItem: React.FC<RowItemProps> = ({ row }) => {
                                             className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
                                             referrerPolicy="no-referrer"
                                             loading="lazy"
-                                            onError={(e) => {
-                                                e.currentTarget.style.display = 'none';
-                                                e.currentTarget.parentElement?.classList.add('hidden');
-                                            }}
+                                            onError={() => setDrThumbFailed(true)}
                                         />
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 transition-colors">
-                                            {/* Fallback icon if image fails or just overlay */}
-                                        </div>
                                     </div>
                                 );
                             }
@@ -101,7 +94,7 @@ const RowItem: React.FC<RowItemProps> = ({ row }) => {
                     >
                         {(() => {
                             const match = row.CBM && row.CBM.match(/id=([a-zA-Z0-9_-]+)/);
-                            if (match && match[1]) {
+                            if (match && match[1] && !cbmThumbFailed) {
                                 return (
                                     <div className="w-10 h-10 sm:w-12 sm:h-12 overflow-hidden rounded-lg shadow-sm bg-gray-100 border border-gray-200">
                                         <img
@@ -109,10 +102,7 @@ const RowItem: React.FC<RowItemProps> = ({ row }) => {
                                             className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
                                             referrerPolicy="no-referrer"
                                             loading="lazy"
-                                            onError={(e) => {
-                                                e.currentTarget.style.display = 'none';
-                                                e.currentTarget.parentElement?.classList.add('hidden');
-                                            }}
+                                            onError={() => setCbmThumbFailed(true)}
                                         />
                                     </div>
                                 );
