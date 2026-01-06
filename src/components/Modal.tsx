@@ -1,5 +1,6 @@
+```typescript
 import { X } from 'lucide-react';
-import React from 'react';
+import React, { useState } from 'react';
 
 interface ModalProps {
     isOpen: boolean;
@@ -34,50 +35,62 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content }) => {
                                 if (match && match[1]) {
                                     return (
                                         <div className="flex flex-col gap-2">
-                                            <img
-                                                src={`https://drive.google.com/uc?export=view&id=${match[1]}`}
-                                                alt="Attachment"
-                                                className="w-full h-auto rounded-lg shadow-sm"
-                                                referrerPolicy="no-referrer"
-                                                crossOrigin="anonymous"
-                                                onError={(e) => {
-                                                    e.currentTarget.style.display = 'none';
-                                                    // Fallback: If image fails (common on iPhone), show a direct button
-                                                    const container = e.currentTarget.parentElement;
-                                                    if (container && !container.querySelector('a.fallback-link')) {
-                                                        const link = document.createElement('a');
-                                                        link.href = content; // Original link
-                                                        link.target = '_blank';
-                                                        link.rel = 'noopener noreferrer';
-                                                        link.className = 'fallback-link block w-full py-2 bg-gray-100 text-gray-600 text-center text-xs rounded-lg hover:bg-gray-200 transition-colors mt-2';
-                                                        link.innerText = 'Tap to View Image';
-                                                        container.appendChild(link);
-                                                    }
-                                                }}
-                                            />
-                                        </div>
+                                            {/* Stateful Image Loader */}
+                                            {(() => {
+                                                const [imgSrc, setImgSrc] = useState(`https://lh3.googleusercontent.com/d/${match[1]}=s3000`);
+const [attempts, setAttempts] = useState(0);
+
+const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    // Strategy: lh3 -> uc?export=view -> thumbnail
+    if (attempts === 0) {
+        // Fallback 1: Standard Export
+        setImgSrc(`https://drive.google.com/uc?export=view&id=${match[1]}`);
+        setAttempts(1);
+    } else if (attempts === 1) {
+        // Fallback 2: Thumbnail API (Lower res but reliable)
+        setImgSrc(`https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`);
+        setAttempts(2);
+    } else {
+        // Final Fallback: Hide strictly if requested, but a broken icon is better than whitespace
+        // User said "no need to show this" referring to the button.
+        // We'll leave it hidden or show a small broken image icon.
+        e.currentTarget.style.display = 'none';
+    }
+};
+
+return (
+    <img
+        src={imgSrc}
+        alt="Attachment"
+        className="w-full h-auto rounded-lg shadow-sm"
+        referrerPolicy="no-referrer"
+        onError={handleError}
+    />
+);
+                                            }) ()}
+                                        </div >
                                     );
                                 }
-                                return <p className="text-gray-700 whitespace-pre-wrap font-mono text-sm leading-relaxed break-all">{content}</p>;
-                            })()}
-                        </div>
+return <p className="text-gray-700 whitespace-pre-wrap font-mono text-sm leading-relaxed break-all">{content}</p>;
+                            }) ()}
+                        </div >
                     ) : (
-                        <p className="text-gray-700 whitespace-pre-wrap font-mono text-sm leading-relaxed">
-                            {content || 'No details available'}
-                        </p>
-                    )}
-                </div>
+    <p className="text-gray-700 whitespace-pre-wrap font-mono text-sm leading-relaxed">
+        {content || 'No details available'}
+    </p>
+)}
+                </div >
 
-                <div className="mt-6 flex justify-end">
-                    <button
-                        onClick={onClose}
-                        className="w-full sm:w-auto px-4 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors shadow-lg shadow-gray-900/10 active:scale-95"
-                    >
-                        Close
-                    </button>
-                </div>
-            </div>
-        </div>
+    <div className="mt-6 flex justify-end">
+        <button
+            onClick={onClose}
+            className="w-full sm:w-auto px-4 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors shadow-lg shadow-gray-900/10 active:scale-95"
+        >
+            Close
+        </button>
+    </div>
+            </div >
+        </div >
     );
 };
 
