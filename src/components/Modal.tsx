@@ -35,14 +35,13 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content }) => {
                                     return (
                                         <div className="flex flex-col gap-2">
                                             <img
-                                                src={`https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`}
+                                                src={`https://lh3.googleusercontent.com/d/${match[1]}=s3000`}
                                                 alt="Attachment"
                                                 className="w-full h-auto rounded-lg shadow-sm"
                                                 referrerPolicy="no-referrer"
                                                 onError={(e) => {
                                                     e.currentTarget.style.display = 'none';
-                                                    // User requested to "skip this" (the link), so we show nothing or a subtle error
-                                                    e.currentTarget.parentElement?.insertAdjacentHTML('beforeend', '<p class="text-xs text-red-400 text-center mt-2">Image unavailable</p>');
+                                                    e.currentTarget.parentElement?.insertAdjacentHTML('beforeend', '<p class="text-xs text-red-400 text-center mt-2">Image unavailable (Check permissions)</p>');
                                                 }}
                                             />
                                         </div>
