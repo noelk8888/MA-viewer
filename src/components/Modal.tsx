@@ -33,20 +33,48 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content }) => {
                 <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100 flex justify-center">
                     {driveId ? (
                         <div className="w-full">
-                            <img
-                                src={`https://lh3.googleusercontent.com/d/${driveId}=s3000`}
-                                alt="Attachment"
-                                className="w-full h-auto rounded-lg shadow-sm"
-                                referrerPolicy="no-referrer"
-                                onError={(e) => {
-                                    // Simple fallback: try thumbnail API
-                                    const img = e.currentTarget;
-                                    if (!img.dataset.retried) {
-                                        img.dataset.retried = 'true';
-                                        img.src = `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000`;
+                            {/* Stateful Image Loader */}
+                            {(() => {
+                                const [imgSrc, setImgSrc] = useState(`https://lh3.googleusercontent.com/d/${driveId}=s3000`);
+                                const [attempts, setAttempts] = useState(0);
+                                const [failed, setFailed] = useState(false);
+
+                                const handleError = () => {
+                                    // Strategy: lh3 -> uc?export=view -> thumbnail -> Fallback Button
+                                    if (attempts === 0) {
+                                        setImgSrc(`https://drive.google.com/uc?export=view&id=${driveId}`);
+                                        setAttempts(1);
+                                    } else if (attempts === 1) {
+                                        setImgSrc(`https://drive.google.com/thumbnail?id=${driveId}&sz=w1000`);
+                                        setAttempts(2);
+                                    } else {
+                                        setFailed(true);
                                     }
-                                }}
-                            />
+                                };
+
+                                if (failed) {
+                                    return (
+                                        <a
+                                            href={`https://drive.google.com/open?id=${driveId}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="block w-full py-4 bg-gray-200 text-gray-700 text-center font-medium rounded-lg hover:bg-gray-300 transition-colors"
+                                        >
+                                            Click to load image
+                                        </a>
+                                    );
+                                }
+
+                                return (
+                                    <img
+                                        src={imgSrc}
+                                        alt="Attachment"
+                                        className="w-full h-auto rounded-lg shadow-sm"
+                                        referrerPolicy="no-referrer"
+                                        onError={handleError}
+                                    />
+                                );
+                            })()}
                         </div>
                     ) : (
                         <p className="text-gray-700 whitespace-pre-wrap font-mono text-sm leading-relaxed">
