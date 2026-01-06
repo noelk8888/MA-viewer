@@ -35,13 +35,24 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content }) => {
                                     return (
                                         <div className="flex flex-col gap-2">
                                             <img
-                                                src={`https://lh3.googleusercontent.com/d/${match[1]}=s3000`}
+                                                src={`https://drive.google.com/uc?export=view&id=${match[1]}`}
                                                 alt="Attachment"
                                                 className="w-full h-auto rounded-lg shadow-sm"
                                                 referrerPolicy="no-referrer"
+                                                crossOrigin="anonymous"
                                                 onError={(e) => {
                                                     e.currentTarget.style.display = 'none';
-                                                    e.currentTarget.parentElement?.insertAdjacentHTML('beforeend', '<p class="text-xs text-red-400 text-center mt-2">Image unavailable (Check permissions)</p>');
+                                                    // Fallback: If image fails (common on iPhone), show a direct button
+                                                    const container = e.currentTarget.parentElement;
+                                                    if (container && !container.querySelector('a.fallback-link')) {
+                                                        const link = document.createElement('a');
+                                                        link.href = content; // Original link
+                                                        link.target = '_blank';
+                                                        link.rel = 'noopener noreferrer';
+                                                        link.className = 'fallback-link block w-full py-2 bg-gray-100 text-gray-600 text-center text-xs rounded-lg hover:bg-gray-200 transition-colors mt-2';
+                                                        link.innerText = 'Tap to View Image';
+                                                        container.appendChild(link);
+                                                    }
                                                 }}
                                             />
                                         </div>
