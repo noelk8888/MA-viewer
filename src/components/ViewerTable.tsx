@@ -43,10 +43,10 @@ const ViewerTable: React.FC = () => {
         <div className="w-full max-w-2xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100 my-4 sm:my-8">
             {/* Header Bar */}
             <div className="p-4 bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-10 backdrop-blur-md bg-white/80">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-3">
-                    <a 
-                        href={SHEET_URL} 
-                        target="_blank" 
+                <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-3">
+                    <a
+                        href={SHEET_URL}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="hover:underline cursor-pointer"
                     >
