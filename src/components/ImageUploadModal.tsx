@@ -76,7 +76,14 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
       }, 1500);
     } catch (err) {
       setUploadState('error');
-      setError(err instanceof Error ? err.message : 'Upload failed');
+      const errorMessage = err instanceof Error ? err.message : 'Upload failed';
+
+      // Check if it's an authentication error
+      if (errorMessage.includes('authentication') || errorMessage.includes('credentials') || errorMessage.includes('401') || errorMessage.includes('403')) {
+        setError('Session expired. Please log in again to upload images.');
+      } else {
+        setError(errorMessage);
+      }
     }
   }, [selectedFile, accessToken, sheetRowNumber, imageType, onUploadComplete, onClose]);
 
@@ -187,9 +194,22 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
               </div>
             )}
             {error && (
-              <div className="flex items-center gap-2 mt-4 text-red-600">
-                <AlertCircle size={18} />
-                <span>{error}</span>
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-start gap-2 text-red-600">
+                  <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
+                  <span className="text-sm">{error}</span>
+                </div>
+                {error.includes('Session expired') && (
+                  <button
+                    onClick={() => {
+                      logout();
+                      login();
+                    }}
+                    className="mt-3 w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                  >
+                    Login Again
+                  </button>
+                )}
               </div>
             )}
 
@@ -201,13 +221,15 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
               >
                 Cancel
               </button>
-              <button
-                onClick={handleUpload}
-                disabled={!selectedFile || isProcessing}
-                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isProcessing ? 'Uploading...' : 'Upload'}
-              </button>
+              {!(error && error.includes('Session expired')) && (
+                <button
+                  onClick={handleUpload}
+                  disabled={!selectedFile || isProcessing}
+                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isProcessing ? 'Uploading...' : 'Upload'}
+                </button>
+              )}
             </div>
           </>
         )}
