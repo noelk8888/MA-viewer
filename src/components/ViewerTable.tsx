@@ -93,7 +93,7 @@ const ViewerTable: React.FC = () => {
                     </div>
                 ) : (
                     data.map((row, index) => (
-                        <RowItem key={index} row={row} />
+                        <RowItem key={index} row={row} onImageUpdated={loadData} />
                     ))
                 )}
             </div>

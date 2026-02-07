@@ -19,6 +19,9 @@ export interface SheetRow {
 
     // Column 4: CBM
     CBM: string; // Col R - Modal Content
+
+    // Row tracking for updates
+    originalIndex: number; // Actual 1-indexed row number in sheet
 }
 
 export const fetchSheetData = async (): Promise<{ rows: SheetRow[], rate: string, i1Value: string }> => {
@@ -53,7 +56,7 @@ export const fetchSheetData = async (): Promise<{ rows: SheetRow[], rate: string
 
                 // 2. Parse Rows
                 // User requested to start with row 6 (index 5)
-                const rows = data.slice(5).map(row => ({
+                const rows = data.slice(5).map((row, index) => ({
                     Supplier: row[1] || '',
                     Code: row[14] || '',
                     Description: row[2] || '',
@@ -62,7 +65,8 @@ export const fetchSheetData = async (): Promise<{ rows: SheetRow[], rate: string
                     DR: row[3] || '',
                     RMB: row[4] || '0',
                     PHP: row[16] || '0',
-                    CBM: row[17] || ''
+                    CBM: row[17] || '',
+                    originalIndex: index + 6 // Data starts at row 6 (1-indexed)
                 })).filter(row => row.Supplier || row.Code || row.Description);
 
                 // User requested to sort by latest date. Assuming sheet is chronological (oldest -> newest),
