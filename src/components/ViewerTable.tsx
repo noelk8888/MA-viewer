@@ -4,6 +4,7 @@ import { fetchSheetData, type SheetRow } from '../services/sheetService';
 import RowItem from './RowItem';
 
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=311571294#gid=311571294';
+const RATES_FOLDER_URL = 'https://drive.google.com/drive/folders/1MsJRVArZGMTmqcOuCr4pvhY1-aE_HPqT?usp=drive_link';
 
 const ViewerTable: React.FC = () => {
     const [data, setData] = useState<SheetRow[]>([]);
@@ -53,7 +54,14 @@ const ViewerTable: React.FC = () => {
                         {today}
                     </a>
                     <span className="text-gray-300 font-light">|</span>
-                    <span className={`${loading ? 'opacity-50 animate-pulse' : ''}`}>{rate}</span>
+                    <a
+                        href={RATES_FOLDER_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`hover:underline cursor-pointer ${loading ? 'opacity-50 animate-pulse' : ''}`}
+                    >
+                        {rate}
+                    </a>
                     <span className="text-gray-300 font-light">|</span>
                     <span className={`${loading ? 'opacity-50 animate-pulse' : ''}`}>{i1Value}</span>
                 </h1>

@@ -22,7 +22,7 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
   sheetRowNumber,
   onUploadComplete,
 }) => {
-  const { accessToken, isAuthenticated, login, isLoading: authLoading, isConfigured, error: authError } = useGoogleAuth();
+  const { accessToken, isAuthenticated, login, logout, isLoading: authLoading, isConfigured, error: authError } = useGoogleAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploadState, setUploadState] = useState<UploadState>('idle');
