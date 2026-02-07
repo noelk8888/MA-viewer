@@ -53,6 +53,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content, onUpload
         try {
             // Fetch the image as a blob
             const response = await fetch(`https://lh3.googleusercontent.com/d/${driveId}=s3000`, {
+                mode: 'cors',
                 referrerPolicy: 'no-referrer'
             });
             const blob = await response.blob();
@@ -66,9 +67,21 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content, onUpload
 
             setCopySuccess(true);
             setTimeout(() => setCopySuccess(false), 2000);
-        } catch (err) {
-            console.error('Failed to copy image:', err);
-            alert('Failed to copy image. Please try again.');
+        } catch (blobError) {
+            // Fallback: Copy the image URL instead
+            try {
+                const imageUrl = `https://drive.google.com/uc?export=view&id=${driveId}`;
+                await navigator.clipboard.writeText(imageUrl);
+
+                setCopySuccess(true);
+                setTimeout(() => setCopySuccess(false), 2000);
+
+                // Show info that URL was copied instead
+                alert('Image URL copied to clipboard! (Direct image copy blocked by browser security)');
+            } catch (urlError) {
+                console.error('Failed to copy:', blobError, urlError);
+                alert('Copy failed due to browser restrictions. Try opening the image in a new tab and copying from there.');
+            }
         }
     };
 
