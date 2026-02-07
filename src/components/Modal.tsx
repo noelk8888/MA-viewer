@@ -1,4 +1,4 @@
-import { X, Upload, Copy, Check } from 'lucide-react';
+import { X, Upload, Copy, Check, Share2 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
 interface ModalProps {
@@ -47,7 +47,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content, onUpload
         }
     };
 
-    const handleCopyImage = async () => {
+    const handleShareImage = async () => {
         if (!driveId) return;
 
         try {
@@ -58,36 +58,39 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content, onUpload
             });
             const blob = await response.blob();
 
-            // Copy to clipboard
-            await navigator.clipboard.write([
-                new ClipboardItem({
-                    [blob.type]: blob
-                })
-            ]);
+            // Try native share API (works great on mobile)
+            if (navigator.share && navigator.canShare) {
+                const file = new File([blob], 'image.jpg', { type: blob.type });
+                if (navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: title,
+                        text: 'Check out this image'
+                    });
+                    setCopySuccess(true);
+                    setTimeout(() => setCopySuccess(false), 2000);
+                    return;
+                }
+            }
 
-            setCopySuccess(true);
-            setTimeout(() => setCopySuccess(false), 2000);
-        } catch (blobError) {
-            // Fallback: Copy the image URL instead
+            // Fallback: Try clipboard copy (works on desktop)
             try {
-                const imageUrl = `https://drive.google.com/uc?export=view&id=${driveId}`;
-                await navigator.clipboard.writeText(imageUrl);
-
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        [blob.type]: blob
+                    })
+                ]);
                 setCopySuccess(true);
                 setTimeout(() => setCopySuccess(false), 2000);
-
-                // Show info that URL was copied instead
-                alert('Image URL copied to clipboard! (Direct image copy blocked by browser security)');
-            } catch (urlError) {
-                // Fallback 2: Open in new tab (works everywhere, especially mobile)
+            } catch {
+                // Final fallback: Open in new tab
                 const imageUrl = `https://drive.google.com/uc?export=view&id=${driveId}`;
                 window.open(imageUrl, '_blank');
-
-                setCopySuccess(true);
-                setTimeout(() => setCopySuccess(false), 2000);
-
-                alert('Image opened in new tab! You can save or copy it from there.');
+                alert('Image opened in new tab! Long-press to save or share.');
             }
+        } catch (err) {
+            console.error('Share failed:', err);
+            alert('Failed to share image. Please try again.');
         }
     };
 
@@ -148,21 +151,21 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content, onUpload
                         </button>
                     )}
 
-                    {/* COPY */}
+                    {/* SHARE/COPY */}
                     <button
-                        onClick={handleCopyImage}
+                        onClick={handleShareImage}
                         disabled={!hasImage}
                         className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
                     >
                         {copySuccess ? (
                             <>
                                 <Check size={16} />
-                                Copied!
+                                Done!
                             </>
                         ) : (
                             <>
-                                <Copy size={16} />
-                                Copy
+                                <Share2 size={16} />
+                                Share
                             </>
                         )}
                     </button>
