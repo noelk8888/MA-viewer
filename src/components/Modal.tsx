@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { X, Upload, Copy, Check } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface ModalProps {
@@ -6,14 +6,43 @@ interface ModalProps {
     onClose: () => void;
     title: string;
     content: string;
+    onUpload?: () => void;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content, onUpload }) => {
+    const [copySuccess, setCopySuccess] = useState(false);
+
     if (!isOpen) return null;
 
     // Extract Google Drive ID if present
     const driveMatch = content?.match(/id=([a-zA-Z0-9_-]+)/);
     const driveId = driveMatch?.[1];
+    const hasImage = !!driveId;
+
+    const handleCopyImage = async () => {
+        if (!driveId) return;
+
+        try {
+            // Fetch the image as a blob
+            const response = await fetch(`https://lh3.googleusercontent.com/d/${driveId}=s3000`, {
+                referrerPolicy: 'no-referrer'
+            });
+            const blob = await response.blob();
+
+            // Copy to clipboard
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    [blob.type]: blob
+                })
+            ]);
+
+            setCopySuccess(true);
+            setTimeout(() => setCopySuccess(false), 2000);
+        } catch (err) {
+            console.error('Failed to copy image:', err);
+            alert('Failed to copy image. Please try again.');
+        }
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -77,16 +106,48 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content }) => {
                             })()}
                         </div>
                     ) : (
-                        <p className="text-gray-700 whitespace-pre-wrap font-mono text-sm leading-relaxed">
-                            {content || 'No details available'}
-                        </p>
+                        <div className="text-center py-8">
+                            <p className="text-gray-400 text-sm">No image uploaded</p>
+                        </div>
                     )}
                 </div>
 
-                <div className="mt-6 flex justify-end">
+                {/* 3-Button Action Row */}
+                <div className="mt-6 flex gap-2">
+                    {/* UPLOAD or REPLACE */}
+                    {onUpload && (
+                        <button
+                            onClick={onUpload}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20 active:scale-95"
+                        >
+                            <Upload size={16} />
+                            {hasImage ? 'Replace' : 'Upload'}
+                        </button>
+                    )}
+
+                    {/* COPY */}
+                    <button
+                        onClick={handleCopyImage}
+                        disabled={!hasImage}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                    >
+                        {copySuccess ? (
+                            <>
+                                <Check size={16} />
+                                Copied!
+                            </>
+                        ) : (
+                            <>
+                                <Copy size={16} />
+                                Copy
+                            </>
+                        )}
+                    </button>
+
+                    {/* CLOSE */}
                     <button
                         onClick={onClose}
-                        className="w-full sm:w-auto px-4 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors shadow-lg shadow-gray-900/10 active:scale-95"
+                        className="flex-1 px-4 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors shadow-lg shadow-gray-900/10 active:scale-95"
                     >
                         Close
                     </button>
