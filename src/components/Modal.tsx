@@ -1,4 +1,4 @@
-import { X, Upload, Copy, Check, Share2 } from 'lucide-react';
+import { X, Upload, Check, Share2 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
 interface ModalProps {
