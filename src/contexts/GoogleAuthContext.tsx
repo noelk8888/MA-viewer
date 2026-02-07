@@ -26,7 +26,8 @@ interface GoogleAuthProviderProps {
   children: ReactNode;
 }
 
-const GoogleAuthProviderInner: React.FC<GoogleAuthProviderProps & { isConfigured: boolean }> = ({ children, isConfigured }) => {
+// Separate component for when Google is actually configured
+const ConfiguredAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,14 +47,10 @@ const GoogleAuthProviderInner: React.FC<GoogleAuthProviderProps & { isConfigured
   });
 
   const handleLogin = useCallback(() => {
-    if (!isConfigured) {
-      setError('Google Auth is not configured (missing Client ID)');
-      return;
-    }
     setIsLoading(true);
     setError(null);
     login();
-  }, [login, isConfigured]);
+  }, [login]);
 
   const handleLogout = useCallback(() => {
     googleLogout();
@@ -65,7 +62,7 @@ const GoogleAuthProviderInner: React.FC<GoogleAuthProviderProps & { isConfigured
       value={{
         accessToken,
         isAuthenticated: !!accessToken,
-        isConfigured,
+        isConfigured: true,
         login: handleLogin,
         logout: handleLogout,
         isLoading,
@@ -77,23 +74,35 @@ const GoogleAuthProviderInner: React.FC<GoogleAuthProviderProps & { isConfigured
   );
 };
 
+// Separate component for when Google is NOT configured
+const UnconfiguredAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children }) => {
+  return (
+    <GoogleAuthContext.Provider
+      value={{
+        accessToken: null,
+        isAuthenticated: false,
+        isConfigured: false,
+        login: () => { },
+        logout: () => { },
+        isLoading: false,
+        error: 'Google OAuth not configured',
+      }}
+    >
+      {children}
+    </GoogleAuthContext.Provider>
+  );
+};
+
 export const GoogleAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children }) => {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   if (!clientId) {
-    console.warn('VITE_GOOGLE_CLIENT_ID not configured - upload features disabled');
-    return (
-      <GoogleAuthProviderInner isConfigured={false}>
-        {children}
-      </GoogleAuthProviderInner>
-    );
+    return <UnconfiguredAuthProvider>{children}</UnconfiguredAuthProvider>;
   }
 
   return (
     <GoogleOAuthProvider clientId={clientId}>
-      <GoogleAuthProviderInner isConfigured={true}>
-        {children}
-      </GoogleAuthProviderInner>
+      <ConfiguredAuthProvider>{children}</ConfiguredAuthProvider>
     </GoogleOAuthProvider>
   );
 };
