@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import type { SheetRow } from '../services/sheetService';
 import Modal from './Modal';
 import ImageUploadModal from './ImageUploadModal';
+import EditRowModal from './EditRowModal';
 import type { ImageType } from '../services/googleSheetsService';
 
 interface RowItemProps {
@@ -13,6 +14,7 @@ interface RowItemProps {
 const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated }) => {
     const [activeModal, setActiveModal] = useState<'DR' | 'CBM' | null>(null);
     const [uploadModalType, setUploadModalType] = useState<ImageType | null>(null);
+    const [showEditModal, setShowEditModal] = useState(false);
     const [drThumbFailed, setDrThumbFailed] = useState(false);
     const [cbmThumbFailed, setCbmThumbFailed] = useState(false);
 
@@ -34,12 +36,13 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated }) => {
                         {row.Description}
                     </div>
                     <div className="flex flex-wrap gap-1 items-center mt-1">
-                        {/* COL X */}
-                        <span
-                            className={`font-semibold ${isColorAlert ? 'text-red-500' : 'text-gray-700'}`}
+                        {/* COL X - Clickable date to edit */}
+                        <button
+                            onClick={() => setShowEditModal(true)}
+                            className={`font-semibold ${isColorAlert ? 'text-red-500' : 'text-gray-700'} hover:underline cursor-pointer`}
                         >
                             {row.Color || '-'}
-                        </span>
+                        </button>
                         {/* COL Y */}
                         {row.Remarks && (
                             <span className="text-[10px] px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded-md">
@@ -159,6 +162,14 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated }) => {
                     }}
                 />
             )}
+
+            {/* Edit Row Modal */}
+            <EditRowModal
+                isOpen={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                onRowUpdated={() => onImageUpdated?.()}
+                rowNumber={row.originalIndex}
+            />
         </>
     );
 };

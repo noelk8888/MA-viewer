@@ -154,3 +154,170 @@ export const appendSheetRow = async (
     appendedRange: result.updates?.updatedRange || 'Unknown',
   };
 };
+
+// Fetch row data for editing
+export interface RowDataForEdit {
+  date: string;
+  supplier: string;
+  amountCNY: string;
+  sacks: string;
+  cnyToday: string;
+  cnyMA: string;
+  cbm: string;
+  drNumber: string;
+}
+
+export const fetchRowForEdit = async (
+  accessToken: string,
+  sheetId: string,
+  rowNumber: number
+): Promise<RowDataForEdit> => {
+  // Fetch columns A through Y for the specific row
+  // Use UNFORMATTED_VALUE to get raw values (numbers instead of formatted strings)
+  const range = `2026!A${rowNumber}:Y${rowNumber}`;
+
+  const response = await fetch(
+    `${SHEETS_API_BASE}/${sheetId}/values/${encodeURIComponent(range)}?valueRenderOption=UNFORMATTED_VALUE`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    console.error('Fetch row error:', errorData);
+    throw new Error(errorData.error?.message || 'Failed to fetch row data');
+  }
+
+  const result = await response.json();
+  const row = result.values?.[0] || [];
+
+  // Helper to safely get value from array
+  const getValue = (index: number): string => {
+    const val = row[index];
+    if (val === undefined || val === null) return '';
+    return String(val);
+  };
+
+  // Parse date - handle serial date number
+  let dateValue = getValue(1);
+  if (dateValue) {
+    const num = parseFloat(dateValue);
+    // Serial date for 2020-2030 range is roughly 43831-47848
+    if (!isNaN(num) && num > 40000 && num < 60000) {
+      // Excel/Sheets serial date - convert to JS date
+      // Sheets uses 1899-12-30 as epoch (day 0)
+      const date = new Date((num - 25569) * 86400 * 1000);
+      dateValue = date.toISOString().split('T')[0];
+    } else if (typeof row[1] === 'string' && dateValue.includes('/')) {
+      // Format like "1/15/2026" - convert to YYYY-MM-DD
+      const parts = dateValue.split('/');
+      if (parts.length === 3) {
+        const month = parts[0].padStart(2, '0');
+        const day = parts[1].padStart(2, '0');
+        const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+        dateValue = `${year}-${month}-${day}`;
+      }
+    }
+  }
+
+  return {
+    date: dateValue,
+    supplier: getValue(2),       // C
+    amountCNY: getValue(4),      // E
+    sacks: getValue(5),          // F
+    cnyToday: getValue(9),       // J
+    cnyMA: getValue(14),         // O
+    cbm: getValue(18),           // S
+    drNumber: getValue(24),      // Y
+  };
+};
+
+// Update existing row
+export const updateSheetRow = async (
+  accessToken: string,
+  sheetId: string,
+  rowNumber: number,
+  rowData: NewRowData
+): Promise<UpdateResult> => {
+  const range = `2026!A${rowNumber}:AB${rowNumber}`;
+
+  // Build row array with values and formulas (same structure as append)
+  const rowValues = [
+    '',                                    // A
+    rowData.date || '',                    // B - Date
+    rowData.supplier || '',                // C - Supplier
+    '',                                    // D - DR image (preserve)
+    rowData.amountCNY || '',               // E - Amount CNY
+    rowData.sacks || '',                   // F - Sacks
+    '',                                    // G
+    `=IF(M${rowNumber}=0,"",I${rowNumber}/M${rowNumber})`,  // H
+    `=IF(OR(Q${rowNumber}="",M${rowNumber}=""),"",Q${rowNumber}-M${rowNumber})`,  // I
+    rowData.cnyToday || '',                // J - CNY Today
+    '',                                    // K
+    '',                                    // L
+    `=IF(OR(E${rowNumber}="",J${rowNumber}=""),"",E${rowNumber}*J${rowNumber})`,  // M
+    '',                                    // N
+    rowData.cnyMA || '',                   // O - CNY MA
+    1.05,                                  // P
+    `=IF(OR(E${rowNumber}="",O${rowNumber}=""),"",E${rowNumber}*O${rowNumber}*1.05)`,  // Q
+    '',                                    // R - CBM image (preserve)
+    rowData.cbm || '',                     // S - CBM
+    10500,                                 // T
+    `=IF(S${rowNumber}="","",S${rowNumber}*10500)`,  // U
+    `=IF(B${rowNumber}="","",B${rowNumber}+5)`,  // V
+    30,                                    // W
+    `=IF(V${rowNumber}="","",V${rowNumber}+30)`,  // X
+    rowData.drNumber || '',                // Y - DR Number
+    `=S${rowNumber}`,                      // Z
+    9500,                                  // AA
+    `=IF(Z${rowNumber}="","",Z${rowNumber}*9500)`,  // AB
+  ];
+
+  // First, get existing DR and CBM image values to preserve them
+  const existingRange = `2026!D${rowNumber}:R${rowNumber}`;
+  const existingResponse = await fetch(
+    `${SHEETS_API_BASE}/${sheetId}/values/${encodeURIComponent(existingRange)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (existingResponse.ok) {
+    const existingData = await existingResponse.json();
+    const existingRow = existingData.values?.[0] || [];
+    // D is index 0, R is index 14 in this range
+    rowValues[3] = existingRow[0] || '';  // Preserve DR image
+    rowValues[17] = existingRow[14] || ''; // Preserve CBM image
+  }
+
+  const response = await fetch(
+    `${SHEETS_API_BASE}/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        range,
+        values: [rowValues],
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error?.message || 'Failed to update row');
+  }
+
+  const result = await response.json();
+  return {
+    success: true,
+    updatedRange: result.updatedRange || range,
+  };
+};
