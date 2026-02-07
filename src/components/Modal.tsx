@@ -79,8 +79,14 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content, onUpload
                 // Show info that URL was copied instead
                 alert('Image URL copied to clipboard! (Direct image copy blocked by browser security)');
             } catch (urlError) {
-                console.error('Failed to copy:', blobError, urlError);
-                alert('Copy failed due to browser restrictions. Try opening the image in a new tab and copying from there.');
+                // Fallback 2: Open in new tab (works everywhere, especially mobile)
+                const imageUrl = `https://drive.google.com/uc?export=view&id=${driveId}`;
+                window.open(imageUrl, '_blank');
+
+                setCopySuccess(true);
+                setTimeout(() => setCopySuccess(false), 2000);
+
+                alert('Image opened in new tab! You can save or copy it from there.');
             }
         }
     };
