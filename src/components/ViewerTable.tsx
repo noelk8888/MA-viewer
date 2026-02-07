@@ -1,7 +1,8 @@
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Plus } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { fetchSheetData, type SheetRow } from '../services/sheetService';
 import RowItem from './RowItem';
+import AddRowModal from './AddRowModal';
 
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=311571294#gid=311571294';
 const RATES_FOLDER_URL = 'https://drive.google.com/drive/folders/1MsJRVArZGMTmqcOuCr4pvhY1-aE_HPqT?usp=drive_link';
@@ -12,6 +13,7 @@ const ViewerTable: React.FC = () => {
     const [i1Value, setI1Value] = useState<string>('0');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showAddRowModal, setShowAddRowModal] = useState(false);
 
     // Get Today's Date formatted
     const today = new Date().toLocaleDateString('en-US', {
@@ -53,6 +55,13 @@ const ViewerTable: React.FC = () => {
                     >
                         {today}
                     </a>
+                    <button
+                        onClick={() => setShowAddRowModal(true)}
+                        className="p-1 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors"
+                        title="Add new entry"
+                    >
+                        <Plus size={14} />
+                    </button>
                     <span className="text-gray-300 font-light">|</span>
                     <a
                         href={RATES_FOLDER_URL}
@@ -105,6 +114,13 @@ const ViewerTable: React.FC = () => {
                     ))
                 )}
             </div>
+
+            {/* Add Row Modal */}
+            <AddRowModal
+                isOpen={showAddRowModal}
+                onClose={() => setShowAddRowModal(false)}
+                onRowAdded={loadData}
+            />
         </div>
     );
 };
