@@ -18,8 +18,7 @@ const ViewerTable: React.FC = () => {
     // Get Today's Date formatted
     const today = new Date().toLocaleDateString('en-US', {
         month: 'short',
-        day: 'numeric',
-        year: 'numeric'
+        day: 'numeric'
     });
 
     const loadData = async () => {

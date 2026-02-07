@@ -51,7 +51,7 @@ export const fetchSheetData = async (): Promise<{ rows: SheetRow[], rate: string
                     // Extract I1 value (column I = index 8) and divide by 1000
                     // Remove commas from the number string before parsing
                     const i1Raw = parseFloat((row0[8] || '0').replace(/,/g, '')) || 0;
-                    i1Value = (i1Raw / 1000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    i1Value = (i1Raw / 1000).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
                 }
 
                 // 2. Parse Rows
