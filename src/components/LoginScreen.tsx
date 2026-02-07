@@ -73,8 +73,11 @@ export const LoginScreen: React.FC = () => {
                                 </button>
 
                                 {error && (
-                                    <div className="text-center">
+                                    <div className="text-center space-y-2">
                                         <p className="text-red-600 text-sm">{error}</p>
+                                        <p className="text-gray-500 text-xs">
+                                            💡 Tip: If login isn't working on mobile, try allowing popups or use a desktop browser.
+                                        </p>
                                     </div>
                                 )}
                             </>

@@ -64,7 +64,22 @@ const ConfiguredAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children })
   const handleLogin = useCallback(() => {
     setIsLoading(true);
     setError(null);
-    login();
+
+    // Set a timeout to prevent indefinite loading (common on mobile)
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+      setError('Login timeout. Please try again. If the issue persists, try using a desktop browser.');
+    }, 30000); // 30 second timeout
+
+    try {
+      login();
+      // Clear timeout if login succeeds quickly
+      return () => clearTimeout(timeoutId);
+    } catch (err) {
+      clearTimeout(timeoutId);
+      setIsLoading(false);
+      setError('Failed to open login window. Please check your popup blocker settings.');
+    }
   }, [login]);
 
   const handleLogout = useCallback(() => {
