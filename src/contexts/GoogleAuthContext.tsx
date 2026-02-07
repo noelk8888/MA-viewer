@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { GoogleOAuthProvider, useGoogleLogin, googleLogout } from '@react-oauth/google';
 
@@ -8,6 +8,7 @@ interface GoogleAuthContextType {
   login: () => void;
   logout: () => void;
   isLoading: boolean;
+  isInitializing: boolean;
   isConfigured: boolean;
   error: string | null;
 }
@@ -26,15 +27,29 @@ interface GoogleAuthProviderProps {
   children: ReactNode;
 }
 
+const AUTH_STORAGE_KEY = 'inventory_viewer_auth_token';
+
 // Separate component for when Google is actually configured
 const ConfiguredAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Restore session on mount
+  useEffect(() => {
+    const storedToken = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (storedToken) {
+      setAccessToken(storedToken);
+    }
+    setIsInitializing(false);
+  }, []);
 
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => {
-      setAccessToken(tokenResponse.access_token);
+      const token = tokenResponse.access_token;
+      setAccessToken(token);
+      localStorage.setItem(AUTH_STORAGE_KEY, token);
       setError(null);
       setIsLoading(false);
     },
@@ -55,6 +70,7 @@ const ConfiguredAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children })
   const handleLogout = useCallback(() => {
     googleLogout();
     setAccessToken(null);
+    localStorage.removeItem(AUTH_STORAGE_KEY);
   }, []);
 
   return (
@@ -63,6 +79,7 @@ const ConfiguredAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children })
         accessToken,
         isAuthenticated: !!accessToken,
         isConfigured: true,
+        isInitializing,
         login: handleLogin,
         logout: handleLogout,
         isLoading,
@@ -82,6 +99,7 @@ const UnconfiguredAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children 
         accessToken: null,
         isAuthenticated: false,
         isConfigured: false,
+        isInitializing: false,
         login: () => { },
         logout: () => { },
         isLoading: false,
