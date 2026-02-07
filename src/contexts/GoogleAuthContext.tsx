@@ -8,6 +8,7 @@ interface GoogleAuthContextType {
   login: () => void;
   logout: () => void;
   isLoading: boolean;
+  isConfigured: boolean;
   error: string | null;
 }
 
@@ -25,7 +26,7 @@ interface GoogleAuthProviderProps {
   children: ReactNode;
 }
 
-const GoogleAuthProviderInner: React.FC<GoogleAuthProviderProps> = ({ children }) => {
+const GoogleAuthProviderInner: React.FC<GoogleAuthProviderProps & { isConfigured: boolean }> = ({ children, isConfigured }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,10 +46,14 @@ const GoogleAuthProviderInner: React.FC<GoogleAuthProviderProps> = ({ children }
   });
 
   const handleLogin = useCallback(() => {
+    if (!isConfigured) {
+      setError('Google Auth is not configured (missing Client ID)');
+      return;
+    }
     setIsLoading(true);
     setError(null);
     login();
-  }, [login]);
+  }, [login, isConfigured]);
 
   const handleLogout = useCallback(() => {
     googleLogout();
@@ -60,6 +65,7 @@ const GoogleAuthProviderInner: React.FC<GoogleAuthProviderProps> = ({ children }
       value={{
         accessToken,
         isAuthenticated: !!accessToken,
+        isConfigured,
         login: handleLogin,
         logout: handleLogout,
         isLoading,
@@ -76,12 +82,18 @@ export const GoogleAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children
 
   if (!clientId) {
     console.warn('VITE_GOOGLE_CLIENT_ID not configured - upload features disabled');
-    return <>{children}</>;
+    return (
+      <GoogleAuthProviderInner isConfigured={false}>
+        {children}
+      </GoogleAuthProviderInner>
+    );
   }
 
   return (
     <GoogleOAuthProvider clientId={clientId}>
-      <GoogleAuthProviderInner>{children}</GoogleAuthProviderInner>
+      <GoogleAuthProviderInner isConfigured={true}>
+        {children}
+      </GoogleAuthProviderInner>
     </GoogleOAuthProvider>
   );
 };

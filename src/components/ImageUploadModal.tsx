@@ -22,13 +22,14 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
   sheetRowNumber,
   onUploadComplete,
 }) => {
-  const { accessToken, isAuthenticated, login, isLoading: authLoading } = useGoogleAuth();
+  const { accessToken, isAuthenticated, login, isLoading: authLoading, isConfigured, error: authError } = useGoogleAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploadState, setUploadState] = useState<UploadState>('idle');
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ... (handleFileSelect and handleUpload logic same as before)
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -53,7 +54,7 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
     const sheetId = import.meta.env.VITE_GOOGLE_SHEET_ID;
 
     if (!folderId || !sheetId) {
-      setError('Upload configuration missing');
+      setError('Upload configuration missing (Drive Folder ID or Sheet ID)');
       return;
     }
 
@@ -115,9 +116,18 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
           Upload {imageType} Image
         </h3>
 
-        {!isAuthenticated ? (
+        {!isConfigured ? (
+          <div className="text-center py-8">
+            <AlertCircle className="mx-auto text-red-500 mb-2" size={32} />
+            <p className="text-gray-900 font-medium">Configuration Missing</p>
+            <p className="text-gray-600 text-sm mt-1">
+              Google Client ID is not configured. Please check your environment variables.
+            </p>
+          </div>
+        ) : !isAuthenticated ? (
           <div className="text-center py-8">
             <p className="text-gray-600 mb-4">Sign in with Google to upload images</p>
+            {authError && <p className="text-red-500 text-xs mb-4">{authError}</p>}
             <button
               onClick={login}
               disabled={authLoading}
