@@ -30,7 +30,7 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated }) => {
                         {row.Supplier || '-'}
                     </div>
                     <div className="text-gray-500 font-medium font-mono text-[10px] sm:text-xs">
-                        {row.Code}
+                        {row.Code} x 1.05
                     </div>
                     <div className="text-gray-600 line-clamp-2 leading-tight">
                         {row.Description}
@@ -92,6 +92,16 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated }) => {
                     <div className="font-medium text-gray-600 text-xs sm:text-sm whitespace-nowrap">
                         <span className="text-[10px] mr-0.5 opacity-70">₱</span>{row.PHP}
                     </div>
+                    {row.CBMValue && (
+                        <div className="font-bold text-emerald-600 text-sm sm:text-base whitespace-nowrap">
+                            <span className="text-xs mr-0.5 opacity-70">¥</span>{row.CBMValue}
+                        </div>
+                    )}
+                    {row.CBMPHP && (
+                        <div className="font-medium text-gray-600 text-xs sm:text-sm whitespace-nowrap">
+                            <span className="text-[10px] mr-0.5 opacity-70">₱</span>{row.CBMPHP}
+                        </div>
+                    )}
                 </div>
 
                 {/* COL 4: CBM Icon */}

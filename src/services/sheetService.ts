@@ -16,6 +16,9 @@ export interface SheetRow {
     // Column 3: Pricing
     RMB: string; // Col E (CNY)
     PHP: string; // Col Q (PHP)
+    CnyToday: string; // Col J
+    CBMValue: string; // Col S
+    CBMPHP: string;   // Col U
 
     // Column 4: CBM
     CBM: string; // Col R - Modal Content
@@ -58,13 +61,16 @@ export const fetchSheetData = async (): Promise<{ rows: SheetRow[], rate: string
                 // User requested to start with row 6 (index 5)
                 const rows = data.slice(5).map((row, index) => ({
                     Supplier: row[1] || '',
-                    Code: row[14] || '',
+                    Code: row[9] || '',
                     Description: row[2] || '',
                     Color: row[23] || ' ',
                     Remarks: row[24] || '',
                     DR: row[3] || '',
                     RMB: row[4] || '0',
                     PHP: row[16] || '0',
+                    CnyToday: row[9] || '0',
+                    CBMValue: row[18] || '',
+                    CBMPHP: row[20] || '',
                     CBM: row[17] || '',
                     originalIndex: index + 6 // Data starts at row 6 (1-indexed)
                 })).filter(row => row.Supplier || row.Code || row.Description);
