@@ -61,7 +61,7 @@ export const fetchSheetData = async (): Promise<{ rows: SheetRow[], rate: string
                 // User requested to start with row 6 (index 5)
                 const rows = data.slice(5).map((row, index) => ({
                     Supplier: row[1] || '',
-                    Code: row[9] || '',
+                    Code: row[14] || '',
                     Description: row[2] || '',
                     Color: row[23] || ' ',
                     Remarks: row[24] || '',

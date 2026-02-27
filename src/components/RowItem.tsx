@@ -30,7 +30,7 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated }) => {
                         {row.Supplier || '-'}
                     </div>
                     <div className="text-gray-500 font-medium font-mono text-[10px] sm:text-xs">
-                        {row.Code} x 1.05
+                        {row.Code} ({row.CnyToday})
                     </div>
                     <div className="text-gray-600 line-clamp-2 leading-tight">
                         {row.Description}
