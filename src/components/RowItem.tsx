@@ -26,9 +26,13 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated }) => {
             <div className="grid grid-cols-4 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
                 {/* COL 1: Supplier Info */}
                 <div className="p-3 flex flex-col justify-center space-y-1 text-xs sm:text-sm border-r border-gray-100/50">
-                    <div className="font-bold text-gray-900 truncate" title={row.Supplier}>
+                    <button
+                        onClick={() => setShowEditModal(true)}
+                        className="font-bold text-gray-900 truncate hover:underline cursor-pointer text-left"
+                        title={row.Supplier}
+                    >
                         {row.Supplier || '-'}
-                    </div>
+                    </button>
                     <div className="text-gray-500 font-medium font-mono text-[10px] sm:text-xs">
                         {row.Code} ({row.CnyToday})
                     </div>

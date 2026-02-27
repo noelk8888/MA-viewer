@@ -353,7 +353,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
                 ) : (
                   <>
                     <Edit3 size={16} />
-                    Save Changes
+                    Update Entry
                   </>
                 )}
               </button>
