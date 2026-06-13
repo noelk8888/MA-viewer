@@ -106,6 +106,11 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated }) => {
                             <span className="text-[10px] mr-0.5 opacity-70">₱</span>{row.CBMPHP}
                         </div>
                     )}
+                    {row.colN?.trim().toUpperCase() === 'Y' && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-red-100 text-yellow-600 rounded-md mt-1 inline-block">
+                            PAID
+                        </span>
+                    )}
                 </div>
 
                 {/* COL 4: CBM Icon */}

@@ -334,11 +334,11 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
             {/* Action Buttons */}
             <div className="flex gap-3 mt-6">
               <button
-                onClick={handleClose}
+                onClick={() => window.open('https://drsheet.vercel.app/', '_blank')}
                 disabled={isProcessing}
                 className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
-                Cancel
+                ISSUE RECEIPT
               </button>
               <button
                 onClick={handleSubmit}

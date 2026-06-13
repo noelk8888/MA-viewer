@@ -22,6 +22,7 @@ export interface SheetRow {
 
     // Column 4: CBM
     CBM: string; // Col R - Modal Content
+    colN: string; // Col N
 
     // Row tracking for updates
     originalIndex: number; // Actual 1-indexed row number in sheet
@@ -72,6 +73,7 @@ export const fetchSheetData = async (): Promise<{ rows: SheetRow[], rate: string
                     CBMValue: row[18] || '',
                     CBMPHP: row[20] || '',
                     CBM: row[17] || '',
+                    colN: row[13] || '',
                     originalIndex: index + 6 // Data starts at row 6 (1-indexed)
                 })).filter(row => row.Supplier || row.Code || row.Description);
 
