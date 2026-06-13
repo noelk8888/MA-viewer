@@ -32,6 +32,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
   const [cnyMA, setCnyMA] = useState('');
   const [cbm, setCbm] = useState('');
   const [drNumber, setDrNumber] = useState('');
+  const [isPaid, setIsPaid] = useState(false);
 
   const resetForm = useCallback(() => {
     setDate('');
@@ -42,6 +43,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
     setCnyMA('');
     setCbm('');
     setDrNumber('');
+    setIsPaid(false);
     setSubmitState('idle');
     setError(null);
   }, []);
@@ -76,6 +78,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
           setCnyMA(data.cnyMA);
           setCbm(data.cbm);
           setDrNumber(data.drNumber);
+          setIsPaid(data.colN?.trim().toUpperCase() === 'Y');
           setSubmitState('idle');
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : 'Failed to load row data';
@@ -166,8 +169,16 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
           <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 cursor-pointer">
             <input
               type="radio"
-              checked={drNumber === 'Y'}
-              onClick={() => setDrNumber(prev => prev === 'Y' ? '' : 'Y')}
+              checked={isPaid}
+              onClick={() => {
+                const newPaid = !isPaid;
+                setIsPaid(newPaid);
+                if (newPaid) {
+                  setDrNumber('Y');
+                } else if (drNumber === 'Y') {
+                  setDrNumber('');
+                }
+              }}
               onChange={() => {}}
               className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
             />

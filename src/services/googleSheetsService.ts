@@ -165,6 +165,7 @@ export interface RowDataForEdit {
   cnyMA: string;
   cbm: string;
   drNumber: string;
+  colN: string;
 }
 
 export const fetchRowForEdit = async (
@@ -232,6 +233,7 @@ export const fetchRowForEdit = async (
     cnyMA: getValue(14),         // O
     cbm: getValue(18),           // S
     drNumber: getValue(24),      // Y
+    colN: getValue(13),          // N
   };
 };
 
