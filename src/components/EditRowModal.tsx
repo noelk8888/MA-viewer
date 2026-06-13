@@ -158,10 +158,22 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
           <X size={20} />
         </button>
 
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Edit3 size={20} className="text-blue-600" />
-          Edit Entry (Row {rowNumber})
-        </h3>
+        <div className="flex items-center justify-between mb-4 pr-8">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <Edit3 size={20} className="text-blue-600" />
+            Edit Entry (Row {rowNumber})
+          </h3>
+          <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 cursor-pointer">
+            <input
+              type="radio"
+              checked={drNumber === 'Y'}
+              onClick={() => setDrNumber(prev => prev === 'Y' ? '' : 'Y')}
+              onChange={() => {}}
+              className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
+            />
+            PAID
+          </label>
+        </div>
 
         {!isConfigured ? (
           <div className="text-center py-8">
