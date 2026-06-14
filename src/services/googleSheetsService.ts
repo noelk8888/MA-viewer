@@ -63,6 +63,7 @@ export interface NewRowData {
   cnyMA?: number;          // Col O
   cbm?: number;            // Col S
   drNumber?: string;       // Col Y
+  colN?: string;           // Col N
 }
 
 export interface AppendResult {
@@ -111,7 +112,7 @@ export const appendSheetRow = async (
     '',                                    // K
     '',                                    // L
     `=IF(OR(E${nextRow}="",J${nextRow}=""),"",E${nextRow}*J${nextRow})`,  // M - formula: E*J
-    '',                                    // N
+    rowData.colN || '',                    // N
     rowData.cnyMA || '',                   // O - CNY MA
     1.05,                                  // P - constant
     `=IF(OR(E${nextRow}="",O${nextRow}=""),"",E${nextRow}*O${nextRow}*1.05)`,  // Q - formula: E*O*1.05
@@ -233,7 +234,7 @@ export const fetchRowForEdit = async (
     cnyMA: getValue(14),         // O
     cbm: getValue(18),           // S
     drNumber: getValue(24),      // Y
-    colN: getValue(13),          // N
+    colN: getValue(13),          // N (Column 14)
   };
 };
 
@@ -261,7 +262,7 @@ export const updateSheetRow = async (
     '',                                    // K
     '',                                    // L
     `=IF(OR(E${rowNumber}="",J${rowNumber}=""),"",E${rowNumber}*J${rowNumber})`,  // M
-    '',                                    // N
+    rowData.colN || '',                    // N
     rowData.cnyMA || '',                   // O - CNY MA
     1.05,                                  // P
     `=IF(OR(E${rowNumber}="",O${rowNumber}=""),"",E${rowNumber}*O${rowNumber}*1.05)`,  // Q

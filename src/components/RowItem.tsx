@@ -48,7 +48,7 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated }) => {
                             {row.Color || '-'}
                         </button>
                         {/* COL Y */}
-                        {row.Remarks && (
+                        {row.Remarks && row.Remarks.trim().toUpperCase() !== 'Y' && (
                             <span className="text-[10px] px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded-md">
                                 {row.Remarks}
                             </span>

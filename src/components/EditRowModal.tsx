@@ -32,7 +32,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
   const [cnyMA, setCnyMA] = useState('');
   const [cbm, setCbm] = useState('');
   const [drNumber, setDrNumber] = useState('');
-  const [isPaid, setIsPaid] = useState(false);
+  const [colN, setColN] = useState('');
 
   const resetForm = useCallback(() => {
     setDate('');
@@ -43,7 +43,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
     setCnyMA('');
     setCbm('');
     setDrNumber('');
-    setIsPaid(false);
+    setColN('');
     setSubmitState('idle');
     setError(null);
   }, []);
@@ -78,7 +78,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
           setCnyMA(data.cnyMA);
           setCbm(data.cbm);
           setDrNumber(data.drNumber);
-          setIsPaid(data.colN?.trim().toUpperCase() === 'Y');
+          setColN(data.colN || '');
           setSubmitState('idle');
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : 'Failed to load row data';
@@ -116,6 +116,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
         cnyMA: cnyMA ? parseFloat(cnyMA) : undefined,
         cbm: cbm ? parseFloat(cbm) : undefined,
         drNumber: drNumber || undefined,
+        colN: colN || undefined,
       };
 
       await updateSheetRow(accessToken, sheetId, rowNumber, rowData);
@@ -137,7 +138,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
         setError(errorMessage);
       }
     }
-  }, [accessToken, date, supplier, amountCNY, sacks, cnyToday, cnyMA, cbm, drNumber, rowNumber, onRowUpdated, onClose, resetForm]);
+  }, [accessToken, date, supplier, amountCNY, sacks, cnyToday, cnyMA, cbm, drNumber, colN, rowNumber, onRowUpdated, onClose, resetForm]);
 
   const handleClose = useCallback(() => {
     if (submitState !== 'submitting' && submitState !== 'loading') {
@@ -161,30 +162,10 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
           <X size={20} />
         </button>
 
-        <div className="flex items-center justify-between mb-4 pr-8">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Edit3 size={20} className="text-blue-600" />
-            Edit Entry (Row {rowNumber})
-          </h3>
-          <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 cursor-pointer">
-            <input
-              type="radio"
-              checked={isPaid}
-              onClick={() => {
-                const newPaid = !isPaid;
-                setIsPaid(newPaid);
-                if (newPaid) {
-                  setDrNumber('Y');
-                } else if (drNumber === 'Y') {
-                  setDrNumber('');
-                }
-              }}
-              onChange={() => {}}
-              className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
-            />
-            PAID
-          </label>
-        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <Edit3 size={20} className="text-blue-600" />
+          Edit Entry (Row {rowNumber})
+        </h3>
 
         {!isConfigured ? (
           <div className="text-center py-8">
@@ -317,6 +298,37 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
                     placeholder="Enter DR#"
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                   />
+                </div>
+              </div>
+
+              {/* Row 5: Payment Status (Col N) */}
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <label className="block text-xs font-medium text-gray-600 mb-2">Payment Status (Col N)</label>
+                <div className="flex items-center gap-6">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer select-none">
+                    <input
+                      type="radio"
+                      name="paymentStatus"
+                      value="Y"
+                      checked={colN === 'Y'}
+                      onChange={() => setColN('Y')}
+                      disabled={isProcessing}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+                    />
+                    Paid
+                  </label>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer select-none">
+                    <input
+                      type="radio"
+                      name="paymentStatus"
+                      value=""
+                      checked={colN !== 'Y'}
+                      onChange={() => setColN('')}
+                      disabled={isProcessing}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+                    />
+                    Unpaid
+                  </label>
                 </div>
               </div>
             </div>
