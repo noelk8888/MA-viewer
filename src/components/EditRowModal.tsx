@@ -371,9 +371,9 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
               <button
                 onClick={() => window.open('https://drsheet.vercel.app/', '_blank')}
                 disabled={isProcessing}
-                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
               >
-                ISSUE RECEIPT
+                ISSUE DR
               </button>
               <button
                 onClick={handleSubmit}
