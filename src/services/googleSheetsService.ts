@@ -341,7 +341,7 @@ export const fetchSummaryData = async (
   accessToken: string,
   sheetId: string
 ): Promise<SummaryData> => {
-  const range = `2026!B14:C154`;
+  const range = `'2025 CAL'!B14:C154`;
   const response = await fetch(
     `${SHEETS_API_BASE}/${sheetId}/values/${encodeURIComponent(range)}?valueRenderOption=UNFORMATTED_VALUE`,
     {
