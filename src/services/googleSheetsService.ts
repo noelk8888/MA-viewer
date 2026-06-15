@@ -367,20 +367,19 @@ export const fetchSummaryData = async (
             const currentMonthIndex = new Date().getMonth(); // 0-11
             const items: SummaryItem[] = [];
 
-            for (let i = currentMonthIndex; i < 12; i++) {
+            for (let count = 0; count < 12; count++) {
+              const i = (currentMonthIndex + count) % 12;
               const row = 14 + (i * 8);
               const valStr = getCell(row, 'B').replace(/,/g, '');
               const label = getCell(row, 'C');
               
               const numVal = parseFloat(valStr);
-              if (isNaN(numVal) || numVal === 0) {
-                break;
+              if (!isNaN(numVal) && numVal !== 0) {
+                items.push({
+                  label: label,
+                  value: numVal
+                });
               }
-              
-              items.push({
-                label: label,
-                value: numVal
-              });
             }
 
             const deliveredStr = getCell(106, 'B').replace(/,/g, '');
