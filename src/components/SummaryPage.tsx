@@ -24,7 +24,7 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await fetchSummaryData(accessToken, SHEET_ID);
+      const result = await fetchSummaryData(SHEET_ID);
       setData(result);
     } catch (err: any) {
       console.error(err);

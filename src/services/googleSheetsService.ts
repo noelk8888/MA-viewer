@@ -340,7 +340,6 @@ export interface SummaryData {
 }
 
 export const fetchSummaryData = async (
-  accessToken: string,
   sheetId: string
 ): Promise<SummaryData> => {
   const CSV_URL = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=213812473&t=${new Date().getTime()}`;
