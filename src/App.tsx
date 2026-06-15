@@ -1,10 +1,13 @@
 import ViewerTable from './components/ViewerTable'
+import { SummaryPage } from './components/SummaryPage'
 import { GoogleAuthProvider, useGoogleAuth } from './contexts/GoogleAuthContext'
 import { LoginScreen } from './components/LoginScreen'
 import { Loader2, LogOut } from 'lucide-react'
+import { useState } from 'react';
 
 function AppContent() {
   const { isAuthenticated, isInitializing, logout } = useGoogleAuth();
+  const [view, setView] = useState<'viewer' | 'summary'>('viewer');
 
   // Show loading screen while checking session
   if (isInitializing) {
@@ -38,7 +41,11 @@ function AppContent() {
         </button>
       </div>
 
-      <ViewerTable />
+      {view === 'viewer' ? (
+        <ViewerTable onSummaryClick={() => setView('summary')} />
+      ) : (
+        <SummaryPage onBack={() => setView('viewer')} />
+      )}
 
       <footer className="py-6 text-center text-xs text-gray-400">
         <p>Inventory Viewer App • {new Date().getFullYear()}</p>

@@ -7,7 +7,11 @@ import AddRowModal from './AddRowModal';
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=311571294#gid=311571294';
 const RATES_FOLDER_URL = 'https://drive.google.com/drive/folders/1MsJRVArZGMTmqcOuCr4pvhY1-aE_HPqT?usp=drive_link';
 
-const ViewerTable: React.FC = () => {
+interface ViewerTableProps {
+  onSummaryClick?: () => void;
+}
+
+const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     const [data, setData] = useState<SheetRow[]>([]);
     const [rate, setRate] = useState<string>('0');
     const [i1Value, setI1Value] = useState<string>('0');
@@ -71,7 +75,12 @@ const ViewerTable: React.FC = () => {
                         {rate}
                     </a>
                     <span className="text-gray-300 font-light">|</span>
-                    <span className={`${loading ? 'opacity-50 animate-pulse' : ''}`}>{i1Value}</span>
+                    <span 
+                        className={`${loading ? 'opacity-50 animate-pulse' : ''} hover:underline cursor-pointer`}
+                        onClick={onSummaryClick}
+                    >
+                        {i1Value}
+                    </span>
                 </h1>
                 <button
                     onClick={loadData}

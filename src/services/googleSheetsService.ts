@@ -324,3 +324,69 @@ export const updateSheetRow = async (
     updatedRange: result.updatedRange || range,
   };
 };
+
+export interface SummaryItem {
+  label: string;
+  value: number;
+}
+
+export interface SummaryData {
+  items: SummaryItem[];
+  delivered: number;
+  notYetDelivered: number;
+  total: number;
+}
+
+export const fetchSummaryData = async (
+  accessToken: string,
+  sheetId: string
+): Promise<SummaryData> => {
+  const range = `2026!B14:C154`;
+  const response = await fetch(
+    `${SHEETS_API_BASE}/${sheetId}/values/${encodeURIComponent(range)}?valueRenderOption=UNFORMATTED_VALUE`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch summary data');
+  }
+
+  const result = await response.json();
+  const values = result.values || [];
+
+  const getCell = (row: number, col: 'B' | 'C'): any => {
+    const r = values[row - 14]; // row 14 is index 0
+    if (!r) return undefined;
+    return col === 'B' ? r[0] : r[1];
+  };
+
+  const currentMonthIndex = new Date().getMonth(); // 0-11
+  const items: SummaryItem[] = [];
+
+  for (let i = currentMonthIndex; i < 12; i++) {
+    const row = 14 + (i * 8);
+    const val = getCell(row, 'B');
+    const label = getCell(row, 'C');
+    
+    const numVal = parseFloat(val);
+    if (isNaN(numVal) || numVal === 0) {
+      break;
+    }
+    
+    items.push({
+      label: typeof label === 'string' ? label : (label || '').toString(),
+      value: numVal
+    });
+  }
+
+  const deliveredVal = parseFloat(getCell(106, 'B')) || 0;
+  const notYetDeliveredVal = parseFloat(getCell(154, 'B')) || 0;
+
+  const total = items.reduce((sum, item) => sum + item.value, 0) + deliveredVal + notYetDeliveredVal;
+
+  return { items, delivered: deliveredVal, notYetDelivered: notYetDeliveredVal, total };
+};
