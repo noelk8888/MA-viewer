@@ -1,3 +1,5 @@
+import Papa from 'papaparse';
+
 const SHEETS_API_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
 
 export type ImageType = 'DR' | 'CBM';
@@ -341,52 +343,66 @@ export const fetchSummaryData = async (
   accessToken: string,
   sheetId: string
 ): Promise<SummaryData> => {
-  const range = `'2025 CAL'!B14:C154`;
-  const response = await fetch(
-    `${SHEETS_API_BASE}/${sheetId}/values/${encodeURIComponent(range)}?valueRenderOption=UNFORMATTED_VALUE`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+  const CSV_URL = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=213812473&t=${new Date().getTime()}`;
+  
+  try {
+    const response = await fetch(CSV_URL);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  );
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch summary data');
-  }
-
-  const result = await response.json();
-  const values = result.values || [];
-
-  const getCell = (row: number, col: 'B' | 'C'): any => {
-    const r = values[row - 14]; // row 14 is index 0
-    if (!r) return undefined;
-    return col === 'B' ? r[0] : r[1];
-  };
-
-  const currentMonthIndex = new Date().getMonth(); // 0-11
-  const items: SummaryItem[] = [];
-
-  for (let i = currentMonthIndex; i < 12; i++) {
-    const row = 14 + (i * 8);
-    const val = getCell(row, 'B');
-    const label = getCell(row, 'C');
+    const csvText = await response.text();
     
-    const numVal = parseFloat(val);
-    if (isNaN(numVal) || numVal === 0) {
-      break;
-    }
-    
-    items.push({
-      label: typeof label === 'string' ? label : (label || '').toString(),
-      value: numVal
+    return new Promise((resolve, reject) => {
+      Papa.parse(csvText, {
+        header: false,
+        complete: (results) => {
+          try {
+            const data = results.data as string[][];
+            
+            const getCell = (row: number, col: 'B' | 'C'): string => {
+              const r = data[row - 1]; // row 14 is index 13
+              if (!r) return '';
+              return col === 'B' ? (r[1] || '') : (r[2] || '');
+            };
+
+            const currentMonthIndex = new Date().getMonth(); // 0-11
+            const items: SummaryItem[] = [];
+
+            for (let i = currentMonthIndex; i < 12; i++) {
+              const row = 14 + (i * 8);
+              const valStr = getCell(row, 'B').replace(/,/g, '');
+              const label = getCell(row, 'C');
+              
+              const numVal = parseFloat(valStr);
+              if (isNaN(numVal) || numVal === 0) {
+                break;
+              }
+              
+              items.push({
+                label: label,
+                value: numVal
+              });
+            }
+
+            const deliveredStr = getCell(106, 'B').replace(/,/g, '');
+            const deliveredVal = parseFloat(deliveredStr) || 0;
+            
+            const notYetStr = getCell(154, 'B').replace(/,/g, '');
+            const notYetDeliveredVal = parseFloat(notYetStr) || 0;
+
+            const total = items.reduce((sum, item) => sum + item.value, 0) + deliveredVal + notYetDeliveredVal;
+
+            resolve({ items, delivered: deliveredVal, notYetDelivered: notYetDeliveredVal, total });
+          } catch (err: any) {
+            reject(new Error('Parse logic error: ' + err.message));
+          }
+        },
+        error: (error: any) => {
+          reject(new Error('CSV parse error: ' + error.message));
+        }
+      });
     });
+  } catch (err: any) {
+    throw new Error('Fetch failed: ' + err.message);
   }
-
-  const deliveredVal = parseFloat(getCell(106, 'B')) || 0;
-  const notYetDeliveredVal = parseFloat(getCell(154, 'B')) || 0;
-
-  const total = items.reduce((sum, item) => sum + item.value, 0) + deliveredVal + notYetDeliveredVal;
-
-  return { items, delivered: deliveredVal, notYetDelivered: notYetDeliveredVal, total };
 };

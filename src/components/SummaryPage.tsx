@@ -26,9 +26,9 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
     try {
       const result = await fetchSummaryData(accessToken, SHEET_ID);
       setData(result);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError('Failed to load summary data');
+      setError(err.message || 'Failed to load summary data');
     } finally {
       setLoading(false);
     }
@@ -67,9 +67,9 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
             <p className="text-sm">Loading summary...</p>
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center py-20 text-red-500">
+          <div className="flex flex-col items-center justify-center py-20 text-red-500 text-center px-4">
             <p className="font-medium mb-2">Unavailable</p>
-            <p className="text-xs opacity-70">{error}</p>
+            <p className="text-xs opacity-70 break-words">{error}</p>
             <button onClick={loadData} className="mt-4 px-4 py-2 bg-gray-900 text-white text-xs rounded-lg">Retry</button>
           </div>
         ) : data ? (
