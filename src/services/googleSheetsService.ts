@@ -404,3 +404,39 @@ export const fetchSummaryData = async (
     throw new Error('Fetch failed: ' + err.message);
   }
 };
+
+export const fetchK2Value = async (
+  sheetId: string
+): Promise<string> => {
+  const CSV_URL = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=976817616&t=${new Date().getTime()}`;
+  
+  try {
+    const response = await fetch(CSV_URL);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const csvText = await response.text();
+    
+    return new Promise((resolve, reject) => {
+      Papa.parse(csvText, {
+        header: false,
+        complete: (results) => {
+          try {
+            const data = results.data as string[][];
+            // Row 2 is index 1, Column K is index 10
+            const k2Value = data[1]?.[10] || '';
+            resolve(k2Value);
+          } catch (err: any) {
+            reject(new Error('Parse logic error: ' + err.message));
+          }
+        },
+        error: (error: any) => {
+          reject(new Error('CSV parse error: ' + error.message));
+        }
+      });
+    });
+  } catch (err: any) {
+    throw new Error('Fetch failed: ' + err.message);
+  }
+};
+
