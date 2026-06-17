@@ -8,6 +8,7 @@ interface AddRowModalProps {
   isOpen: boolean;
   onClose: () => void;
   onRowAdded: () => void;
+  selectedYear: string;
 }
 
 type SubmitState = 'idle' | 'submitting' | 'success' | 'error';
@@ -16,6 +17,7 @@ const AddRowModal: React.FC<AddRowModalProps> = ({
   isOpen,
   onClose,
   onRowAdded,
+  selectedYear,
 }) => {
   const { accessToken, isAuthenticated, login, logout, isLoading: authLoading, isConfigured } = useGoogleAuth();
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
@@ -68,7 +70,7 @@ const AddRowModal: React.FC<AddRowModalProps> = ({
         drNumber: drNumber || undefined,
       };
 
-      await appendSheetRow(accessToken, sheetId, rowData);
+      await appendSheetRow(accessToken, sheetId, rowData, selectedYear);
 
       setSubmitState('success');
       onRowAdded();
@@ -88,7 +90,7 @@ const AddRowModal: React.FC<AddRowModalProps> = ({
         setError(errorMessage);
       }
     }
-  }, [accessToken, date, supplier, amountCNY, sacks, cnyToday, cnyMA, cbm, drNumber, onRowAdded, onClose, resetForm]);
+  }, [accessToken, date, supplier, amountCNY, sacks, cnyToday, cnyMA, cbm, drNumber, onRowAdded, onClose, resetForm, selectedYear]);
 
   const handleClose = useCallback(() => {
     if (submitState !== 'submitting') {

@@ -9,6 +9,7 @@ interface EditRowModalProps {
   onClose: () => void;
   onRowUpdated: () => void;
   rowNumber: number;
+  selectedYear: string;
 }
 
 type SubmitState = 'idle' | 'loading' | 'submitting' | 'success' | 'error';
@@ -18,6 +19,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
   onClose,
   onRowUpdated,
   rowNumber,
+  selectedYear,
 }) => {
   const { accessToken, isAuthenticated, login, logout, isLoading: authLoading, isConfigured } = useGoogleAuth();
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
@@ -58,7 +60,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
         try {
           setSubmitState('loading');
           setError(null);
-          const data = await fetchRowForEdit(accessToken, sheetId, rowNumber);
+          const data = await fetchRowForEdit(accessToken, sheetId, rowNumber, selectedYear);
 
           // Convert date format if needed (from serial or display format to YYYY-MM-DD)
           let dateValue = data.date;
@@ -92,7 +94,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
       };
       loadRowData();
     }
-  }, [isOpen, accessToken, rowNumber]);
+  }, [isOpen, accessToken, rowNumber, selectedYear]);
 
   const handleSubmit = useCallback(async () => {
     if (!accessToken) return;
@@ -119,7 +121,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
         colN: colN || undefined,
       };
 
-      await updateSheetRow(accessToken, sheetId, rowNumber, rowData);
+      await updateSheetRow(accessToken, sheetId, rowNumber, rowData, selectedYear);
 
       setSubmitState('success');
       onRowUpdated();
@@ -138,7 +140,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
         setError(errorMessage);
       }
     }
-  }, [accessToken, date, supplier, amountCNY, sacks, cnyToday, cnyMA, cbm, drNumber, colN, rowNumber, onRowUpdated, onClose, resetForm]);
+  }, [accessToken, date, supplier, amountCNY, sacks, cnyToday, cnyMA, cbm, drNumber, colN, rowNumber, onRowUpdated, onClose, resetForm, selectedYear]);
 
   const handleClose = useCallback(() => {
     if (submitState !== 'submitting' && submitState !== 'loading') {

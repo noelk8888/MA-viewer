@@ -11,6 +11,7 @@ interface ImageUploadModalProps {
   imageType: ImageType;
   sheetRowNumber: number;
   onUploadComplete: () => void;
+  selectedYear: string;
 }
 
 type UploadState = 'idle' | 'uploading' | 'updating-sheet' | 'success' | 'error';
@@ -21,6 +22,7 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
   imageType,
   sheetRowNumber,
   onUploadComplete,
+  selectedYear,
 }) => {
   const { accessToken, isAuthenticated, login, logout, isLoading: authLoading, isConfigured, error: authError } = useGoogleAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -65,7 +67,7 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
       const uploadResult = await uploadImageToDrive(selectedFile, accessToken, folderId);
 
       setUploadState('updating-sheet');
-      await updateSheetCell(accessToken, sheetId, sheetRowNumber, imageType, uploadResult.driveLink);
+      await updateSheetCell(accessToken, sheetId, sheetRowNumber, imageType, uploadResult.driveLink, selectedYear);
 
       setUploadState('success');
       onUploadComplete();
@@ -85,7 +87,7 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
         setError(errorMessage);
       }
     }
-  }, [selectedFile, accessToken, sheetRowNumber, imageType, onUploadComplete, onClose]);
+  }, [selectedFile, accessToken, sheetRowNumber, imageType, onUploadComplete, onClose, selectedYear]);
 
   const resetState = useCallback(() => {
     setSelectedFile(null);

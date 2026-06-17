@@ -22,11 +22,11 @@ export const updateSheetCell = async (
   sheetId: string,
   sheetRowNumber: number,
   imageType: ImageType,
-  driveLink: string
+  driveLink: string,
+  year: string = '2026'
 ): Promise<UpdateResult> => {
   const column = COLUMN_MAP[imageType];
-  // Use the "2026" sheet tab
-  const range = `2026!${column}${sheetRowNumber}`;
+  const range = `${year}!${column}${sheetRowNumber}`;
 
   const response = await fetch(
     `${SHEETS_API_BASE}/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=RAW`,
@@ -76,11 +76,12 @@ export interface AppendResult {
 export const appendSheetRow = async (
   accessToken: string,
   sheetId: string,
-  rowData: NewRowData
+  rowData: NewRowData,
+  year: string = '2026'
 ): Promise<AppendResult> => {
   // Step 1: Find the last row with data in column B
   const findLastRowResponse = await fetch(
-    `${SHEETS_API_BASE}/${sheetId}/values/2026!B:B`,
+    `${SHEETS_API_BASE}/${sheetId}/values/${year}!B:B`,
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -96,8 +97,7 @@ export const appendSheetRow = async (
   const lastRow = lastRowData.values ? lastRowData.values.length : 1;
   const nextRow = lastRow + 1;
 
-  // Step 2: Write to the specific next row
-  const range = `2026!A${nextRow}:AB${nextRow}`;
+  const range = `${year}!A${nextRow}:AB${nextRow}`;
 
   // Build row array with values and formulas
   const rowValues = [
@@ -174,11 +174,10 @@ export interface RowDataForEdit {
 export const fetchRowForEdit = async (
   accessToken: string,
   sheetId: string,
-  rowNumber: number
+  rowNumber: number,
+  year: string = '2026'
 ): Promise<RowDataForEdit> => {
-  // Fetch columns A through Y for the specific row
-  // Use UNFORMATTED_VALUE to get raw values (numbers instead of formatted strings)
-  const range = `2026!A${rowNumber}:Y${rowNumber}`;
+  const range = `${year}!A${rowNumber}:Y${rowNumber}`;
 
   const response = await fetch(
     `${SHEETS_API_BASE}/${sheetId}/values/${encodeURIComponent(range)}?valueRenderOption=UNFORMATTED_VALUE`,
@@ -245,9 +244,10 @@ export const updateSheetRow = async (
   accessToken: string,
   sheetId: string,
   rowNumber: number,
-  rowData: NewRowData
+  rowData: NewRowData,
+  year: string = '2026'
 ): Promise<UpdateResult> => {
-  const range = `2026!A${rowNumber}:AB${rowNumber}`;
+  const range = `${year}!A${rowNumber}:AB${rowNumber}`;
 
   // Build row array with values and formulas (same structure as append)
   const rowValues = [
@@ -281,8 +281,7 @@ export const updateSheetRow = async (
     `=IF(Z${rowNumber}="","",Z${rowNumber}*9500)`,  // AB
   ];
 
-  // First, get existing DR and CBM image values to preserve them
-  const existingRange = `2026!D${rowNumber}:R${rowNumber}`;
+  const existingRange = `${year}!D${rowNumber}:R${rowNumber}`;
   const existingResponse = await fetch(
     `${SHEETS_API_BASE}/${sheetId}/values/${encodeURIComponent(existingRange)}`,
     {

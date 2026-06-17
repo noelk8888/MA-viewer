@@ -1,6 +1,13 @@
 import Papa from 'papaparse';
 
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/export?format=csv&gid=311571294';
+const SHEET_BASE_ID = '1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM';
+
+export const YEAR_GID_MAP: Record<string, string> = {
+    '2026': '311571294',
+    '2025': '1839802311',
+    '2024': '1195155394',
+    '2023': '1749625856',
+};
 
 export interface SheetRow {
     // Column 1: Supplier Info
@@ -28,8 +35,11 @@ export interface SheetRow {
     originalIndex: number; // Actual 1-indexed row number in sheet
 }
 
-export const fetchSheetData = async (): Promise<{ rows: SheetRow[], rate: string, i1Value: string }> => {
+export const fetchSheetData = async (year: string = '2026'): Promise<{ rows: SheetRow[], rate: string, i1Value: string }> => {
     return new Promise((resolve, reject) => {
+        const gid = YEAR_GID_MAP[year] || YEAR_GID_MAP['2026'];
+        const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_BASE_ID}/export?format=csv&gid=${gid}`;
+        
         // Append timestamp to URL to prevent caching and ensure fresh rate
         const freshUrl = `${SHEET_CSV_URL}&t=${new Date().getTime()}`;
         Papa.parse(freshUrl, {

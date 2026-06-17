@@ -18,6 +18,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showAddRowModal, setShowAddRowModal] = useState(false);
+    const [selectedYear, setSelectedYear] = useState<string>('2026');
 
     // Get Today's Date formatted
     const today = new Date().toLocaleDateString('en-US', {
@@ -29,7 +30,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
         setLoading(true);
         setError(null);
         try {
-            const result = await fetchSheetData();
+            const result = await fetchSheetData(selectedYear);
             setData(result.rows);
             setRate(result.rate);
             setI1Value(result.i1Value);
@@ -43,7 +44,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
 
     useEffect(() => {
         loadData();
-    }, []);
+    }, [selectedYear]);
 
     return (
         <div className="w-full max-w-2xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100 my-4 sm:my-8">
@@ -91,8 +92,25 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                 </button>
             </div>
 
+            {/* Year Tabs */}
+            <div className="flex border-b border-gray-200 bg-white sticky top-[60px] z-10">
+                {['2026', '2025', '2024', '2023'].map(year => (
+                    <button
+                        key={year}
+                        onClick={() => setSelectedYear(year)}
+                        className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                            selectedYear === year 
+                                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' 
+                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                        {year}
+                    </button>
+                ))}
+            </div>
+
             {/* Table Headers */}
-            <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[60px] z-10">
+            <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[101px] z-10">
                 <div className="p-3 border-r border-gray-200/50">Supplier</div>
                 <div className="p-3 text-center border-r border-gray-200/50">DR</div>
                 <div className="p-3 text-right border-r border-gray-200/50">RMB / PHP</div>
@@ -118,7 +136,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                     </div>
                 ) : (
                     data.map((row, index) => (
-                        <RowItem key={index} row={row} onImageUpdated={loadData} />
+                        <RowItem key={index} row={row} onImageUpdated={loadData} selectedYear={selectedYear} />
                     ))
                 )}
             </div>
@@ -128,6 +146,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                 isOpen={showAddRowModal}
                 onClose={() => setShowAddRowModal(false)}
                 onRowAdded={loadData}
+                selectedYear={selectedYear}
             />
         </div>
     );

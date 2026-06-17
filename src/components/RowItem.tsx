@@ -9,9 +9,10 @@ import type { ImageType } from '../services/googleSheetsService';
 interface RowItemProps {
     row: SheetRow;
     onImageUpdated?: () => void;
+    selectedYear: string;
 }
 
-const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated }) => {
+const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear }) => {
     const [activeModal, setActiveModal] = useState<'DR' | 'CBM' | null>(null);
     const [uploadModalType, setUploadModalType] = useState<ImageType | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -179,6 +180,7 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated }) => {
                         onImageUpdated?.();
                         setUploadModalType(null);
                     }}
+                    selectedYear={selectedYear}
                 />
             )}
 
@@ -188,6 +190,7 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated }) => {
                 onClose={() => setShowEditModal(false)}
                 onRowUpdated={() => onImageUpdated?.()}
                 rowNumber={row.originalIndex}
+                selectedYear={selectedYear}
             />
         </>
     );
