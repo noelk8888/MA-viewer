@@ -1,8 +1,10 @@
 import { RefreshCw, Plus, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { fetchSheetData, type SheetRow } from '../services/sheetService';
+import { generateSOA } from '../services/googleSheetsService';
 import RowItem from './RowItem';
 import AddRowModal from './AddRowModal';
+import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=311571294#gid=311571294';
 const RATES_FOLDER_URL = 'https://drive.google.com/drive/folders/1MsJRVArZGMTmqcOuCr4pvhY1-aE_HPqT?usp=drive_link';
@@ -21,6 +23,10 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     const [selectedYear, setSelectedYear] = useState<string>('2026');
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedRowIndices, setSelectedRowIndices] = useState<number[]>([]);
+    const [selectionType, setSelectionType] = useState<'DR' | 'CBM' | null>(null);
+    const [isProcessingSoa, setIsProcessingSoa] = useState(false);
+
+    const { accessToken, login, isAuthenticated } = useGoogleAuth();
 
     // Get Today's Date formatted
     const today = new Date().toLocaleDateString('en-US', {
@@ -118,7 +124,10 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                     className="p-3 text-center border-r border-gray-200/50 cursor-pointer hover:bg-gray-200 transition-colors select-none"
                     onClick={() => {
                         setIsSelectionMode(!isSelectionMode);
-                        if (isSelectionMode) setSelectedRowIndices([]);
+                        if (isSelectionMode) {
+                            setSelectedRowIndices([]);
+                            setSelectionType(null);
+                        }
                     }}
                     title="Toggle DR Selection Mode"
                 >
@@ -154,12 +163,28 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                             selectedYear={selectedYear} 
                             isSelectionMode={isSelectionMode}
                             isSelected={selectedRowIndices.includes(row.originalIndex)}
-                            onToggleSelect={(rowIndex) => {
-                                setSelectedRowIndices(prev => 
-                                    prev.includes(rowIndex) 
+                            selectionType={selectionType}
+                            selectedCount={selectedRowIndices.length}
+                            onToggleSelect={(rowIndex, type) => {
+                                setSelectedRowIndices(prev => {
+                                    const isSelected = prev.includes(rowIndex);
+                                    
+                                    if (!isSelected && prev.length >= 3) {
+                                        alert("You can only select up to 3 items for the SOA.");
+                                        return prev;
+                                    }
+
+                                    const newSelection = isSelected 
                                         ? prev.filter(i => i !== rowIndex)
-                                        : [...prev, rowIndex]
-                                );
+                                        : [...prev, rowIndex];
+                                    
+                                    if (newSelection.length === 0) {
+                                        setSelectionType(null);
+                                    } else {
+                                        setSelectionType(type);
+                                    }
+                                    return newSelection;
+                                });
                             }}
                         />
                     ))
@@ -182,22 +207,57 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                     </span>
                     <div className="w-px h-6 bg-gray-200"></div>
                     <button
-                        onClick={() => {
-                            // To be implemented by user's next request
-                            alert(`Extracting data for rows: ${selectedRowIndices.join(', ')}\n(ISSUE SOA feature to be fully implemented)`);
+                        onClick={async () => {
+                            if (!isAuthenticated || !accessToken) {
+                                alert("Please sign in with Google to issue an SOA.");
+                                login();
+                                return;
+                            }
+                            
+                            const sheetId = import.meta.env.VITE_GOOGLE_SHEET_ID;
+                            if (!sheetId) {
+                                alert("Sheet ID not configured.");
+                                return;
+                            }
+
+                            if (!selectionType) return;
+
+                            try {
+                                setIsProcessingSoa(true);
+                                // Find full row data for selected indices
+                                const selectedRowsData = selectedRowIndices.map(id => 
+                                    data.find(r => r.originalIndex === id)
+                                ).filter(Boolean);
+                                
+                                await generateSOA(accessToken, sheetId, selectedRowsData, selectionType);
+                                
+                                // Open SOA tab
+                                window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=1049592506', '_blank');
+                                
+                                // Clear selection after success
+                                setIsSelectionMode(false);
+                                setSelectedRowIndices([]);
+                                setSelectionType(null);
+                            } catch (err: any) {
+                                alert("Error generating SOA: " + err.message);
+                            } finally {
+                                setIsProcessingSoa(false);
+                            }
                         }}
-                        disabled={selectedRowIndices.length === 0}
+                        disabled={selectedRowIndices.length === 0 || isProcessingSoa}
                         className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                     >
-                        ISSUE SOA
+                        {isProcessingSoa ? 'PROCESSING...' : 'ISSUE SOA'}
                     </button>
                     <button
                         onClick={() => {
                             setIsSelectionMode(false);
                             setSelectedRowIndices([]);
+                            setSelectionType(null);
                         }}
                         className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors ml-2"
                         title="Cancel Selection Mode"
+                        disabled={isProcessingSoa}
                     >
                         <X size={16} />
                     </button>

@@ -12,10 +12,12 @@ interface RowItemProps {
     selectedYear: string;
     isSelectionMode?: boolean;
     isSelected?: boolean;
-    onToggleSelect?: (rowIndex: number) => void;
+    selectionType?: 'DR' | 'CBM' | null;
+    selectedCount?: number;
+    onToggleSelect?: (rowIndex: number, type: 'DR' | 'CBM') => void;
 }
 
-const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, isSelectionMode, isSelected, onToggleSelect }) => {
+const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, isSelectionMode, isSelected, selectionType, selectedCount = 0, onToggleSelect }) => {
     const [activeModal, setActiveModal] = useState<'DR' | 'CBM' | null>(null);
     const [uploadModalType, setUploadModalType] = useState<ImageType | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -65,9 +67,10 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, is
                     {isSelectionMode && (
                         <input
                             type="checkbox"
-                            checked={isSelected}
-                            onChange={() => onToggleSelect?.(row.originalIndex)}
-                            className="w-5 h-5 text-blue-600 rounded-full border-gray-300 focus:ring-blue-500 cursor-pointer transition-all"
+                            checked={isSelected && selectionType === 'DR'}
+                            onChange={() => onToggleSelect?.(row.originalIndex, 'DR')}
+                            disabled={selectionType === 'CBM' || (!isSelected && selectedCount >= 3)}
+                            className="w-5 h-5 text-blue-600 rounded-full border-gray-300 focus:ring-blue-500 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                     )}
                     <button
@@ -130,9 +133,10 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, is
                     {isSelectionMode && (
                         <input
                             type="checkbox"
-                            checked={isSelected}
-                            onChange={() => onToggleSelect?.(row.originalIndex)}
-                            className="w-5 h-5 text-blue-600 rounded-full border-gray-300 focus:ring-blue-500 cursor-pointer transition-all"
+                            checked={isSelected && selectionType === 'CBM'}
+                            onChange={() => onToggleSelect?.(row.originalIndex, 'CBM')}
+                            disabled={selectionType === 'DR' || (!isSelected && selectedCount >= 3)}
+                            className="w-5 h-5 text-blue-600 rounded-full border-gray-300 focus:ring-blue-500 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                     )}
                     <button

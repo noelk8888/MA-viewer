@@ -439,3 +439,93 @@ export const fetchK2Value = async (
   }
 };
 
+export const getSheetNameByGid = async (
+  accessToken: string,
+  spreadsheetId: string,
+  gid: string
+): Promise<string> => {
+  const response = await fetch(
+    `${SHEETS_API_BASE}/${spreadsheetId}?fields=sheets(properties(sheetId,title))`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch sheet properties');
+  }
+
+  const data = await response.json();
+  const sheet = data.sheets?.find((s: any) => s.properties?.sheetId === Number(gid));
+  return sheet?.properties?.title || 'Sheet1';
+};
+
+export const generateSOA = async (
+  accessToken: string,
+  spreadsheetId: string,
+  selectedRowsData: any[],
+  selectionType: 'DR' | 'CBM'
+): Promise<void> => {
+  const soaGid = '1049592506';
+  const sheetName = await getSheetNameByGid(accessToken, spreadsheetId, soaGid);
+
+  const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  
+  let b7Value = '';
+  if (selectionType === 'DR') {
+    const hasInterest = selectedRowsData.length > 0 && selectedRowsData[0].Description?.toLowerCase().includes('interest');
+    b7Value = hasInterest ? 'INTEREST' : 'ITEMS';
+  } else if (selectionType === 'CBM') {
+    b7Value = 'CBM';
+  }
+
+  const rowsData = [];
+  for (let i = 0; i < 3; i++) {
+    if (i < selectedRowsData.length) {
+      const row = selectedRowsData[i];
+      let c8Value = '';
+      if (selectionType === 'DR') {
+        c8Value = (row.Remarks || '').substring(0, 5);
+      } else {
+        const remarks = row.Remarks || '';
+        c8Value = remarks.length >= 5 ? remarks.substring(0, 2) + remarks.slice(-3) : remarks;
+      }
+
+      const d8Value = selectionType === 'DR' ? (row.PHP || '') : (row.CBMPHP || '');
+
+      rowsData.push([row.Color || '', row.Description || '', c8Value, d8Value]);
+    } else {
+      rowsData.push(['', '', '', '']);
+    }
+  }
+
+  const data = [
+    { range: `'${sheetName}'!D2`, values: [[dateStr]] },
+    { range: `'${sheetName}'!B7`, values: [[b7Value]] },
+    { range: `'${sheetName}'!A8:D10`, values: rowsData },
+    { range: `'${sheetName}'!D11`, values: [['=SUM(D8:D10)']] }
+  ];
+
+  const response = await fetch(
+    `${SHEETS_API_BASE}/${spreadsheetId}/values:batchUpdate`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        valueInputOption: 'USER_ENTERED',
+        data,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error?.message || 'Failed to update SOA sheet');
+  }
+};
+
