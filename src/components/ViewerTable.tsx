@@ -1,4 +1,4 @@
-import { RefreshCw, Plus } from 'lucide-react';
+import { RefreshCw, Plus, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { fetchSheetData, type SheetRow } from '../services/sheetService';
 import RowItem from './RowItem';
@@ -19,6 +19,8 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     const [error, setError] = useState<string | null>(null);
     const [showAddRowModal, setShowAddRowModal] = useState(false);
     const [selectedYear, setSelectedYear] = useState<string>('2026');
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [selectedRowIndices, setSelectedRowIndices] = useState<number[]>([]);
 
     // Get Today's Date formatted
     const today = new Date().toLocaleDateString('en-US', {
@@ -112,7 +114,16 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
             {/* Table Headers */}
             <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[101px] z-10">
                 <div className="p-3 border-r border-gray-200/50">Supplier</div>
-                <div className="p-3 text-center border-r border-gray-200/50">DR</div>
+                <div 
+                    className="p-3 text-center border-r border-gray-200/50 cursor-pointer hover:bg-gray-200 transition-colors select-none"
+                    onClick={() => {
+                        setIsSelectionMode(!isSelectionMode);
+                        if (isSelectionMode) setSelectedRowIndices([]);
+                    }}
+                    title="Toggle DR Selection Mode"
+                >
+                    DR {isSelectionMode && <span className="text-[10px] ml-1 text-blue-600 font-bold">(Cancel)</span>}
+                </div>
                 <div className="p-3 text-right border-r border-gray-200/50">RMB / PHP</div>
                 <div className="p-3 text-center">CBM</div>
             </div>
@@ -136,7 +147,21 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                     </div>
                 ) : (
                     data.map((row, index) => (
-                        <RowItem key={index} row={row} onImageUpdated={loadData} selectedYear={selectedYear} />
+                        <RowItem 
+                            key={index} 
+                            row={row} 
+                            onImageUpdated={loadData} 
+                            selectedYear={selectedYear} 
+                            isSelectionMode={isSelectionMode}
+                            isSelected={selectedRowIndices.includes(row.originalIndex)}
+                            onToggleSelect={(rowIndex) => {
+                                setSelectedRowIndices(prev => 
+                                    prev.includes(rowIndex) 
+                                        ? prev.filter(i => i !== rowIndex)
+                                        : [...prev, rowIndex]
+                                );
+                            }}
+                        />
                     ))
                 )}
             </div>
@@ -148,6 +173,36 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                 onRowAdded={loadData}
                 selectedYear={selectedYear}
             />
+
+            {/* Floating Action Bar */}
+            {isSelectionMode && (
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 px-6 py-3 flex items-center gap-4 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
+                    <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                        {selectedRowIndices.length} selected
+                    </span>
+                    <div className="w-px h-6 bg-gray-200"></div>
+                    <button
+                        onClick={() => {
+                            // To be implemented by user's next request
+                            alert(`Extracting data for rows: ${selectedRowIndices.join(', ')}\n(ISSUE SOA feature to be fully implemented)`);
+                        }}
+                        disabled={selectedRowIndices.length === 0}
+                        className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                        ISSUE SOA
+                    </button>
+                    <button
+                        onClick={() => {
+                            setIsSelectionMode(false);
+                            setSelectedRowIndices([]);
+                        }}
+                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors ml-2"
+                        title="Cancel Selection Mode"
+                    >
+                        <X size={16} />
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

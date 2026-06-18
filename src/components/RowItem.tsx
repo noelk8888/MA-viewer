@@ -10,9 +10,12 @@ interface RowItemProps {
     row: SheetRow;
     onImageUpdated?: () => void;
     selectedYear: string;
+    isSelectionMode?: boolean;
+    isSelected?: boolean;
+    onToggleSelect?: (rowIndex: number) => void;
 }
 
-const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear }) => {
+const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, isSelectionMode, isSelected, onToggleSelect }) => {
     const [activeModal, setActiveModal] = useState<'DR' | 'CBM' | null>(null);
     const [uploadModalType, setUploadModalType] = useState<ImageType | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -58,7 +61,15 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear }) 
                 </div>
 
                 {/* COL 2: DR Icon */}
-                <div className="p-2 flex items-center justify-center border-r border-gray-100/50">
+                <div className="p-2 flex items-center justify-center border-r border-gray-100/50 gap-3">
+                    {isSelectionMode && (
+                        <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => onToggleSelect?.(row.originalIndex)}
+                            className="w-5 h-5 text-blue-600 rounded-full border-gray-300 focus:ring-blue-500 cursor-pointer transition-all"
+                        />
+                    )}
                     <button
                         onClick={() => setActiveModal('DR')}
                         className="relative flex items-center justify-center transition-transform active:scale-95 hover:scale-105"
@@ -115,7 +126,15 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear }) 
                 </div>
 
                 {/* COL 4: CBM Icon */}
-                <div className="p-2 flex items-center justify-center">
+                <div className="p-2 flex items-center justify-center gap-3">
+                    {isSelectionMode && (
+                        <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => onToggleSelect?.(row.originalIndex)}
+                            className="w-5 h-5 text-blue-600 rounded-full border-gray-300 focus:ring-blue-500 cursor-pointer transition-all"
+                        />
+                    )}
                     <button
                         onClick={() => setActiveModal('CBM')}
                         className="relative flex items-center justify-center transition-transform active:scale-95 hover:scale-105"
