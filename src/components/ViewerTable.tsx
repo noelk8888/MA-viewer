@@ -55,9 +55,9 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     }, [selectedYear]);
 
     return (
-        <div className="w-full max-w-2xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100 my-4 sm:my-8">
+        <div className="w-full max-w-2xl mx-auto bg-white shadow-xl rounded-2xl border border-gray-100 my-4 sm:my-8 relative">
             {/* Header Bar */}
-            <div className="p-4 bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-10 backdrop-blur-md bg-white/80">
+            <div className="p-4 bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-20 backdrop-blur-md bg-white/80 rounded-t-2xl shadow-sm">
                 <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-3">
                     <a
                         href={SHEET_URL}
@@ -101,7 +101,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
             </div>
 
             {/* Year Tabs */}
-            <div className="flex border-b border-gray-200 bg-white sticky top-[60px] z-10">
+            <div className="flex border-b border-gray-200 bg-white sticky top-[60px] z-20 shadow-sm">
                 {['2026', '2025', '2024', '2023'].map(year => (
                     <button
                         key={year}
@@ -118,7 +118,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
             </div>
 
             {/* Table Headers */}
-            <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[101px] z-10">
+            <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[97px] z-20 shadow-sm">
                 <div className="p-3 border-r border-gray-200/50">Supplier</div>
                 <div 
                     className="p-3 text-center border-r border-gray-200/50 cursor-pointer hover:bg-gray-200 transition-colors select-none"
@@ -138,7 +138,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
             </div>
 
             {/* Data List */}
-            <div className="divide-y divide-gray-50 min-h-[300px]">
+            <div className="divide-y divide-gray-50 min-h-[300px] rounded-b-2xl overflow-hidden bg-white">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                         <RefreshCw size={32} className="animate-spin mb-3 opacity-50" />
