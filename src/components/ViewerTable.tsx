@@ -224,7 +224,6 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
 
                             try {
                                 setIsProcessingSoa(true);
-                                // Find full row data for selected indices
                                 const selectedRowsData = selectedRowIndices.map(id => 
                                     data.find(r => r.originalIndex === id)
                                 ).filter(Boolean);
@@ -234,7 +233,6 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                                 // Open SOA tab
                                 window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=1049592506', '_blank');
                                 
-                                // Clear selection after success
                                 setIsSelectionMode(false);
                                 setSelectedRowIndices([]);
                                 setSelectionType(null);
@@ -248,6 +246,20 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                         className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                     >
                         {isProcessingSoa ? 'PROCESSING...' : 'ISSUE SOA'}
+                    </button>
+                    <button
+                        onClick={async () => {
+                            // Open PDF export for printing (A1:D35)
+                            window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/export?format=pdf&gid=1049592506&range=A1:D35', '_blank');
+                            
+                            setIsSelectionMode(false);
+                            setSelectedRowIndices([]);
+                            setSelectionType(null);
+                        }}
+                        disabled={selectedRowIndices.length === 0 || isProcessingSoa}
+                        className="px-4 py-1.5 bg-gray-800 text-white text-sm font-medium rounded-full hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                        PRINT
                     </button>
                     <button
                         onClick={() => {
