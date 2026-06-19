@@ -454,7 +454,11 @@ export const getSheetNameByGid = async (
   );
 
   if (!response.ok) {
-    throw new Error('Failed to fetch sheet properties');
+    if (response.status === 401) {
+      throw new Error('Your Google session has expired. Please refresh the page or sign out and sign in again.');
+    }
+    const errObj = await response.json().catch(() => ({}));
+    throw new Error(`Failed to fetch sheet properties: ${response.status} ${errObj.error?.message || ''}`);
   }
 
   const data = await response.json();

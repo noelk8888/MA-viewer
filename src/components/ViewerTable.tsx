@@ -26,7 +26,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     const [selectionType, setSelectionType] = useState<'DR' | 'CBM' | null>(null);
     const [isProcessingSoa, setIsProcessingSoa] = useState(false);
 
-    const { accessToken, login, isAuthenticated } = useGoogleAuth();
+    const { accessToken, login, logout, isAuthenticated } = useGoogleAuth();
 
     // Get Today's Date formatted
     const today = new Date().toLocaleDateString('en-US', {
@@ -238,6 +238,10 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                                 setSelectionType(null);
                             } catch (err: any) {
                                 alert("Error generating SOA: " + err.message);
+                                if (err.message.includes('expired')) {
+                                    logout();
+                                    login();
+                                }
                             } finally {
                                 setIsProcessingSoa(false);
                             }
@@ -279,6 +283,10 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                                 setSelectionType(null);
                             } catch (err: any) {
                                 alert("Error printing SOA: " + err.message);
+                                if (err.message.includes('expired')) {
+                                    logout();
+                                    login();
+                                }
                             } finally {
                                 setIsProcessingSoa(false);
                             }
