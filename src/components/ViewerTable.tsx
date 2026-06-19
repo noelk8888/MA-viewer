@@ -249,12 +249,39 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                     </button>
                     <button
                         onClick={async () => {
-                            // Open PDF export for printing (A1:D35) fitted to A4 without gridlines
-                            window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/export?format=pdf&gid=1049592506&range=A1:D35&size=A4&portrait=true&fitw=true&gridlines=false', '_blank');
+                            if (!isAuthenticated || !accessToken) {
+                                alert("Please sign in with Google to print the SOA.");
+                                login();
+                                return;
+                            }
                             
-                            setIsSelectionMode(false);
-                            setSelectedRowIndices([]);
-                            setSelectionType(null);
+                            const sheetId = import.meta.env.VITE_GOOGLE_SHEET_ID;
+                            if (!sheetId) {
+                                alert("Sheet ID not configured.");
+                                return;
+                            }
+
+                            if (!selectionType) return;
+
+                            try {
+                                setIsProcessingSoa(true);
+                                const selectedRowsData = selectedRowIndices.map(id => 
+                                    data.find(r => r.originalIndex === id)
+                                ).filter(Boolean);
+                                
+                                await generateSOA(accessToken, sheetId, selectedRowsData, selectionType);
+                                
+                                // Open PDF export for printing (A1:D35) fitted to A4 without gridlines
+                                window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/export?format=pdf&gid=1049592506&range=A1:D35&size=A4&portrait=true&fitw=true&gridlines=false', '_blank');
+                                
+                                setIsSelectionMode(false);
+                                setSelectedRowIndices([]);
+                                setSelectionType(null);
+                            } catch (err: any) {
+                                alert("Error printing SOA: " + err.message);
+                            } finally {
+                                setIsProcessingSoa(false);
+                            }
                         }}
                         disabled={selectedRowIndices.length === 0 || isProcessingSoa}
                         className="px-4 py-1.5 bg-gray-800 text-white text-sm font-medium rounded-full hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
