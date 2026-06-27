@@ -221,53 +221,53 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                         {selectedRowIndices.length} selected
                     </span>
                     <div className="w-px h-6 bg-gray-200"></div>
-                    <button
-                        onClick={async () => {
-                            if (!isAuthenticated || !accessToken) {
-                                alert("Please sign in with Google to issue an SOA.");
-                                login();
-                                return;
-                            }
-                            
-                            const sheetId = import.meta.env.VITE_GOOGLE_SHEET_ID;
-                            if (!sheetId) {
-                                alert("Sheet ID not configured.");
-                                return;
-                            }
-
-                            if (selectionType !== 'DR' && selectionType !== 'CBM') return;
-
-                            try {
-                                setIsProcessingSoa(true);
-                                const selectedRowsData = selectedRowIndices.map(id => 
-                                    data.find(r => r.originalIndex === id)
-                                ).filter(Boolean);
-                                
-                                await generateSOA(accessToken, sheetId, selectedRowsData, selectionType);
-                                
-                                // Open SOA tab
-                                window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=1049592506', '_blank');
-                                
-                                setSelectionModeType(null);
-                                setSelectedRowIndices([]);
-                                setSelectionType(null);
-                            } catch (err: any) {
-                                alert("Error generating SOA: " + err.message);
-                                if (err.message.includes('expired')) {
-                                    logout();
-                                    login();
-                                }
-                            } finally {
-                                setIsProcessingSoa(false);
-                            }
-                        }}
-                        disabled={selectedRowIndices.length === 0 || isProcessingSoa}
-                        className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                    >
-                        {isProcessingSoa ? 'PROCESSING...' : 'ISSUE SOA'}
-                    </button>
                     {selectionModeType === 'DR_CBM' ? (
                         <>
+                            <button
+                                onClick={async () => {
+                                    if (!isAuthenticated || !accessToken) {
+                                        alert("Please sign in with Google to issue an SOA.");
+                                        login();
+                                        return;
+                                    }
+                                    
+                                    const sheetId = import.meta.env.VITE_GOOGLE_SHEET_ID;
+                                    if (!sheetId) {
+                                        alert("Sheet ID not configured.");
+                                        return;
+                                    }
+
+                                    if (selectionType !== 'DR' && selectionType !== 'CBM') return;
+
+                                    try {
+                                        setIsProcessingSoa(true);
+                                        const selectedRowsData = selectedRowIndices.map(id => 
+                                            data.find(r => r.originalIndex === id)
+                                        ).filter(Boolean);
+                                        
+                                        await generateSOA(accessToken, sheetId, selectedRowsData, selectionType);
+                                        
+                                        // Open SOA tab
+                                        window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=1049592506', '_blank');
+                                        
+                                        setSelectionModeType(null);
+                                        setSelectedRowIndices([]);
+                                        setSelectionType(null);
+                                    } catch (err: any) {
+                                        alert("Error generating SOA: " + err.message);
+                                        if (err.message.includes('expired')) {
+                                            logout();
+                                            login();
+                                        }
+                                    } finally {
+                                        setIsProcessingSoa(false);
+                                    }
+                                }}
+                                disabled={selectedRowIndices.length === 0 || isProcessingSoa}
+                                className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                            >
+                                {isProcessingSoa ? 'PROCESSING...' : 'ISSUE SOA'}
+                            </button>
                             <button
                                 onClick={async () => {
                                     if (!isAuthenticated || !accessToken) {
