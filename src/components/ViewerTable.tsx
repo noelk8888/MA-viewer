@@ -235,7 +235,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                                 return;
                             }
 
-                            if (!selectionType) return;
+                            if (selectionType !== 'DR' && selectionType !== 'CBM') return;
 
                             try {
                                 setIsProcessingSoa(true);
@@ -282,7 +282,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                                         return;
                                     }
 
-                                    if (!selectionType) return;
+                                    if (selectionType !== 'DR' && selectionType !== 'CBM') return;
 
                                     try {
                                         setIsProcessingSoa(true);
