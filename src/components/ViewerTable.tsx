@@ -179,6 +179,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                             selectedYear={selectedYear} 
                             selectionModeType={selectionModeType}
                             isSelected={selectedRowIndices.includes(row.originalIndex)}
+                            selectionType={selectionType}
                             selectedCount={selectedRowIndices.length}
                             onToggleSelect={(rowIndex, type) => {
                                 setSelectedRowIndices(prev => {
