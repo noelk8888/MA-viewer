@@ -23,7 +23,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     const [selectedYear, setSelectedYear] = useState<string>('2026');
     const [selectionModeType, setSelectionModeType] = useState<'DR_CBM' | 'SUPPLIER' | null>(null);
     const [selectedRowIndices, setSelectedRowIndices] = useState<number[]>([]);
-    const [selectionType, setSelectionType] = useState<'DR' | 'CBM' | null>(null);
+    const [selectionType, setSelectionType] = useState<'DR' | 'CBM' | 'SUPPLIER' | null>(null);
     const [isProcessingSoa, setIsProcessingSoa] = useState(false);
 
     const { accessToken, login, logout, isAuthenticated } = useGoogleAuth();
@@ -179,7 +179,6 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                             selectedYear={selectedYear} 
                             selectionModeType={selectionModeType}
                             isSelected={selectedRowIndices.includes(row.originalIndex)}
-                            selectionType={selectionType}
                             selectedCount={selectedRowIndices.length}
                             onToggleSelect={(rowIndex, type) => {
                                 setSelectedRowIndices(prev => {

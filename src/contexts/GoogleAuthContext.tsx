@@ -73,6 +73,7 @@ const ConfiguredAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children })
     scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
     flow: 'implicit',
     // Using redirect mode is much more reliable on mobile devices
+    // @ts-ignore - The types in this version don't include ux_mode for implicit flow but GIS supports it
     ux_mode: 'redirect',
     redirect_uri: window.location.origin + window.location.pathname,
   });

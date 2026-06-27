@@ -12,12 +12,11 @@ interface RowItemProps {
     selectedYear: string;
     selectionModeType?: 'DR_CBM' | 'SUPPLIER' | null;
     isSelected?: boolean;
-    selectionType?: 'DR' | 'CBM' | null;
     selectedCount?: number;
     onToggleSelect?: (rowIndex: number, type: 'DR' | 'CBM' | 'SUPPLIER') => void;
 }
 
-const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, selectionModeType, isSelected, selectionType, selectedCount = 0, onToggleSelect }) => {
+const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, selectionModeType, isSelected, selectedCount = 0, onToggleSelect }) => {
     const [activeModal, setActiveModal] = useState<'DR' | 'CBM' | null>(null);
     const [uploadModalType, setUploadModalType] = useState<ImageType | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
