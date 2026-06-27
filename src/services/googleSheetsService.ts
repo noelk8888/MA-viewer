@@ -590,7 +590,7 @@ export const generateBill = async (
       
       const colE = getCell(4);  // Amount CNY
       
-      const cbmUrl = getDirectImageUrl(rowData.CBMImage || '');
+      const cbmUrl = getDirectImageUrl(rowData.CBM || '');
       const colR = cbmUrl ? `=IMAGE("${cbmUrl}", 1)` : ''; // CBM Image formula
       
       const colS = getCell(18); // CBM Value
