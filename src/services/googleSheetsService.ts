@@ -564,8 +564,8 @@ export const generateBill = async (
   const valueRanges = rawDataResult.valueRanges || [];
 
   // 2. Prepare target data arrays
-  const rows8To10 = [];
-  const rows11To13 = [];
+  const rows10To12 = [];
+  const rows13To15 = [];
 
   for (let i = 0; i < 3; i++) {
     if (i < selectedRowsData.length) {
@@ -581,14 +581,14 @@ export const generateBill = async (
       const colS = getCell(18); // CBM Value
       const colV = getCell(21); // Date + 5
       
-      rows8To10.push([colB, colC, colD, colE]);
+      rows10To12.push([colB, colC, colD, colE]);
       
-      // Target E formula: =F11*G11, =F12*G12, =F13*G13
-      const targetRow = 11 + i;
-      rows11To13.push([colV, colC, colR, `=F${targetRow}*G${targetRow}`, colS]);
+      // Target E formula: =F13*G13, =F14*G14, =F15*G15
+      const targetRow = 13 + i;
+      rows13To15.push([colV, colC, colR, `=F${targetRow}*G${targetRow}`, colS]);
     } else {
-      rows8To10.push(['', '', '', '']);
-      rows11To13.push(['', '', '', '', '']);
+      rows10To12.push(['', '', '', '']);
+      rows13To15.push(['', '', '', '', '']);
     }
   }
 
@@ -597,8 +597,8 @@ export const generateBill = async (
   const targetSheetName = await getSheetNameByGid(accessToken, spreadsheetId, billGid);
 
   const data = [
-    { range: `'${targetSheetName}'!B8:E10`, values: rows8To10 },
-    { range: `'${targetSheetName}'!B11:F13`, values: rows11To13 }
+    { range: `'${targetSheetName}'!B10:E12`, values: rows10To12 },
+    { range: `'${targetSheetName}'!B13:F15`, values: rows13To15 }
   ];
 
   const updateResponse = await fetch(
