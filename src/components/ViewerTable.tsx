@@ -276,7 +276,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                                 await generateSOA(accessToken, sheetId, selectedRowsData, selectionType);
                                 
                                 // Open PDF export for printing (A1:D35) fitted to A4 without gridlines
-                                window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/export?format=pdf&gid=1049592506&range=A1:D35&size=A4&portrait=true&fitw=true&gridlines=false', '_blank');
+                                window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/export?format=pdf&gid=1049592506&range=A1:D35&size=A4&portrait=true&scale=4&gridlines=false', '_blank');
                                 
                                 setIsSelectionMode(false);
                                 setSelectedRowIndices([]);
