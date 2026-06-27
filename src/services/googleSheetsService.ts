@@ -567,17 +567,32 @@ export const generateBill = async (
   const rows10To12 = [];
   const rows13To15 = [];
 
+  const getDirectImageUrl = (url: string) => {
+    if (!url) return '';
+    const idMatch = url.match(/[?&]id=([^&]+)/) || url.match(/\/file\/d\/([^\/]+)/);
+    if (idMatch && idMatch[1]) {
+      return `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+    }
+    return url;
+  };
+
   for (let i = 0; i < 3; i++) {
     if (i < selectedRowsData.length) {
       const rawRow = valueRanges[i]?.values?.[0] || [];
+      const rowData = selectedRowsData[i];
       const getCell = (idx: number) => rawRow[idx] ? String(rawRow[idx]) : '';
       
       const colB = getCell(1);  // Date
       const colC = getCell(2);  // Supplier
-      const colD = getCell(3);  // DR Image
+      
+      const drUrl = getDirectImageUrl(rowData.DR || '');
+      const colD = drUrl ? `=IMAGE("${drUrl}", 1)` : ''; // DR Image formula
+      
       const colE = getCell(4);  // Amount CNY
       
-      const colR = getCell(17); // CBM Image
+      const cbmUrl = getDirectImageUrl(rowData.CBMImage || '');
+      const colR = cbmUrl ? `=IMAGE("${cbmUrl}", 1)` : ''; // CBM Image formula
+      
       const colS = getCell(18); // CBM Value
       const colV = getCell(21); // Date + 5
       
