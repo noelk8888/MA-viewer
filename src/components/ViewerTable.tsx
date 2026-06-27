@@ -335,8 +335,8 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                                         data.find(r => r.originalIndex === id)
                                     ).filter(Boolean);
                                     
-                                    // PUSH DATA (STUB) - Implement generateBill in googleSheetsService later
-                                    await generateBill(accessToken, sheetId, selectedRowsData);
+                                    // PUSH DATA - Implement generateBill in googleSheetsService
+                                    await generateBill(accessToken, sheetId, selectedRowsData, selectedYear);
                                     
                                     window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=837323267#gid=837323267', '_blank');
                                     

@@ -534,13 +534,91 @@ export const generateSOA = async (
 };
 
 export const generateBill = async (
-  _accessToken: string,
-  _spreadsheetId: string,
-  selectedRowsData: any[]
+  accessToken: string,
+  spreadsheetId: string,
+  selectedRowsData: any[],
+  year: string = '2026'
 ): Promise<void> => {
-  // STUB: This function will push selected rows data to the BILL sheet
-  // Implementation details will be provided by the user later
-  console.log("generateBill called with", selectedRowsData.length, "rows", _accessToken, _spreadsheetId);
-  return Promise.resolve();
+  if (selectedRowsData.length === 0) return;
+
+  // 1. Fetch raw data for the selected rows from the source sheet
+  const rangesQuery = selectedRowsData
+    .map(r => `ranges=${year}!A${r.originalIndex}:V${r.originalIndex}`)
+    .join('&');
+
+  const fetchResponse = await fetch(
+    `${SHEETS_API_BASE}/${spreadsheetId}/values:batchGet?${rangesQuery}&valueRenderOption=FORMATTED_VALUE`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (!fetchResponse.ok) {
+    const error = await fetchResponse.json();
+    throw new Error(error.error?.message || 'Failed to fetch raw row data for billing');
+  }
+
+  const rawDataResult = await fetchResponse.json();
+  const valueRanges = rawDataResult.valueRanges || [];
+
+  // 2. Prepare target data arrays
+  const rows8To10 = [];
+  const rows11To13 = [];
+
+  for (let i = 0; i < 3; i++) {
+    if (i < selectedRowsData.length) {
+      const rawRow = valueRanges[i]?.values?.[0] || [];
+      const getCell = (idx: number) => rawRow[idx] ? String(rawRow[idx]) : '';
+      
+      const colB = getCell(1);  // Date
+      const colC = getCell(2);  // Supplier
+      const colD = getCell(3);  // DR Image
+      const colE = getCell(4);  // Amount CNY
+      
+      const colR = getCell(17); // CBM Image
+      const colS = getCell(18); // CBM Value
+      const colV = getCell(21); // Date + 5
+      
+      rows8To10.push([colB, colC, colD, colE]);
+      
+      // Target E formula: =F11*G11, =F12*G12, =F13*G13
+      const targetRow = 11 + i;
+      rows11To13.push([colV, colC, colR, `=F${targetRow}*G${targetRow}`, colS]);
+    } else {
+      rows8To10.push(['', '', '', '']);
+      rows11To13.push(['', '', '', '', '']);
+    }
+  }
+
+  // 3. Update the target BILL sheet
+  const billGid = '837323267';
+  const targetSheetName = await getSheetNameByGid(accessToken, spreadsheetId, billGid);
+
+  const data = [
+    { range: `'${targetSheetName}'!B8:E10`, values: rows8To10 },
+    { range: `'${targetSheetName}'!B11:F13`, values: rows11To13 }
+  ];
+
+  const updateResponse = await fetch(
+    `${SHEETS_API_BASE}/${spreadsheetId}/values:batchUpdate`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        valueInputOption: 'USER_ENTERED',
+        data,
+      }),
+    }
+  );
+
+  if (!updateResponse.ok) {
+    const error = await updateResponse.json();
+    throw new Error(error.error?.message || 'Failed to push data to the BILL sheet');
+  }
 };
 
