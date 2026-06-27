@@ -1,7 +1,7 @@
 import { RefreshCw, Plus, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { fetchSheetData, type SheetRow } from '../services/sheetService';
-import { generateSOA } from '../services/googleSheetsService';
+import { generateSOA, generateBill } from '../services/googleSheetsService';
 import RowItem from './RowItem';
 import AddRowModal from './AddRowModal';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
@@ -21,7 +21,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     const [error, setError] = useState<string | null>(null);
     const [showAddRowModal, setShowAddRowModal] = useState(false);
     const [selectedYear, setSelectedYear] = useState<string>('2026');
-    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [selectionModeType, setSelectionModeType] = useState<'DR_CBM' | 'SUPPLIER' | null>(null);
     const [selectedRowIndices, setSelectedRowIndices] = useState<number[]>([]);
     const [selectionType, setSelectionType] = useState<'DR' | 'CBM' | null>(null);
     const [isProcessingSoa, setIsProcessingSoa] = useState(false);
@@ -119,19 +119,35 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
 
             {/* Table Headers */}
             <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[97px] z-20 shadow-sm">
-                <div className="p-3 border-r border-gray-200/50">Supplier</div>
+                <div 
+                    className="p-3 border-r border-gray-200/50 cursor-pointer hover:bg-gray-200 transition-colors select-none"
+                    onClick={() => {
+                        if (selectionModeType === 'SUPPLIER') {
+                            setSelectionModeType(null);
+                        } else {
+                            setSelectionModeType('SUPPLIER');
+                        }
+                        setSelectedRowIndices([]);
+                        setSelectionType(null);
+                    }}
+                    title="Toggle Supplier Selection Mode"
+                >
+                    Supplier {selectionModeType === 'SUPPLIER' && <span className="text-[10px] ml-1 text-blue-600 font-bold">(Cancel)</span>}
+                </div>
                 <div 
                     className="p-3 text-center border-r border-gray-200/50 cursor-pointer hover:bg-gray-200 transition-colors select-none"
                     onClick={() => {
-                        setIsSelectionMode(!isSelectionMode);
-                        if (isSelectionMode) {
-                            setSelectedRowIndices([]);
-                            setSelectionType(null);
+                        if (selectionModeType === 'DR_CBM') {
+                            setSelectionModeType(null);
+                        } else {
+                            setSelectionModeType('DR_CBM');
                         }
+                        setSelectedRowIndices([]);
+                        setSelectionType(null);
                     }}
                     title="Toggle DR Selection Mode"
                 >
-                    DR {isSelectionMode && <span className="text-[10px] ml-1 text-blue-600 font-bold">(Cancel)</span>}
+                    DR {selectionModeType === 'DR_CBM' && <span className="text-[10px] ml-1 text-blue-600 font-bold">(Cancel)</span>}
                 </div>
                 <div className="p-3 text-right border-r border-gray-200/50">RMB / PHP</div>
                 <div className="p-3 text-center">CBM</div>
@@ -161,7 +177,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                             row={row} 
                             onImageUpdated={loadData} 
                             selectedYear={selectedYear} 
-                            isSelectionMode={isSelectionMode}
+                            selectionModeType={selectionModeType}
                             isSelected={selectedRowIndices.includes(row.originalIndex)}
                             selectionType={selectionType}
                             selectedCount={selectedRowIndices.length}
@@ -200,7 +216,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
             />
 
             {/* Floating Action Bar */}
-            {isSelectionMode && (
+            {selectionModeType && (
                 <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 px-6 py-3 flex items-center gap-4 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
                     <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
                         {selectedRowIndices.length} selected
@@ -233,7 +249,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                                 // Open SOA tab
                                 window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=1049592506', '_blank');
                                 
-                                setIsSelectionMode(false);
+                                setSelectionModeType(null);
                                 setSelectedRowIndices([]);
                                 setSelectionType(null);
                             } catch (err: any) {
@@ -251,54 +267,98 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                     >
                         {isProcessingSoa ? 'PROCESSING...' : 'ISSUE SOA'}
                     </button>
-                    <button
-                        onClick={async () => {
-                            if (!isAuthenticated || !accessToken) {
-                                alert("Please sign in with Google to print the SOA.");
-                                login();
-                                return;
-                            }
-                            
-                            const sheetId = import.meta.env.VITE_GOOGLE_SHEET_ID;
-                            if (!sheetId) {
-                                alert("Sheet ID not configured.");
-                                return;
-                            }
+                    {selectionModeType === 'DR_CBM' ? (
+                        <>
+                            <button
+                                onClick={async () => {
+                                    if (!isAuthenticated || !accessToken) {
+                                        alert("Please sign in with Google to print the SOA.");
+                                        login();
+                                        return;
+                                    }
+                                    
+                                    const sheetId = import.meta.env.VITE_GOOGLE_SHEET_ID;
+                                    if (!sheetId) {
+                                        alert("Sheet ID not configured.");
+                                        return;
+                                    }
 
-                            if (!selectionType) return;
+                                    if (!selectionType) return;
 
-                            try {
-                                setIsProcessingSoa(true);
-                                const selectedRowsData = selectedRowIndices.map(id => 
-                                    data.find(r => r.originalIndex === id)
-                                ).filter(Boolean);
-                                
-                                await generateSOA(accessToken, sheetId, selectedRowsData, selectionType);
-                                
-                                // Open PDF export for printing (A1:D35) fitted to A4 without gridlines
-                                window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/export?format=pdf&gid=1049592506&range=A1:D35&size=A4&portrait=true&scale=4&gridlines=false', '_blank');
-                                
-                                setIsSelectionMode(false);
-                                setSelectedRowIndices([]);
-                                setSelectionType(null);
-                            } catch (err: any) {
-                                alert("Error printing SOA: " + err.message);
-                                if (err.message.includes('expired')) {
-                                    logout();
+                                    try {
+                                        setIsProcessingSoa(true);
+                                        const selectedRowsData = selectedRowIndices.map(id => 
+                                            data.find(r => r.originalIndex === id)
+                                        ).filter(Boolean);
+                                        
+                                        await generateSOA(accessToken, sheetId, selectedRowsData, selectionType);
+                                        
+                                        // Open PDF export for printing (A1:D35) fitted to A4 without gridlines
+                                        window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/export?format=pdf&gid=1049592506&range=A1:D35&size=A4&portrait=true&scale=4&gridlines=false', '_blank');
+                                        
+                                        setSelectionModeType(null);
+                                        setSelectedRowIndices([]);
+                                        setSelectionType(null);
+                                    } catch (err: any) {
+                                        alert("Error printing SOA: " + err.message);
+                                        if (err.message.includes('expired')) {
+                                            logout();
+                                            login();
+                                        }
+                                    } finally {
+                                        setIsProcessingSoa(false);
+                                    }
+                                }}
+                                disabled={selectedRowIndices.length === 0 || isProcessingSoa}
+                                className="px-4 py-1.5 bg-gray-800 text-white text-sm font-medium rounded-full hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                            >
+                                PRINT
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={async () => {
+                                if (!isAuthenticated || !accessToken) {
+                                    alert("Please sign in with Google to generate a bill.");
                                     login();
+                                    return;
                                 }
-                            } finally {
-                                setIsProcessingSoa(false);
-                            }
-                        }}
-                        disabled={selectedRowIndices.length === 0 || isProcessingSoa}
-                        className="px-4 py-1.5 bg-gray-800 text-white text-sm font-medium rounded-full hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                    >
-                        PRINT
-                    </button>
+                                
+                                const sheetId = import.meta.env.VITE_GOOGLE_SHEET_ID;
+                                if (!sheetId) {
+                                    alert("Sheet ID not configured.");
+                                    return;
+                                }
+
+                                try {
+                                    setIsProcessingSoa(true);
+                                    const selectedRowsData = selectedRowIndices.map(id => 
+                                        data.find(r => r.originalIndex === id)
+                                    ).filter(Boolean);
+                                    
+                                    // PUSH DATA (STUB) - Implement generateBill in googleSheetsService later
+                                    await generateBill(accessToken, sheetId, selectedRowsData);
+                                    
+                                    window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=837323267#gid=837323267', '_blank');
+                                    
+                                    setSelectionModeType(null);
+                                    setSelectedRowIndices([]);
+                                    setSelectionType(null);
+                                } catch (err: any) {
+                                    alert("Error generating bill: " + err.message);
+                                } finally {
+                                    setIsProcessingSoa(false);
+                                }
+                            }}
+                            disabled={selectedRowIndices.length === 0 || isProcessingSoa}
+                            className="px-4 py-1.5 bg-purple-600 text-white text-sm font-medium rounded-full hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                        >
+                            {isProcessingSoa ? 'PROCESSING...' : 'GENERATE BILL'}
+                        </button>
+                    )}
                     <button
                         onClick={() => {
-                            setIsSelectionMode(false);
+                            setSelectionModeType(null);
                             setSelectedRowIndices([]);
                             setSelectionType(null);
                         }}

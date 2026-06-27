@@ -533,3 +533,14 @@ export const generateSOA = async (
   }
 };
 
+export const generateBill = async (
+  accessToken: string,
+  spreadsheetId: string,
+  selectedRowsData: any[]
+): Promise<void> => {
+  // STUB: This function will push selected rows data to the BILL sheet
+  // Implementation details will be provided by the user later
+  console.log("generateBill called with", selectedRowsData.length, "rows");
+  return Promise.resolve();
+};
+

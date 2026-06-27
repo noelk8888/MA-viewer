@@ -10,14 +10,14 @@ interface RowItemProps {
     row: SheetRow;
     onImageUpdated?: () => void;
     selectedYear: string;
-    isSelectionMode?: boolean;
+    selectionModeType?: 'DR_CBM' | 'SUPPLIER' | null;
     isSelected?: boolean;
     selectionType?: 'DR' | 'CBM' | null;
     selectedCount?: number;
-    onToggleSelect?: (rowIndex: number, type: 'DR' | 'CBM') => void;
+    onToggleSelect?: (rowIndex: number, type: 'DR' | 'CBM' | 'SUPPLIER') => void;
 }
 
-const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, isSelectionMode, isSelected, selectionType, selectedCount = 0, onToggleSelect }) => {
+const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, selectionModeType, isSelected, selectionType, selectedCount = 0, onToggleSelect }) => {
     const [activeModal, setActiveModal] = useState<'DR' | 'CBM' | null>(null);
     const [uploadModalType, setUploadModalType] = useState<ImageType | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -31,13 +31,23 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, is
         <>
             <div className="grid grid-cols-4 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
                 {/* COL 1: Supplier Info */}
-                <div className="p-3 flex flex-col justify-center space-y-1 text-xs sm:text-sm border-r border-gray-100/50">
-                    <button
-                        onClick={() => setShowEditModal(true)}
-                        className="font-bold text-gray-900 truncate hover:underline cursor-pointer text-left"
-                        title={row.Supplier}
-                    >
-                        {row.Supplier || '-'}
+                <div className="p-3 flex flex-row items-center gap-2 border-r border-gray-100/50">
+                    {selectionModeType === 'SUPPLIER' && (
+                        <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => onToggleSelect?.(row.originalIndex, 'SUPPLIER')}
+                            disabled={!isSelected && selectedCount >= 3}
+                            className="w-5 h-5 text-purple-600 rounded border-gray-300 focus:ring-purple-500 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                        />
+                    )}
+                    <div className="flex flex-col justify-center space-y-1 text-xs sm:text-sm w-full">
+                        <button
+                            onClick={() => setShowEditModal(true)}
+                            className="font-bold text-gray-900 truncate hover:underline cursor-pointer text-left"
+                            title={row.Supplier}
+                        >
+                            {row.Supplier || '-'}
                     </button>
                     <div className="text-gray-500 font-medium font-mono text-[10px] sm:text-xs">
                         {row.Code} ({row.CnyToday})
@@ -60,16 +70,17 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, is
                             </span>
                         )}
                     </div>
+                    </div>
                 </div>
 
                 {/* COL 2: DR Icon */}
                 <div className="p-2 flex items-center justify-center border-r border-gray-100/50 gap-3">
-                    {isSelectionMode && (
+                    {selectionModeType === 'DR_CBM' && (
                         <input
                             type="checkbox"
-                            checked={isSelected && selectionType === 'DR'}
+                            checked={isSelected}
                             onChange={() => onToggleSelect?.(row.originalIndex, 'DR')}
-                            disabled={selectionType === 'CBM' || (!isSelected && selectedCount >= 3)}
+                            disabled={!isSelected && selectedCount >= 3}
                             className="w-5 h-5 text-blue-600 rounded-full border-gray-300 focus:ring-blue-500 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                     )}
@@ -130,12 +141,12 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, is
 
                 {/* COL 4: CBM Icon */}
                 <div className="p-2 flex items-center justify-center gap-3">
-                    {isSelectionMode && (
+                    {selectionModeType === 'DR_CBM' && (
                         <input
                             type="checkbox"
-                            checked={isSelected && selectionType === 'CBM'}
+                            checked={isSelected}
                             onChange={() => onToggleSelect?.(row.originalIndex, 'CBM')}
-                            disabled={selectionType === 'DR' || (!isSelected && selectedCount >= 3)}
+                            disabled={!isSelected && selectedCount >= 3}
                             className="w-5 h-5 text-blue-600 rounded-full border-gray-300 focus:ring-blue-500 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                     )}

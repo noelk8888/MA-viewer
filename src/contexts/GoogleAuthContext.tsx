@@ -36,11 +36,24 @@ const ConfiguredAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children })
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Restore session on mount
+  // Restore session on mount or parse redirect
   useEffect(() => {
-    const storedToken = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (storedToken) {
-      setAccessToken(storedToken);
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token=')) {
+      // Parse token from redirect
+      const params = new URLSearchParams(hash.substring(1).replace(/&/g, '&'));
+      const token = params.get('access_token');
+      if (token) {
+        setAccessToken(token);
+        localStorage.setItem(AUTH_STORAGE_KEY, token);
+        // Clean up the URL to remove the hash
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+      }
+    } else {
+      const storedToken = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (storedToken) {
+        setAccessToken(storedToken);
+      }
     }
     setIsInitializing(false);
   }, []);
@@ -59,26 +72,28 @@ const ConfiguredAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children })
     },
     scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
     flow: 'implicit',
+    // Using redirect mode is much more reliable on mobile devices
+    ux_mode: 'redirect',
+    redirect_uri: window.location.origin + window.location.pathname,
   });
 
   const handleLogin = useCallback(() => {
     setIsLoading(true);
     setError(null);
 
-    // Set a timeout to prevent indefinite loading (common on mobile)
+    // Give it a slightly longer timeout for mobile network latency
     const timeoutId = setTimeout(() => {
       setIsLoading(false);
       setError('Login timeout. Please try again. If the issue persists, try using a desktop browser.');
-    }, 30000); // 30 second timeout
+    }, 45000);
 
     try {
       login();
-      // Clear timeout if login succeeds quickly
-      return () => clearTimeout(timeoutId);
+      // Don't clear timeout immediately because redirect takes them away from the page
     } catch (err) {
       clearTimeout(timeoutId);
       setIsLoading(false);
-      setError('Failed to open login window. Please check your popup blocker settings.');
+      setError('Failed to open login. Please check your browser settings.');
     }
   }, [login]);
 
