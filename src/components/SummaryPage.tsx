@@ -89,13 +89,13 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
                   {item.label}
                 </div>
                 <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
-                  {item.j2n === 0 ? '0.00' : formatNumber(item.j2n)}
+                  {formatNumber(item.j2n)}
                 </div>
                 <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
-                  {item.jkb === 0 ? '0.00' : formatNumber(item.jkb)}
+                  {formatNumber(item.jkb)}
                 </div>
                 <div className="w-1/4 p-3 text-right text-gray-900">
-                  {item.nck === 0 ? '0.00' : formatNumber(item.nck)}
+                  {formatNumber(item.nck)}
                 </div>
               </div>
             ))}
@@ -107,13 +107,13 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
                   {data.dr.label}
                 </div>
                 <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
-                  {data.dr.j2n === 0 ? '0' : formatNumber(data.dr.j2n)}
+                  {formatNumber(data.dr.j2n)}
                 </div>
                 <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
-                  {data.dr.jkb === 0 ? '0' : formatNumber(data.dr.jkb)}
+                  {formatNumber(data.dr.jkb)}
                 </div>
                 <div className="w-1/4 p-3 text-right text-gray-900">
-                  {data.dr.nck === 0 ? '0' : formatNumber(data.dr.nck)}
+                  {formatNumber(data.dr.nck)}
                 </div>
               </div>
             )}
@@ -125,13 +125,13 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
                   {data.china.label}
                 </div>
                 <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
-                  {data.china.j2n === 0 ? '0' : formatNumber(data.china.j2n)}
+                  {formatNumber(data.china.j2n)}
                 </div>
                 <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
-                  {data.china.jkb === 0 ? '0' : formatNumber(data.china.jkb)}
+                  {formatNumber(data.china.jkb)}
                 </div>
                 <div className="w-1/4 p-3 text-right text-gray-900">
-                  {data.china.nck === 0 ? '0' : formatNumber(data.china.nck)}
+                  {formatNumber(data.china.nck)}
                 </div>
               </div>
             )}
