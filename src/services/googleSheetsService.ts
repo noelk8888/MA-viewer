@@ -328,14 +328,16 @@ export const updateSheetRow = async (
 
 export interface SummaryItem {
   label: string;
-  value: number;
+  j2n: number;
+  jkb: number;
+  nck: number;
 }
 
 export interface SummaryData {
   items: SummaryItem[];
-  delivered: number;
-  notYetDelivered: number;
-  total: number;
+  dr: SummaryItem;
+  china: SummaryItem;
+  total: SummaryItem;
   jkbValue: string;
 }
 
@@ -358,45 +360,73 @@ export const fetchSummaryData = async (
           try {
             const data = results.data as string[][];
             
-            const getCell = (row: number, col: 'B' | 'C' | 'R'): string => {
-              const r = data[row - 1]; // row 14 is index 13
+            const getCell = (row: number, col: 'B' | 'C' | 'M' | 'N' | 'O' | 'R' | 'S' | 'T' | 'U'): string => {
+              const r = data[row - 1]; 
               if (!r) return '';
               if (col === 'B') return r[1] || '';
               if (col === 'C') return r[2] || '';
+              if (col === 'M') return r[12] || '';
+              if (col === 'N') return r[13] || '';
+              if (col === 'O') return r[14] || '';
               if (col === 'R') return r[17] || '';
+              if (col === 'S') return r[18] || '';
+              if (col === 'T') return r[19] || '';
+              if (col === 'U') return r[20] || '';
               return '';
             };
+
+            const parseVal = (str: string) => parseFloat(str.replace(/,/g, '')) || 0;
 
             const currentMonthIndex = new Date().getMonth(); // 0-11
             const items: SummaryItem[] = [];
 
+            let totalJ2N = 0;
+            let totalJKB = 0;
+            let totalNCK = 0;
+
             for (let count = 0; count < 12; count++) {
               const i = (currentMonthIndex + count) % 12;
-              const row = 14 + (i * 8);
-              const valStr = getCell(row, 'B').replace(/,/g, '');
-              const label = getCell(row, 'C');
+              const startRow = 7 + (i * 8);
+              const endRow = 14 + (i * 8);
               
-              const numVal = parseFloat(valStr);
-              if (!isNaN(numVal) && numVal !== 0) {
-                items.push({
-                  label: label,
-                  value: numVal
-                });
+              let j2n = 0;
+              let jkb = 0;
+              let nck = 0;
+
+              for (let r = startRow; r <= endRow; r++) {
+                j2n += parseVal(getCell(r, 'M'));
+                jkb += parseVal(getCell(r, 'N'));
+                nck += parseVal(getCell(r, 'O'));
+              }
+              
+              const label = getCell(endRow, 'C') || ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][i];
+              
+              if (j2n !== 0 || jkb !== 0 || nck !== 0) {
+                items.push({ label, j2n, jkb, nck });
+                totalJ2N += j2n;
+                totalJKB += jkb;
+                totalNCK += nck;
               }
             }
 
-            const deliveredStr = getCell(106, 'B').replace(/,/g, '');
-            const deliveredVal = parseFloat(deliveredStr) || 0;
-            
-            const notYetStr = getCell(154, 'B').replace(/,/g, '');
-            const notYetDeliveredVal = parseFloat(notYetStr) || 0;
+            const drJ2N = parseVal(getCell(106, 'S'));
+            const drJKB = parseVal(getCell(106, 'T'));
+            const drNCK = parseVal(getCell(106, 'U'));
+            const dr: SummaryItem = { label: 'DR', j2n: drJ2N, jkb: drJKB, nck: drNCK };
+            totalJ2N += drJ2N; totalJKB += drJKB; totalNCK += drNCK;
 
-            const total = items.reduce((sum, item) => sum + item.value, 0) + deliveredVal + notYetDeliveredVal;
+            const chinaJ2N = parseVal(getCell(154, 'S'));
+            const chinaJKB = parseVal(getCell(154, 'T'));
+            const chinaNCK = parseVal(getCell(154, 'U'));
+            const china: SummaryItem = { label: 'CHINA', j2n: chinaJ2N, jkb: chinaJKB, nck: chinaNCK };
+            totalJ2N += chinaJ2N; totalJKB += chinaJKB; totalNCK += chinaNCK;
+
+            const total: SummaryItem = { label: 'TOTAL', j2n: totalJ2N, jkb: totalJKB, nck: totalNCK };
 
             const jkbValueRaw = getCell(3, 'R');
             const jkbValue = jkbValueRaw ? jkbValueRaw.split('\n')[0].trim() : '';
 
-            resolve({ items, delivered: deliveredVal, notYetDelivered: notYetDeliveredVal, total, jkbValue });
+            resolve({ items, dr, china, total, jkbValue });
           } catch (err: any) {
             reject(new Error('Parse logic error: ' + err.message));
           }

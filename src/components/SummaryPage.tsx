@@ -74,45 +74,81 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
           </div>
         ) : data ? (
           <div className="flex flex-col text-[15px]">
+            {/* Header Row */}
+            <div className="flex border-b border-gray-300 bg-gray-50 font-bold">
+              <div className="w-1/4 p-3 border-r border-gray-100"></div>
+              <div className="w-1/4 p-3 text-center border-r border-gray-100">J2N</div>
+              <div className="w-1/4 p-3 text-center border-r border-gray-100">JKB</div>
+              <div className="w-1/4 p-3 text-center">NCK</div>
+            </div>
+
+            {/* Monthly Rows */}
             {data.items.map((item, i) => (
               <div key={i} className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <div className="w-1/2 p-3 text-gray-900 uppercase border-r border-gray-100">
+                <div className="w-1/4 p-3 text-gray-900 uppercase border-r border-gray-100 font-medium">
                   {item.label}
                 </div>
-                <div className="w-1/2 p-3 text-right text-gray-900">
-                  {formatNumber(item.value)}
+                <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
+                  {item.j2n === 0 ? '0.00' : formatNumber(item.j2n)}
+                </div>
+                <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
+                  {item.jkb === 0 ? '0.00' : formatNumber(item.jkb)}
+                </div>
+                <div className="w-1/4 p-3 text-right text-gray-900">
+                  {item.nck === 0 ? '0.00' : formatNumber(item.nck)}
                 </div>
               </div>
             ))}
             
-            {data.delivered !== 0 && (
+            {/* DR Row */}
+            {(data.dr.j2n !== 0 || data.dr.jkb !== 0 || data.dr.nck !== 0) && (
               <div className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <div className="w-1/2 p-3 text-gray-900 border-r border-gray-100 uppercase">
-                  DR
+                <div className="w-1/4 p-3 text-gray-900 uppercase border-r border-gray-100 font-medium">
+                  {data.dr.label}
                 </div>
-                <div className="w-1/2 p-3 text-right text-gray-900">
-                  {formatNumber(data.delivered)}
+                <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
+                  {data.dr.j2n === 0 ? '0' : formatNumber(data.dr.j2n)}
+                </div>
+                <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
+                  {data.dr.jkb === 0 ? '0' : formatNumber(data.dr.jkb)}
+                </div>
+                <div className="w-1/4 p-3 text-right text-gray-900">
+                  {data.dr.nck === 0 ? '0' : formatNumber(data.dr.nck)}
                 </div>
               </div>
             )}
 
-            {data.notYetDelivered !== 0 && (
+            {/* CHINA Row */}
+            {(data.china.j2n !== 0 || data.china.jkb !== 0 || data.china.nck !== 0) && (
               <div className="flex border-b border-gray-900 border-b-[2px] hover:bg-gray-50 transition-colors">
-                <div className="w-1/2 p-3 text-gray-900 border-r border-gray-100 uppercase">
-                  CHINA
+                <div className="w-1/4 p-3 text-gray-900 uppercase border-r border-gray-100 font-medium">
+                  {data.china.label}
                 </div>
-                <div className="w-1/2 p-3 text-right text-gray-900">
-                  {formatNumber(data.notYetDelivered)}
+                <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
+                  {data.china.j2n === 0 ? '0' : formatNumber(data.china.j2n)}
+                </div>
+                <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
+                  {data.china.jkb === 0 ? '0' : formatNumber(data.china.jkb)}
+                </div>
+                <div className="w-1/4 p-3 text-right text-gray-900">
+                  {data.china.nck === 0 ? '0' : formatNumber(data.china.nck)}
                 </div>
               </div>
             )}
 
+            {/* TOTAL Row */}
             <div className="flex bg-gray-50/50 hover:bg-gray-50 transition-colors">
-              <div className="w-1/2 p-3 font-bold text-gray-900 uppercase border-r border-gray-100">
-                TOTAL
+              <div className="w-1/4 p-3 font-bold text-gray-900 uppercase border-r border-gray-100">
+                {data.total.label}
               </div>
-              <div className="w-1/2 p-3 text-right font-bold text-gray-900">
-                {formatNumber(data.total)}
+              <div className="w-1/4 p-3 text-right font-bold text-gray-900 border-r border-gray-100">
+                {formatNumber(data.total.j2n)}
+              </div>
+              <div className="w-1/4 p-3 text-right font-bold text-gray-900 border-r border-gray-100">
+                {formatNumber(data.total.jkb)}
+              </div>
+              <div className="w-1/4 p-3 text-right font-bold text-gray-900">
+                {formatNumber(data.total.nck)}
               </div>
             </div>
 
