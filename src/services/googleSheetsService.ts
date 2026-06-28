@@ -622,13 +622,13 @@ export const generateBill = async (
       const colS = getCell(18); // CBM Value
       const colV = getCell(21); // Date + 5
       
-      rows10To12.push([colB, colC, colD, colE]);
+      rows10To12.push([colB, colC, colD, '', colE]);
       
       // Target E formula: =F13*G13, =F14*G14, =F15*G15
       const targetRow = 13 + i;
       rows13To15.push([colV, colC, colR, `=F${targetRow}*G${targetRow}`, colS]);
     } else {
-      rows10To12.push(['', '', '', '']);
+      rows10To12.push(['', '', '', '', '']);
       rows13To15.push(['', '', '', '', '']);
     }
   }
@@ -638,7 +638,7 @@ export const generateBill = async (
   const targetSheetName = await getSheetNameByGid(accessToken, spreadsheetId, billGid);
 
   const data = [
-    { range: `'${targetSheetName}'!B10:E12`, values: rows10To12 },
+    { range: `'${targetSheetName}'!B10:F12`, values: rows10To12 },
     { range: `'${targetSheetName}'!B13:F15`, values: rows13To15 }
   ];
 
