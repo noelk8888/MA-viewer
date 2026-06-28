@@ -87,8 +87,8 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
             
             {data.delivered !== 0 && (
               <div className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <div className="w-1/2 p-3 text-gray-900 border-r border-gray-100">
-                  Delivered, no check yet
+                <div className="w-1/2 p-3 text-gray-900 border-r border-gray-100 uppercase">
+                  DR
                 </div>
                 <div className="w-1/2 p-3 text-right text-gray-900">
                   {formatNumber(data.delivered)}
@@ -98,8 +98,8 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
 
             {data.notYetDelivered !== 0 && (
               <div className="flex border-b border-gray-900 border-b-[2px] hover:bg-gray-50 transition-colors">
-                <div className="w-1/2 p-3 text-gray-900 border-r border-gray-100">
-                  Not yet delivered, still in China
+                <div className="w-1/2 p-3 text-gray-900 border-r border-gray-100 uppercase">
+                  CHINA
                 </div>
                 <div className="w-1/2 p-3 text-right text-gray-900">
                   {formatNumber(data.notYetDelivered)}
