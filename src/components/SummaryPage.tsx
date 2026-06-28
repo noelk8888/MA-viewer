@@ -77,10 +77,10 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
             {/* Header Row */}
             <div className="flex border-b border-gray-300 bg-gray-50 font-bold">
               <div className="w-1/5 p-3 border-r border-gray-100"></div>
+              <div className="w-1/5 p-3 text-center border-r border-gray-100">TOTAL</div>
               <div className="w-1/5 p-3 text-center border-r border-gray-100">J2N</div>
               <div className="w-1/5 p-3 text-center border-r border-gray-100">JKB</div>
-              <div className="w-1/5 p-3 text-center border-r border-gray-100">NCK</div>
-              <div className="w-1/5 p-3 text-center">TOTAL</div>
+              <div className="w-1/5 p-3 text-center">NCK</div>
             </div>
 
             {/* Monthly Rows */}
@@ -89,17 +89,17 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
                 <div className="w-1/5 p-3 text-gray-900 uppercase border-r border-gray-100 font-medium">
                   {item.label}
                 </div>
+                <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100 font-medium">
+                  {formatNumber(item.j2n + item.jkb + item.nck)}
+                </div>
                 <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
                   {formatNumber(item.j2n)}
                 </div>
                 <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
                   {formatNumber(item.jkb)}
                 </div>
-                <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
+                <div className="w-1/5 p-3 text-right text-gray-900">
                   {formatNumber(item.nck)}
-                </div>
-                <div className="w-1/5 p-3 text-right text-gray-900 font-medium">
-                  {formatNumber(item.j2n + item.jkb + item.nck)}
                 </div>
               </div>
             ))}
@@ -110,17 +110,17 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
                 <div className="w-1/5 p-3 text-gray-900 uppercase border-r border-gray-100 font-medium">
                   {data.dr.label}
                 </div>
+                <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100 font-medium">
+                  {formatNumber(data.dr.j2n + data.dr.jkb + data.dr.nck)}
+                </div>
                 <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
                   {formatNumber(data.dr.j2n)}
                 </div>
                 <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
                   {formatNumber(data.dr.jkb)}
                 </div>
-                <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
+                <div className="w-1/5 p-3 text-right text-gray-900">
                   {formatNumber(data.dr.nck)}
-                </div>
-                <div className="w-1/5 p-3 text-right text-gray-900 font-medium">
-                  {formatNumber(data.dr.j2n + data.dr.jkb + data.dr.nck)}
                 </div>
               </div>
             )}
@@ -131,17 +131,17 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
                 <div className="w-1/5 p-3 text-gray-900 uppercase border-r border-gray-100 font-medium">
                   {data.china.label}
                 </div>
+                <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100 font-medium">
+                  {formatNumber(data.china.j2n + data.china.jkb + data.china.nck)}
+                </div>
                 <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
                   {formatNumber(data.china.j2n)}
                 </div>
                 <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
                   {formatNumber(data.china.jkb)}
                 </div>
-                <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
+                <div className="w-1/5 p-3 text-right text-gray-900">
                   {formatNumber(data.china.nck)}
-                </div>
-                <div className="w-1/5 p-3 text-right text-gray-900 font-medium">
-                  {formatNumber(data.china.j2n + data.china.jkb + data.china.nck)}
                 </div>
               </div>
             )}
@@ -152,16 +152,16 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
                 TOTAL
               </div>
               <div className="w-1/5 p-3 text-right font-bold text-gray-900 border-r border-gray-100">
+                {formatNumber(data.total.j2n + data.total.jkb + data.total.nck)}
+              </div>
+              <div className="w-1/5 p-3 text-right font-bold text-gray-900 border-r border-gray-100">
                 {formatNumber(data.total.j2n)}
               </div>
               <div className="w-1/5 p-3 text-right font-bold text-gray-900 border-r border-gray-100">
                 {formatNumber(data.total.jkb)}
               </div>
-              <div className="w-1/5 p-3 text-right font-bold text-gray-900 border-r border-gray-100">
-                {formatNumber(data.total.nck)}
-              </div>
               <div className="w-1/5 p-3 text-right font-bold text-gray-900">
-                {formatNumber(data.total.j2n + data.total.jkb + data.total.nck)}
+                {formatNumber(data.total.nck)}
               </div>
             </div>
 
