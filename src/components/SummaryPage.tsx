@@ -138,8 +138,8 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
 
             {/* TOTAL Row */}
             <div className="flex bg-gray-50/50 hover:bg-gray-50 transition-colors">
-              <div className="w-1/4 p-3 font-bold text-gray-900 uppercase border-r border-gray-100">
-                {data.total.label}
+              <div className="w-1/4 p-3 font-bold text-gray-900 uppercase border-r border-gray-100 text-left">
+                {formatNumber(data.total.j2n + data.total.jkb + data.total.nck)}
               </div>
               <div className="w-1/4 p-3 text-right font-bold text-gray-900 border-r border-gray-100">
                 {formatNumber(data.total.j2n)}

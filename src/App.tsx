@@ -9,15 +9,8 @@ import { fetchK2Value } from './services/googleSheetsService';
 function AppContent() {
   const { isAuthenticated, isInitializing, logout } = useGoogleAuth();
   const [view, setView] = useState<'viewer' | 'summary'>('viewer');
-  const [k2Value, setK2Value] = useState<string>('');
-
   useEffect(() => {
-    if (isAuthenticated) {
-      const SHEET_ID = '1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM';
-      fetchK2Value(SHEET_ID)
-        .then(val => setK2Value(val))
-        .catch(console.error);
-    }
+    // Keep this for any future initialization if needed, or remove completely if not
   }, [isAuthenticated]);
 
   // Show loading screen while checking session
@@ -56,12 +49,6 @@ function AppContent() {
         <ViewerTable onSummaryClick={() => setView('summary')} />
       ) : (
         <SummaryPage onBack={() => setView('viewer')} />
-      )}
-
-      {k2Value && (
-        <div className="mt-8 text-center text-sm font-medium text-gray-700">
-          {k2Value}
-        </div>
       )}
 
       <footer className="py-6 text-center text-xs text-gray-400">
