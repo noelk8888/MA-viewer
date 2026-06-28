@@ -76,26 +76,30 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
           <div className="flex flex-col text-[15px]">
             {/* Header Row */}
             <div className="flex border-b border-gray-300 bg-gray-50 font-bold">
-              <div className="w-1/4 p-3 border-r border-gray-100"></div>
-              <div className="w-1/4 p-3 text-center border-r border-gray-100">J2N</div>
-              <div className="w-1/4 p-3 text-center border-r border-gray-100">JKB</div>
-              <div className="w-1/4 p-3 text-center">NCK</div>
+              <div className="w-1/5 p-3 border-r border-gray-100"></div>
+              <div className="w-1/5 p-3 text-center border-r border-gray-100">J2N</div>
+              <div className="w-1/5 p-3 text-center border-r border-gray-100">JKB</div>
+              <div className="w-1/5 p-3 text-center border-r border-gray-100">NCK</div>
+              <div className="w-1/5 p-3 text-center">TOTAL</div>
             </div>
 
             {/* Monthly Rows */}
             {data.items.map((item, i) => (
               <div key={i} className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <div className="w-1/4 p-3 text-gray-900 uppercase border-r border-gray-100 font-medium">
+                <div className="w-1/5 p-3 text-gray-900 uppercase border-r border-gray-100 font-medium">
                   {item.label}
                 </div>
-                <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
+                <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
                   {formatNumber(item.j2n)}
                 </div>
-                <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
+                <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
                   {formatNumber(item.jkb)}
                 </div>
-                <div className="w-1/4 p-3 text-right text-gray-900">
+                <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
                   {formatNumber(item.nck)}
+                </div>
+                <div className="w-1/5 p-3 text-right text-gray-900 font-medium">
+                  {formatNumber(item.j2n + item.jkb + item.nck)}
                 </div>
               </div>
             ))}
@@ -103,17 +107,20 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
             {/* DR Row */}
             {(data.dr.j2n !== 0 || data.dr.jkb !== 0 || data.dr.nck !== 0) && (
               <div className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <div className="w-1/4 p-3 text-gray-900 uppercase border-r border-gray-100 font-medium">
+                <div className="w-1/5 p-3 text-gray-900 uppercase border-r border-gray-100 font-medium">
                   {data.dr.label}
                 </div>
-                <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
+                <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
                   {formatNumber(data.dr.j2n)}
                 </div>
-                <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
+                <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
                   {formatNumber(data.dr.jkb)}
                 </div>
-                <div className="w-1/4 p-3 text-right text-gray-900">
+                <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
                   {formatNumber(data.dr.nck)}
+                </div>
+                <div className="w-1/5 p-3 text-right text-gray-900 font-medium">
+                  {formatNumber(data.dr.j2n + data.dr.jkb + data.dr.nck)}
                 </div>
               </div>
             )}
@@ -121,34 +128,40 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
             {/* CHINA Row */}
             {(data.china.j2n !== 0 || data.china.jkb !== 0 || data.china.nck !== 0) && (
               <div className="flex border-b border-gray-900 border-b-[2px] hover:bg-gray-50 transition-colors">
-                <div className="w-1/4 p-3 text-gray-900 uppercase border-r border-gray-100 font-medium">
+                <div className="w-1/5 p-3 text-gray-900 uppercase border-r border-gray-100 font-medium">
                   {data.china.label}
                 </div>
-                <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
+                <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
                   {formatNumber(data.china.j2n)}
                 </div>
-                <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
+                <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
                   {formatNumber(data.china.jkb)}
                 </div>
-                <div className="w-1/4 p-3 text-right text-gray-900">
+                <div className="w-1/5 p-3 text-right text-gray-900 border-r border-gray-100">
                   {formatNumber(data.china.nck)}
+                </div>
+                <div className="w-1/5 p-3 text-right text-gray-900 font-medium">
+                  {formatNumber(data.china.j2n + data.china.jkb + data.china.nck)}
                 </div>
               </div>
             )}
 
             {/* TOTAL Row */}
             <div className="flex bg-gray-50/50 hover:bg-gray-50 transition-colors">
-              <div className="w-1/4 p-3 font-bold text-gray-900 uppercase border-r border-gray-100 text-left">
-                {formatNumber(data.total.j2n + data.total.jkb + data.total.nck)}
+              <div className="w-1/5 p-3 font-bold text-gray-900 uppercase border-r border-gray-100 text-left">
+                TOTAL
               </div>
-              <div className="w-1/4 p-3 text-right font-bold text-gray-900 border-r border-gray-100">
+              <div className="w-1/5 p-3 text-right font-bold text-gray-900 border-r border-gray-100">
                 {formatNumber(data.total.j2n)}
               </div>
-              <div className="w-1/4 p-3 text-right font-bold text-gray-900 border-r border-gray-100">
+              <div className="w-1/5 p-3 text-right font-bold text-gray-900 border-r border-gray-100">
                 {formatNumber(data.total.jkb)}
               </div>
-              <div className="w-1/4 p-3 text-right font-bold text-gray-900">
+              <div className="w-1/5 p-3 text-right font-bold text-gray-900 border-r border-gray-100">
                 {formatNumber(data.total.nck)}
+              </div>
+              <div className="w-1/5 p-3 text-right font-bold text-gray-900">
+                {formatNumber(data.total.j2n + data.total.jkb + data.total.nck)}
               </div>
             </div>
 
