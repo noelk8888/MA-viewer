@@ -4,7 +4,6 @@ import { GoogleAuthProvider, useGoogleAuth } from './contexts/GoogleAuthContext'
 import { LoginScreen } from './components/LoginScreen'
 import { Loader2, LogOut } from 'lucide-react'
 import { useState, useEffect } from 'react';
-import { fetchK2Value } from './services/googleSheetsService';
 
 function AppContent() {
   const { isAuthenticated, isInitializing, logout } = useGoogleAuth();
