@@ -336,6 +336,7 @@ export interface SummaryData {
   delivered: number;
   notYetDelivered: number;
   total: number;
+  jkbValue: string;
 }
 
 export const fetchSummaryData = async (
@@ -357,10 +358,13 @@ export const fetchSummaryData = async (
           try {
             const data = results.data as string[][];
             
-            const getCell = (row: number, col: 'B' | 'C'): string => {
+            const getCell = (row: number, col: 'B' | 'C' | 'R'): string => {
               const r = data[row - 1]; // row 14 is index 13
               if (!r) return '';
-              return col === 'B' ? (r[1] || '') : (r[2] || '');
+              if (col === 'B') return r[1] || '';
+              if (col === 'C') return r[2] || '';
+              if (col === 'R') return r[17] || '';
+              return '';
             };
 
             const currentMonthIndex = new Date().getMonth(); // 0-11
@@ -389,7 +393,9 @@ export const fetchSummaryData = async (
 
             const total = items.reduce((sum, item) => sum + item.value, 0) + deliveredVal + notYetDeliveredVal;
 
-            resolve({ items, delivered: deliveredVal, notYetDelivered: notYetDeliveredVal, total });
+            const jkbValue = getCell(3, 'R');
+
+            resolve({ items, delivered: deliveredVal, notYetDelivered: notYetDeliveredVal, total, jkbValue });
           } catch (err: any) {
             reject(new Error('Parse logic error: ' + err.message));
           }

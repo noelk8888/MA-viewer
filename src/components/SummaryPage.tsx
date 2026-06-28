@@ -115,6 +115,14 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
                 TOTAL
               </div>
             </div>
+
+            {data.jkbValue && (
+              <div className="flex border-b border-gray-100 bg-white hover:bg-gray-50 transition-colors">
+                <div className="w-full p-3 text-center text-gray-900">
+                  JKB - {data.jkbValue}
+                </div>
+              </div>
+            )}
           </div>
         ) : null}
       </div>
