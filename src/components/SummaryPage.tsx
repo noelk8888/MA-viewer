@@ -76,43 +76,43 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
           <div className="flex flex-col text-[15px]">
             {data.items.map((item, i) => (
               <div key={i} className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <div className="w-1/2 p-3 text-right text-gray-900 border-r border-gray-100">
-                  {formatNumber(item.value)}
-                </div>
-                <div className="w-1/2 p-3 text-gray-900 uppercase">
+                <div className="w-1/2 p-3 text-gray-900 uppercase border-r border-gray-100">
                   {item.label}
+                </div>
+                <div className="w-1/2 p-3 text-right text-gray-900">
+                  {formatNumber(item.value)}
                 </div>
               </div>
             ))}
             
             {data.delivered !== 0 && (
               <div className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <div className="w-1/2 p-3 text-right text-gray-900 border-r border-gray-100">
-                  {formatNumber(data.delivered)}
-                </div>
-                <div className="w-1/2 p-3 text-gray-900">
+                <div className="w-1/2 p-3 text-gray-900 border-r border-gray-100">
                   Delivered, no check yet
+                </div>
+                <div className="w-1/2 p-3 text-right text-gray-900">
+                  {formatNumber(data.delivered)}
                 </div>
               </div>
             )}
 
             {data.notYetDelivered !== 0 && (
               <div className="flex border-b border-gray-900 border-b-[2px] hover:bg-gray-50 transition-colors">
-                <div className="w-1/2 p-3 text-right text-gray-900 border-r border-gray-100">
-                  {formatNumber(data.notYetDelivered)}
-                </div>
-                <div className="w-1/2 p-3 text-gray-900">
+                <div className="w-1/2 p-3 text-gray-900 border-r border-gray-100">
                   Not yet delivered, still in China
+                </div>
+                <div className="w-1/2 p-3 text-right text-gray-900">
+                  {formatNumber(data.notYetDelivered)}
                 </div>
               </div>
             )}
 
             <div className="flex bg-gray-50/50 hover:bg-gray-50 transition-colors">
-              <div className="w-1/2 p-3 text-right font-bold text-gray-900 border-r border-gray-100">
-                {formatNumber(data.total)}
-              </div>
-              <div className="w-1/2 p-3 font-bold text-gray-900 uppercase">
+              <div className="w-1/2 p-3 font-bold text-gray-900 uppercase border-r border-gray-100">
                 TOTAL
+              </div>
+              <div className="w-1/2 p-3 text-right font-bold text-gray-900">
+                {formatNumber(data.total)}
               </div>
             </div>
 

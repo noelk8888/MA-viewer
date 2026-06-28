@@ -393,7 +393,8 @@ export const fetchSummaryData = async (
 
             const total = items.reduce((sum, item) => sum + item.value, 0) + deliveredVal + notYetDeliveredVal;
 
-            const jkbValue = getCell(3, 'R');
+            const jkbValueRaw = getCell(3, 'R');
+            const jkbValue = jkbValueRaw ? jkbValueRaw.split('\n')[0].trim() : '';
 
             resolve({ items, delivered: deliveredVal, notYetDelivered: notYetDeliveredVal, total, jkbValue });
           } catch (err: any) {
