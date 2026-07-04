@@ -7,13 +7,14 @@ const SHEET_ID = '1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM';
 
 interface SummaryPageProps {
   onBack: () => void;
+  onMonthClick: (monthIndex: number, monthLabel: string) => void;
 }
 
 const formatNumber = (num: number) => {
   return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(num);
 };
 
-export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
+export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack, onMonthClick }) => {
   const { accessToken } = useGoogleAuth();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<SummaryData | null>(null);
@@ -85,7 +86,13 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
 
             {/* Monthly Rows */}
             {data.items.map((item, i) => (
-              <div key={i} className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors">
+              <button
+                key={i}
+                type="button"
+                onClick={() => onMonthClick(item.monthIndex ?? i, item.label)}
+                className="flex w-full border-b border-gray-100 hover:bg-blue-50 transition-colors text-left cursor-pointer"
+                title={`View ${item.label} details`}
+              >
                 <div className="w-1/5 p-3 text-gray-900 uppercase border-r border-gray-100 font-medium">
                   {item.label}
                 </div>
@@ -101,7 +108,7 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack }) => {
                 <div className="w-1/5 p-3 text-right text-gray-900">
                   {formatNumber(item.nck)}
                 </div>
-              </div>
+              </button>
             ))}
             
             {/* DR Row */}

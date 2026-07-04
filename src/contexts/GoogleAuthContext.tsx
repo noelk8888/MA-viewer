@@ -35,6 +35,9 @@ const ConfiguredAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children })
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isLocalDevelopment = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const scopes = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets';
 
   // Restore session on mount or parse redirect
   useEffect(() => {
@@ -70,9 +73,10 @@ const ConfiguredAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children })
       setError(errorResponse.error_description || 'Login failed');
       setIsLoading(false);
     },
-    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
+    scope: scopes,
     flow: 'implicit',
-    // Using redirect mode is much more reliable on mobile devices
+    // Keep the proven redirect flow for the deployed mobile app. Local login is
+    // handled below without Google's popup transform helper.
     // @ts-ignore - The types in this version don't include ux_mode for implicit flow but GIS supports it
     ux_mode: 'redirect',
     redirect_uri: window.location.origin + window.location.pathname,
@@ -81,6 +85,20 @@ const ConfiguredAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children })
   const handleLogin = useCallback(() => {
     setIsLoading(true);
     setError(null);
+
+    if (isLocalDevelopment) {
+      const params = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: window.location.origin + window.location.pathname,
+        response_type: 'token',
+        scope: `openid profile email ${scopes}`,
+        include_granted_scopes: 'true',
+        prompt: 'select_account',
+      });
+
+      window.location.assign(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+      return;
+    }
 
     // Give it a slightly longer timeout for mobile network latency
     const timeoutId = setTimeout(() => {
@@ -96,7 +114,7 @@ const ConfiguredAuthProvider: React.FC<GoogleAuthProviderProps> = ({ children })
       setIsLoading(false);
       setError('Failed to open login. Please check your browser settings.');
     }
-  }, [login]);
+  }, [clientId, isLocalDevelopment, login, scopes]);
 
   const handleLogout = useCallback(() => {
     googleLogout();

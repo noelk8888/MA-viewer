@@ -331,6 +331,7 @@ export interface SummaryItem {
   j2n: number;
   jkb: number;
   nck: number;
+  monthIndex?: number;
 }
 
 export interface SummaryData {
@@ -360,11 +361,13 @@ export const fetchSummaryData = async (
           try {
             const data = results.data as string[][];
             
-            const getCell = (row: number, col: 'B' | 'C' | 'M' | 'N' | 'O' | 'R' | 'S' | 'T' | 'U'): string => {
+            const getCell = (row: number, col: 'B' | 'C' | 'D' | 'F' | 'M' | 'N' | 'O' | 'R' | 'S' | 'T' | 'U'): string => {
               const r = data[row - 1]; 
               if (!r) return '';
               if (col === 'B') return r[1] || '';
               if (col === 'C') return r[2] || '';
+              if (col === 'D') return r[3] || '';
+              if (col === 'F') return r[5] || '';
               if (col === 'M') return r[12] || '';
               if (col === 'N') return r[13] || '';
               if (col === 'O') return r[14] || '';
@@ -394,15 +397,15 @@ export const fetchSummaryData = async (
               let nck = 0;
 
               for (let r = startRow; r <= endRow; r++) {
-                j2n += parseVal(getCell(r, 'M'));
-                jkb += parseVal(getCell(r, 'N'));
-                nck += parseVal(getCell(r, 'O'));
+                j2n += parseVal(getCell(r, 'S'));
+                jkb += parseVal(getCell(r, 'T'));
+                nck += parseVal(getCell(r, 'U'));
               }
               
               const label = getCell(endRow, 'C') || ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][i];
               
               if (j2n !== 0 || jkb !== 0 || nck !== 0) {
-                items.push({ label, j2n, jkb, nck });
+                items.push({ label, j2n, jkb, nck, monthIndex: i });
                 totalJ2N += j2n;
                 totalJKB += jkb;
                 totalNCK += nck;
@@ -439,6 +442,75 @@ export const fetchSummaryData = async (
   } catch (err: any) {
     throw new Error('Fetch failed: ' + err.message);
   }
+};
+
+export interface MonthDetailItem {
+  date: string;
+  j2n: number;
+  jkb: number;
+  nck: number;
+  sourceRow: number;
+}
+
+export interface MonthDetailData {
+  label: string;
+  items: MonthDetailItem[];
+  total: Pick<MonthDetailItem, 'j2n' | 'jkb' | 'nck'>;
+}
+
+export const fetchMonthDetailData = async (
+  sheetId: string,
+  monthIndex: number,
+  monthLabel: string
+): Promise<MonthDetailData> => {
+  const CSV_URL = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=213812473&t=${new Date().getTime()}`;
+  const response = await fetch(CSV_URL);
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const csvText = await response.text();
+
+  return new Promise((resolve, reject) => {
+    Papa.parse(csvText, {
+      header: false,
+      complete: (results) => {
+        try {
+          const data = results.data as string[][];
+          const parseVal = (value: string) => parseFloat(String(value || '').replace(/,/g, '')) || 0;
+          const startRow = 7 + (monthIndex * 8);
+          const endRow = 14 + (monthIndex * 8);
+          const items: MonthDetailItem[] = [];
+
+          for (let row = startRow; row <= endRow; row++) {
+            const source = data[row - 1] || [];
+            const j2n = parseVal(source[18]);   // S
+            const jkb = parseVal(source[19]);   // T
+            const nck = parseVal(source[20]);   // U
+            const date = source[5] || '';        // F (check date)
+
+            if (date || j2n !== 0 || jkb !== 0 || nck !== 0) {
+              items.push({ date, j2n, jkb, nck, sourceRow: row });
+            }
+          }
+
+          const total = items.reduce<Pick<MonthDetailItem, 'j2n' | 'jkb' | 'nck'>>((sum, item) => ({
+            j2n: sum.j2n + item.j2n,
+            jkb: sum.jkb + item.jkb,
+            nck: sum.nck + item.nck,
+          }), {
+            j2n: 0, jkb: 0, nck: 0,
+          });
+
+          resolve({ label: monthLabel, items, total });
+        } catch (err: any) {
+          reject(new Error('Parse logic error: ' + err.message));
+        }
+      },
+      error: (error: any) => reject(new Error('CSV parse error: ' + error.message)),
+    });
+  });
 };
 
 export const fetchK2Value = async (
@@ -662,4 +734,3 @@ export const generateBill = async (
     throw new Error(error.error?.message || 'Failed to push data to the BILL sheet');
   }
 };
-

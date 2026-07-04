@@ -1,5 +1,6 @@
 import ViewerTable from './components/ViewerTable'
 import { SummaryPage } from './components/SummaryPage'
+import { MonthDetailPage } from './components/MonthDetailPage'
 import { GoogleAuthProvider, useGoogleAuth } from './contexts/GoogleAuthContext'
 import { LoginScreen } from './components/LoginScreen'
 import { Loader2, LogOut } from 'lucide-react'
@@ -7,7 +8,8 @@ import { useState, useEffect } from 'react';
 
 function AppContent() {
   const { isAuthenticated, isInitializing, logout } = useGoogleAuth();
-  const [view, setView] = useState<'viewer' | 'summary'>('viewer');
+  const [view, setView] = useState<'viewer' | 'summary' | 'month'>('viewer');
+  const [selectedMonth, setSelectedMonth] = useState<{ index: number; label: string } | null>(null);
   useEffect(() => {
     // Keep this for any future initialization if needed, or remove completely if not
   }, [isAuthenticated]);
@@ -46,9 +48,21 @@ function AppContent() {
 
       {view === 'viewer' ? (
         <ViewerTable onSummaryClick={() => setView('summary')} />
-      ) : (
-        <SummaryPage onBack={() => setView('viewer')} />
-      )}
+      ) : view === 'summary' ? (
+        <SummaryPage
+          onBack={() => setView('viewer')}
+          onMonthClick={(index, label) => {
+            setSelectedMonth({ index, label });
+            setView('month');
+          }}
+        />
+      ) : selectedMonth ? (
+        <MonthDetailPage
+          monthIndex={selectedMonth.index}
+          monthLabel={selectedMonth.label}
+          onBack={() => setView('summary')}
+        />
+      ) : null}
 
       <footer className="py-6 text-center text-xs text-gray-400">
         <p>Inventory Viewer App • {new Date().getFullYear()}</p>
