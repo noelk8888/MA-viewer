@@ -84,6 +84,13 @@ export const MonthDetailPage: React.FC<MonthDetailPageProps> = ({
               <div className="w-1/3 p-3 text-center border-r border-gray-100">J2N</div>
               <div className="w-1/3 p-3 text-center">JKB</div>
             </div>
+          ) : monthLabel === 'DR' ? (
+            <div className="flex border-b border-gray-300 bg-gray-50 font-bold">
+              <div className="w-1/4 p-3 text-center border-r border-gray-100">DATE</div>
+              <div className="w-1/4 p-3 text-center border-r border-gray-100">DETAILS</div>
+              <div className="w-1/4 p-3 text-center border-r border-gray-100">DR#</div>
+              <div className="w-1/4 p-3 text-center">AMOUNT</div>
+            </div>
           ) : (
             <div className="flex border-b border-gray-300 bg-gray-50 font-bold">
               <div className="w-1/4 p-3 text-center border-r border-gray-100">DATE</div>
@@ -108,6 +115,21 @@ export const MonthDetailPage: React.FC<MonthDetailPageProps> = ({
                     </div>
                     <div className="w-1/3 p-3 text-right text-gray-900">
                       {formatNumber(item.jkb)}
+                    </div>
+                  </>
+                ) : monthLabel === 'DR' ? (
+                  <>
+                    <div className="w-1/4 p-3 text-center text-gray-900 border-r border-gray-100 font-medium">
+                      {item.date}
+                    </div>
+                    <div className="w-1/4 p-3 text-center text-gray-900 border-r border-gray-100">
+                      {item.details}
+                    </div>
+                    <div className="w-1/4 p-3 text-center text-gray-900 border-r border-gray-100">
+                      {item.drNum}
+                    </div>
+                    <div className="w-1/4 p-3 text-right text-gray-900">
+                      {formatNumber(item.nck)}
                     </div>
                   </>
                 ) : (
@@ -136,6 +158,13 @@ export const MonthDetailPage: React.FC<MonthDetailPageProps> = ({
                 <div className="w-1/3 p-3 font-bold text-gray-900 border-r border-gray-100">TOTAL</div>
                 <div className="w-1/3 p-3 text-right font-bold text-gray-900 border-r border-gray-100">{formatNumber(data.total.j2n)}</div>
                 <div className="w-1/3 p-3 text-right font-bold text-gray-900">{formatNumber(data.total.jkb)}</div>
+              </>
+            ) : monthLabel === 'DR' ? (
+              <>
+                <div className="w-1/4 p-3 font-bold text-gray-900 border-r border-gray-100">TOTAL</div>
+                <div className="w-1/4 p-3 border-r border-gray-100"></div>
+                <div className="w-1/4 p-3 border-r border-gray-100"></div>
+                <div className="w-1/4 p-3 text-right font-bold text-gray-900">{formatNumber(data.total.nck)}</div>
               </>
             ) : (
               <>

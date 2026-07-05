@@ -450,6 +450,8 @@ export interface MonthDetailItem {
   jkb: number;
   nck: number;
   sourceRow: number;
+  details?: string;
+  drNum?: string;
 }
 
 export interface MonthDetailData {
@@ -482,16 +484,17 @@ export const fetchMonthDetailData = async (
           const items: MonthDetailItem[] = [];
 
           if (monthLabel === 'DR') {
-            for (let row = 110; row <= data.length; row++) {
+            for (let row = 110; row <= 130; row++) {
+              if (row > data.length) break;
               const source = data[row - 1] || [];
               const date = source[5] || '';       // F
-              const j2n = parseVal(source[7]);    // H
-              const jkb = parseVal(source[9]);    // J
-              const nck = parseVal(source[11]);   // L
+              const details = source[7] || '';    // H
+              const drNum = source[9] || '';      // J
+              const amount = parseVal(source[11]);// L
 
-              if (date || j2n !== 0 || jkb !== 0 || nck !== 0) {
-                items.push({ date, j2n, jkb, nck, sourceRow: row });
-              }
+              if (!date && !details && !drNum && amount === 0) continue; // Skip blank rows
+
+              items.push({ date, details, drNum, j2n: 0, jkb: 0, nck: amount, sourceRow: row });
             }
           } else if (monthLabel === 'CHINA') {
             let i = 0;
