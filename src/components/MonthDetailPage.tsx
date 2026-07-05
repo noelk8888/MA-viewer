@@ -80,9 +80,9 @@ export const MonthDetailPage: React.FC<MonthDetailPageProps> = ({
         <div className="flex flex-col text-[15px]">
           {monthLabel === 'CHINA' ? (
             <div className="flex border-b border-gray-300 bg-gray-50 font-bold">
-              <div className="w-1/3 p-3 text-center border-r border-gray-100">DATE</div>
-              <div className="w-1/3 p-3 text-center border-r border-gray-100">J2N</div>
-              <div className="w-1/3 p-3 text-center">JKB</div>
+              <div className="w-1/3 p-3 text-center border-r border-gray-100">DETAILS</div>
+              <div className="w-1/3 p-3 text-center border-r border-gray-100">ITEMS</div>
+              <div className="w-1/3 p-3 text-center">CBM</div>
             </div>
           ) : monthLabel === 'DR' ? (
             <div className="flex border-b border-gray-300 bg-gray-50 font-bold">
@@ -108,7 +108,7 @@ export const MonthDetailPage: React.FC<MonthDetailPageProps> = ({
                 {monthLabel === 'CHINA' ? (
                   <>
                     <div className="w-1/3 p-3 text-center text-gray-900 border-r border-gray-100 font-medium">
-                      {item.date}
+                      {item.details}
                     </div>
                     <div className="w-1/3 p-3 text-right text-gray-900 border-r border-gray-100">
                       {formatNumber(item.j2n)}

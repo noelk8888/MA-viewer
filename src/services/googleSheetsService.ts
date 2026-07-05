@@ -507,18 +507,18 @@ export const fetchMonthDetailData = async (
               const source1 = data[r1 - 1] || [];
               const source2 = data[r2 - 1] || [];
               
-              const date = source1[7] || '';        // H158
+              const details = source1[7] || '';        // H158
               const j2n = parseVal(source2[13]);    // N159
               const jkb = parseVal(source1[15]);    // P158
               const nck = 0;
               
-              if (!date && j2n === 0 && jkb === 0) {
+              if (!details && j2n === 0 && jkb === 0) {
                 // DO NOT include rows with blanks
                 i++;
                 continue;
               }
 
-              items.push({ date, j2n, jkb, nck, sourceRow: r1 });
+              items.push({ date: '', details, j2n, jkb, nck, sourceRow: r1 });
               i++;
             }
           } else {
