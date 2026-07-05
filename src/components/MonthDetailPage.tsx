@@ -155,7 +155,9 @@ export const MonthDetailPage: React.FC<MonthDetailPageProps> = ({
           <div className="flex bg-gray-50/50 border-t-2 border-gray-900">
             {monthLabel === 'CHINA' ? (
               <>
-                <div className="w-1/3 p-3 font-bold text-gray-900 border-r border-gray-100">TOTAL</div>
+                <div className="w-1/3 p-3 font-bold text-gray-900 border-r border-gray-100">
+                  TOTAL - {formatNumber(data.total.j2n + data.total.jkb)}
+                </div>
                 <div className="w-1/3 p-3 text-right font-bold text-gray-900 border-r border-gray-100">{formatNumber(data.total.j2n)}</div>
                 <div className="w-1/3 p-3 text-right font-bold text-gray-900">{formatNumber(data.total.jkb)}</div>
               </>
