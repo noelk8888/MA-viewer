@@ -10,6 +10,17 @@
   }
   
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-[#f8f9fa] text-gray-900;
   }
+}
+
+html.dark {
+  filter: invert(1) hue-rotate(180deg);
+  background-color: #111;
+}
+
+html.dark img,
+html.dark video,
+html.dark [data-ignore-dark="true"] {
+  filter: invert(1) hue-rotate(180deg);
 }

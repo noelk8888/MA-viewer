@@ -25,8 +25,17 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     const [selectedRowIndices, setSelectedRowIndices] = useState<number[]>([]);
     const [selectionType, setSelectionType] = useState<'DR' | 'CBM' | 'SUPPLIER' | null>(null);
     const [isProcessingSoa, setIsProcessingSoa] = useState(false);
+    const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
 
     const { accessToken, login, logout, isAuthenticated } = useGoogleAuth();
+
+    // Toggle dark mode
+    const toggleDarkMode = () => {
+        const next = !isDark;
+        setIsDark(next);
+        if (next) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+    };
 
     // Get Today's Date formatted
     const today = new Date().toLocaleDateString('en-US', {
@@ -90,6 +99,12 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                     >
                         {i1Value}
                     </span>
+                    <button
+                        onClick={toggleDarkMode}
+                        className={`ml-3 px-2 py-1 text-[10px] font-bold rounded shadow-sm border transition-colors ${isDark ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-200 hover:bg-gray-50'}`}
+                    >
+                        {isDark ? 'DARK' : 'LIGHT'}
+                    </button>
                 </h1>
                 <button
                     onClick={loadData}
