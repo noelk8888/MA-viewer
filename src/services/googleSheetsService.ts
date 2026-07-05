@@ -479,19 +479,59 @@ export const fetchMonthDetailData = async (
         try {
           const data = results.data as string[][];
           const parseVal = (value: string) => parseFloat(String(value || '').replace(/,/g, '')) || 0;
-          const startRow = 7 + (monthIndex * 8);
-          const endRow = 14 + (monthIndex * 8);
           const items: MonthDetailItem[] = [];
 
-          for (let row = startRow; row <= endRow; row++) {
-            const source = data[row - 1] || [];
-            const j2n = parseVal(source[18]);   // S
-            const jkb = parseVal(source[19]);   // T
-            const nck = parseVal(source[20]);   // U
-            const date = source[5] || '';        // F (check date)
+          if (monthLabel === 'DR') {
+            for (let row = 110; row <= data.length; row++) {
+              const source = data[row - 1] || [];
+              const date = source[5] || '';       // F
+              const j2n = parseVal(source[7]);    // H
+              const jkb = parseVal(source[9]);    // J
+              const nck = parseVal(source[11]);   // L
 
-            if (date || j2n !== 0 || jkb !== 0 || nck !== 0) {
-              items.push({ date, j2n, jkb, nck, sourceRow: row });
+              if (date || j2n !== 0 || jkb !== 0 || nck !== 0) {
+                items.push({ date, j2n, jkb, nck, sourceRow: row });
+              }
+            }
+          } else if (monthLabel === 'CHINA') {
+            let i = 0;
+            while (true) {
+              const r1 = 158 + i;
+              const r2 = 159 + i;
+              
+              if (r1 > data.length && r2 > data.length) break;
+
+              const source1 = data[r1 - 1] || [];
+              const source2 = data[r2 - 1] || [];
+              
+              const date = source1[7] || '';        // H158
+              const j2n = parseVal(source2[13]);    // N159
+              const jkb = parseVal(source1[15]);    // P158
+              const nck = 0;
+              
+              if (!date && j2n === 0 && jkb === 0) {
+                // DO NOT include rows with blanks
+                i++;
+                continue;
+              }
+
+              items.push({ date, j2n, jkb, nck, sourceRow: r1 });
+              i++;
+            }
+          } else {
+            const startRow = 7 + (monthIndex * 8);
+            const endRow = 14 + (monthIndex * 8);
+
+            for (let row = startRow; row <= endRow; row++) {
+              const source = data[row - 1] || [];
+              const j2n = parseVal(source[18]);   // S
+              const jkb = parseVal(source[19]);   // T
+              const nck = parseVal(source[20]);   // U
+              const date = source[5] || '';        // F (check date)
+
+              if (date || j2n !== 0 || jkb !== 0 || nck !== 0) {
+                items.push({ date, j2n, jkb, nck, sourceRow: row });
+              }
             }
           }
 

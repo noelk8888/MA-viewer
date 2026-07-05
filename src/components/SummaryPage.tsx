@@ -113,7 +113,12 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack, onMonthClick }
             
             {/* DR Row */}
             {(data.dr.j2n !== 0 || data.dr.jkb !== 0 || data.dr.nck !== 0) && (
-              <div className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors">
+              <button
+                type="button"
+                onClick={() => onMonthClick(-1, 'DR')}
+                className="flex w-full border-b border-gray-100 hover:bg-blue-50 transition-colors text-left cursor-pointer"
+                title="View DR details"
+              >
                 <div className="w-1/5 p-3 text-gray-900 uppercase border-r border-gray-100 font-medium">
                   {data.dr.label}
                 </div>
@@ -129,12 +134,17 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack, onMonthClick }
                 <div className="w-1/5 p-3 text-right text-gray-900">
                   {formatNumber(data.dr.nck)}
                 </div>
-              </div>
+              </button>
             )}
 
             {/* CHINA Row */}
             {(data.china.j2n !== 0 || data.china.jkb !== 0 || data.china.nck !== 0) && (
-              <div className="flex border-b border-gray-900 border-b-[2px] hover:bg-gray-50 transition-colors">
+              <button
+                type="button"
+                onClick={() => onMonthClick(-2, 'CHINA')}
+                className="flex w-full border-b border-gray-900 border-b-[2px] hover:bg-blue-50 transition-colors text-left cursor-pointer"
+                title="View CHINA details"
+              >
                 <div className="w-1/5 p-3 text-gray-900 uppercase border-r border-gray-100 font-medium">
                   {data.china.label}
                 </div>
@@ -150,7 +160,7 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack, onMonthClick }
                 <div className="w-1/5 p-3 text-right text-gray-900">
                   {formatNumber(data.china.nck)}
                 </div>
-              </div>
+              </button>
             )}
 
             {/* TOTAL Row */}

@@ -78,39 +78,73 @@ export const MonthDetailPage: React.FC<MonthDetailPageProps> = ({
         </div>
       ) : data ? (
         <div className="flex flex-col text-[15px]">
-          <div className="flex border-b border-gray-300 bg-gray-50 font-bold">
-            <div className="w-1/4 p-3 text-center border-r border-gray-100">DATE</div>
-            <div className="w-1/4 p-3 text-center border-r border-gray-100">J2N</div>
-            <div className="w-1/4 p-3 text-center border-r border-gray-100">JKB</div>
-            <div className="w-1/4 p-3 text-center">NCK</div>
-          </div>
+          {monthLabel === 'CHINA' ? (
+            <div className="flex border-b border-gray-300 bg-gray-50 font-bold">
+              <div className="w-1/3 p-3 text-center border-r border-gray-100">DATE</div>
+              <div className="w-1/3 p-3 text-center border-r border-gray-100">J2N</div>
+              <div className="w-1/3 p-3 text-center">JKB</div>
+            </div>
+          ) : (
+            <div className="flex border-b border-gray-300 bg-gray-50 font-bold">
+              <div className="w-1/4 p-3 text-center border-r border-gray-100">DATE</div>
+              <div className="w-1/4 p-3 text-center border-r border-gray-100">J2N</div>
+              <div className="w-1/4 p-3 text-center border-r border-gray-100">JKB</div>
+              <div className="w-1/4 p-3 text-center">NCK</div>
+            </div>
+          )}
 
           {data.items.length === 0 ? (
             <div className="py-16 text-center text-sm text-gray-400">No monthly details found.</div>
           ) : (
-            data.items.map(item => (
-              <div key={item.sourceRow} className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <div className="w-1/4 p-3 text-center text-gray-900 border-r border-gray-100 font-medium">
-                  {item.date}
-                </div>
-                <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
-                  {formatNumber(item.j2n)}
-                </div>
-                <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
-                  {formatNumber(item.jkb)}
-                </div>
-                <div className="w-1/4 p-3 text-right text-gray-900">
-                  {formatNumber(item.nck)}
-                </div>
+            data.items.map((item, index) => (
+              <div key={item.sourceRow + '-' + index} className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                {monthLabel === 'CHINA' ? (
+                  <>
+                    <div className="w-1/3 p-3 text-center text-gray-900 border-r border-gray-100 font-medium">
+                      {item.date}
+                    </div>
+                    <div className="w-1/3 p-3 text-right text-gray-900 border-r border-gray-100">
+                      {formatNumber(item.j2n)}
+                    </div>
+                    <div className="w-1/3 p-3 text-right text-gray-900">
+                      {formatNumber(item.jkb)}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-1/4 p-3 text-center text-gray-900 border-r border-gray-100 font-medium">
+                      {item.date}
+                    </div>
+                    <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
+                      {formatNumber(item.j2n)}
+                    </div>
+                    <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
+                      {formatNumber(item.jkb)}
+                    </div>
+                    <div className="w-1/4 p-3 text-right text-gray-900">
+                      {formatNumber(item.nck)}
+                    </div>
+                  </>
+                )}
               </div>
             ))
           )}
 
           <div className="flex bg-gray-50/50 border-t-2 border-gray-900">
-            <div className="w-1/4 p-3 font-bold text-gray-900 border-r border-gray-100">TOTAL</div>
-            <div className="w-1/4 p-3 text-right font-bold text-gray-900 border-r border-gray-100">{formatNumber(data.total.j2n)}</div>
-            <div className="w-1/4 p-3 text-right font-bold text-gray-900 border-r border-gray-100">{formatNumber(data.total.jkb)}</div>
-            <div className="w-1/4 p-3 text-right font-bold text-gray-900">{formatNumber(data.total.nck)}</div>
+            {monthLabel === 'CHINA' ? (
+              <>
+                <div className="w-1/3 p-3 font-bold text-gray-900 border-r border-gray-100">TOTAL</div>
+                <div className="w-1/3 p-3 text-right font-bold text-gray-900 border-r border-gray-100">{formatNumber(data.total.j2n)}</div>
+                <div className="w-1/3 p-3 text-right font-bold text-gray-900">{formatNumber(data.total.jkb)}</div>
+              </>
+            ) : (
+              <>
+                <div className="w-1/4 p-3 font-bold text-gray-900 border-r border-gray-100">TOTAL</div>
+                <div className="w-1/4 p-3 text-right font-bold text-gray-900 border-r border-gray-100">{formatNumber(data.total.j2n)}</div>
+                <div className="w-1/4 p-3 text-right font-bold text-gray-900 border-r border-gray-100">{formatNumber(data.total.jkb)}</div>
+                <div className="w-1/4 p-3 text-right font-bold text-gray-900">{formatNumber(data.total.nck)}</div>
+              </>
+            )}
           </div>
         </div>
       ) : null}
