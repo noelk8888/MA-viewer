@@ -497,29 +497,22 @@ export const fetchMonthDetailData = async (
               items.push({ date, details, drNum, j2n: 0, jkb: 0, nck: amount, sourceRow: row });
             }
           } else if (monthLabel === 'CHINA') {
-            let i = 0;
-            while (true) {
-              const r1 = 158 + i;
-              const r2 = 159 + i;
-              
-              if (r1 > data.length && r2 > data.length) break;
+            for (let row = 158; row <= 190; row++) {
+              if (row > data.length) break;
 
-              const source1 = data[r1 - 1] || [];
-              const source2 = data[r2 - 1] || [];
+              const source = data[row - 1] || [];
               
-              const details = source1[7] || '';        // H158
-              const j2n = parseVal(source2[13]);    // N159
-              const jkb = parseVal(source1[15]);    // P158
+              const details = source[7] || '';     // H
+              const j2n = parseVal(source[13]);    // N
+              const jkb = parseVal(source[15]);    // P
               const nck = 0;
               
               if (!details && j2n === 0 && jkb === 0) {
-                // DO NOT include rows with blanks
-                i++;
+                // Skip blank rows
                 continue;
               }
 
-              items.push({ date: '', details, j2n, jkb, nck, sourceRow: r1 });
-              i++;
+              items.push({ date: '', details, j2n, jkb, nck, sourceRow: row });
             }
           } else {
             const startRow = 7 + (monthIndex * 8);
