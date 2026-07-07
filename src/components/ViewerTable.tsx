@@ -1,4 +1,4 @@
-import { RefreshCw, Plus, X } from 'lucide-react';
+import { RefreshCw, Plus, X, TrendingUp, TrendingDown } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { fetchSheetData, type SheetRow } from '../services/sheetService';
 import { generateSOA, generateBill } from '../services/googleSheetsService';
@@ -26,6 +26,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     const [selectionType, setSelectionType] = useState<'DR' | 'CBM' | 'SUPPLIER' | null>(null);
     const [isProcessingSoa, setIsProcessingSoa] = useState(false);
     const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+    const [trend, setTrend] = useState<'up' | 'down' | 'neutral'>('neutral');
 
     const { accessToken, login, logout, isAuthenticated } = useGoogleAuth();
 
@@ -63,6 +64,39 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
         loadData();
     }, [selectedYear]);
 
+    useEffect(() => {
+        if (!rate || rate === '0') return;
+        
+        try {
+            const todayStr = new Date().toDateString();
+            const stored = JSON.parse(localStorage.getItem('cny_rate_data') || '{"rate": "0", "previousRate": "0", "date": ""}');
+            
+            let prevRate = stored.previousRate;
+            let currRate = stored.rate;
+            
+            if (rate !== currRate) {
+                if (stored.date !== todayStr) {
+                    prevRate = currRate;
+                }
+                currRate = rate;
+                localStorage.setItem('cny_rate_data', JSON.stringify({ rate: currRate, previousRate: prevRate, date: todayStr }));
+            } else if (stored.date !== todayStr) {
+                localStorage.setItem('cny_rate_data', JSON.stringify({ rate: currRate, previousRate: prevRate, date: todayStr }));
+            }
+            
+            const currNum = parseFloat(currRate.replace(/,/g, ''));
+            const prevNum = parseFloat(prevRate.replace(/,/g, ''));
+            
+            if (!isNaN(prevNum) && prevNum > 0 && !isNaN(currNum)) {
+                if (currNum > prevNum) setTrend('up');
+                else if (currNum < prevNum) setTrend('down');
+                else setTrend('neutral');
+            }
+        } catch (e) {
+            console.error('Error tracking rate history', e);
+        }
+    }, [rate]);
+
     return (
         <div className="w-full max-w-2xl mx-auto bg-white shadow-xl rounded-2xl border border-gray-100 my-4 sm:my-8 relative">
             {/* Header Bar */}
@@ -84,14 +118,18 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                         <Plus size={14} />
                     </button>
                     <span className="text-gray-300 font-light">|</span>
-                    <a
-                        href={RATES_FOLDER_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`hover:underline cursor-pointer ${loading ? 'opacity-50 animate-pulse' : ''}`}
-                    >
-                        {rate}
-                    </a>
+                    <span className="flex items-center gap-1">
+                        <a
+                            href={RATES_FOLDER_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`hover:underline cursor-pointer ${loading ? 'opacity-50 animate-pulse' : ''}`}
+                        >
+                            {rate}
+                        </a>
+                        {trend === 'up' && <TrendingUp size={16} className="text-green-500" />}
+                        {trend === 'down' && <TrendingDown size={16} className="text-red-500" />}
+                    </span>
                     <span className="text-gray-300 font-light">|</span>
                     <span 
                         className={`${loading ? 'opacity-50 animate-pulse' : ''} hover:underline cursor-pointer`}
