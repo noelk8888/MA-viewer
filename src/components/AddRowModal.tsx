@@ -3,6 +3,8 @@ import { X, Loader2, CheckCircle, AlertCircle, Plus } from 'lucide-react';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 import { appendSheetRow } from '../services/googleSheetsService';
 import type { NewRowData } from '../services/googleSheetsService';
+import FormattedDateInput from './FormattedDateInput';
+import { formatAmount, parseFormattedNumber } from '../utils/formatters';
 
 interface AddRowModalProps {
   isOpen: boolean;
@@ -62,7 +64,7 @@ const AddRowModal: React.FC<AddRowModalProps> = ({
       const rowData: NewRowData = {
         date: date || undefined,
         supplier: supplier || undefined,
-        amountCNY: amountCNY ? parseFloat(amountCNY) : undefined,
+        amountCNY: parseFormattedNumber(amountCNY),
         sacks: sacks ? parseFloat(sacks) : undefined,
         cnyToday: cnyToday ? parseFloat(cnyToday) : undefined,
         cnyMA: cnyMA ? parseFloat(cnyMA) : undefined,
@@ -145,12 +147,11 @@ const AddRowModal: React.FC<AddRowModalProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Date (B)</label>
-                  <input
-                    type="date"
+                  <FormattedDateInput
                     value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    onChange={setDate}
                     disabled={isProcessing}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                    focusColor="green"
                   />
                 </div>
                 <div>
@@ -171,9 +172,11 @@ const AddRowModal: React.FC<AddRowModalProps> = ({
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Amount CNY (E)</label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     value={amountCNY}
-                    onChange={(e) => setAmountCNY(e.target.value)}
+                    onChange={(e) => setAmountCNY(e.target.value.replace(/[^\d.,-]/g, ''))}
+                    onBlur={() => setAmountCNY(formatAmount(amountCNY))}
                     disabled={isProcessing}
                     placeholder="0.00"
                     step="0.01"

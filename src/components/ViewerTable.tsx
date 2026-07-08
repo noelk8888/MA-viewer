@@ -5,6 +5,7 @@ import { generateSOA, generateBill } from '../services/googleSheetsService';
 import RowItem from './RowItem';
 import AddRowModal from './AddRowModal';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
+import { formatAppDate } from '../utils/formatters';
 
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=311571294#gid=311571294';
 const RATES_FOLDER_URL = 'https://drive.google.com/drive/folders/1MsJRVArZGMTmqcOuCr4pvhY1-aE_HPqT?usp=drive_link';
@@ -20,7 +21,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showAddRowModal, setShowAddRowModal] = useState(false);
-    const [selectedYear, setSelectedYear] = useState<string>('2026');
+    const [selectedYear] = useState<string>('2026');
     const [selectionModeType, setSelectionModeType] = useState<'DR_CBM' | 'SUPPLIER' | 'ISSUE_DR' | null>(null);
     const [selectedRowIndices, setSelectedRowIndices] = useState<number[]>([]);
     const [selectionType, setSelectionType] = useState<'DR' | 'CBM' | 'SUPPLIER' | 'ISSUE_DR' | null>(null);
@@ -45,10 +46,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     };
 
     // Get Today's Date formatted
-    const today = new Date().toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric'
-    });
+    const today = formatAppDate(new Date().toISOString().slice(0, 10));
 
     const loadData = async () => {
         setLoading(true);
@@ -155,16 +153,6 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
 
             {/* Year Tabs */}
             <div className="flex border-b border-gray-200 bg-white sticky top-[60px] z-20 shadow-sm">
-                <button
-                    onClick={() => setSelectedYear('2026')}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                        selectedYear === '2026'
-                            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                    }`}
-                >
-                    2026
-                </button>
                 <button
                     onClick={() => toggleSelectionMode('SUPPLIER')}
                     className={`flex-1 py-2 text-sm font-medium transition-colors ${

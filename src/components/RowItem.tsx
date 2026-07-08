@@ -5,6 +5,7 @@ import Modal from './Modal';
 import ImageUploadModal from './ImageUploadModal';
 import EditRowModal from './EditRowModal';
 import type { ImageType } from '../services/googleSheetsService';
+import { formatAmount, formatAppDate } from '../utils/formatters';
 
 interface RowItemProps {
     row: SheetRow;
@@ -66,9 +67,9 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, se
                         {/* COL X - Clickable date to edit */}
                         <button
                             onClick={() => setShowEditModal(true)}
-                            className={`font-semibold ${isColorAlert ? 'text-red-500' : 'text-gray-700'} hover:underline cursor-pointer`}
+                            className={`font-semibold ${isColorAlert ? 'text-red-500' : 'text-green-500'} hover:underline cursor-pointer`}
                         >
-                            {row.Color || '-'}
+                            {formatAppDate(row.Color) || '-'}
                         </button>
                         {/* COL Y */}
                         {row.Remarks && row.Remarks.trim().toUpperCase() !== 'Y' && (
@@ -124,7 +125,7 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, se
                 {/* COL 3: Pricing */}
                 <div className="p-3 flex flex-col justify-center items-end space-y-1 text-right border-r border-gray-100/50 bg-gray-50/30">
                     <div className="font-bold text-emerald-600 text-sm sm:text-base whitespace-nowrap">
-                        <span className="text-xs mr-0.5 opacity-70">¥</span>{row.RMB}
+                        <span className="text-xs mr-0.5 opacity-70">¥</span>{formatAmount(row.RMB)}
                     </div>
                     <div className="font-medium text-gray-600 text-xs sm:text-sm whitespace-nowrap">
                         <span className="text-[10px] mr-0.5 opacity-70">₱</span>{row.PHP}

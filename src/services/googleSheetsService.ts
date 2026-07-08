@@ -1,4 +1,5 @@
 import Papa from 'papaparse';
+import { formatAppDate, toIsoDate } from '../utils/formatters';
 
 const SHEETS_API_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
 
@@ -65,6 +66,7 @@ export interface NewRowData {
   cnyMA?: number;          // Col O
   cbm?: number;            // Col S
   drNumber?: string;       // Col Y
+  dateX?: string;          // Col X
   colN?: string;           // Col N
 }
 
@@ -168,6 +170,7 @@ export interface RowDataForEdit {
   cnyMA: string;
   cbm: string;
   drNumber: string;
+  dateX: string;
   colN: string;
 }
 
@@ -204,30 +207,8 @@ export const fetchRowForEdit = async (
     return String(val);
   };
 
-  // Parse date - handle serial date number
-  let dateValue = getValue(1);
-  if (dateValue) {
-    const num = parseFloat(dateValue);
-    // Serial date for 2020-2030 range is roughly 43831-47848
-    if (!isNaN(num) && num > 40000 && num < 60000) {
-      // Excel/Sheets serial date - convert to JS date
-      // Sheets uses 1899-12-30 as epoch (day 0)
-      const date = new Date((num - 25569) * 86400 * 1000);
-      dateValue = date.toISOString().split('T')[0];
-    } else if (typeof row[1] === 'string' && dateValue.includes('/')) {
-      // Format like "1/15/2026" - convert to YYYY-MM-DD
-      const parts = dateValue.split('/');
-      if (parts.length === 3) {
-        const month = parts[0].padStart(2, '0');
-        const day = parts[1].padStart(2, '0');
-        const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
-        dateValue = `${year}-${month}-${day}`;
-      }
-    }
-  }
-
   return {
-    date: dateValue,
+    date: toIsoDate(getValue(1)),
     supplier: getValue(2),       // C
     amountCNY: getValue(4),      // E
     sacks: getValue(5),          // F
@@ -235,6 +216,7 @@ export const fetchRowForEdit = async (
     cnyMA: getValue(14),         // O
     cbm: getValue(18),           // S
     drNumber: getValue(24),      // Y
+    dateX: toIsoDate(getValue(23)), // X
     colN: getValue(13),          // N (Column 14)
   };
 };
@@ -274,7 +256,7 @@ export const updateSheetRow = async (
     `=IF(S${rowNumber}="","",S${rowNumber}*10500)`,  // U
     `=IF(B${rowNumber}="","",B${rowNumber}+5)`,  // V
     30,                                    // W
-    `=IF(V${rowNumber}="","",V${rowNumber}+30)`,  // X
+    rowData.dateX || `=IF(V${rowNumber}="","",V${rowNumber}+30)`,  // X
     rowData.drNumber || '',                // Y - DR Number
     `=S${rowNumber}`,                      // Z
     9500,                                  // AA
@@ -620,7 +602,7 @@ export const generateSOA = async (
   const soaGid = '1049592506';
   const sheetName = await getSheetNameByGid(accessToken, spreadsheetId, soaGid);
 
-  const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const dateStr = formatAppDate(new Date().toISOString().slice(0, 10));
   
   let b7Value = '';
   if (selectionType === 'DR') {

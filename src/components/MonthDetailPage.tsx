@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { formatAppDate } from '../utils/formatters';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { fetchMonthDetailData, type MonthDetailData } from '../services/googleSheetsService';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
@@ -120,7 +121,7 @@ export const MonthDetailPage: React.FC<MonthDetailPageProps> = ({
                 ) : monthLabel === 'DR' ? (
                   <>
                     <div className="w-1/4 p-3 text-center text-gray-900 border-r border-gray-100 font-medium">
-                      {item.date}
+                      {formatAppDate(item.date)}
                     </div>
                     <div className="w-1/4 p-3 text-center text-gray-900 border-r border-gray-100">
                       {item.details}
@@ -135,7 +136,7 @@ export const MonthDetailPage: React.FC<MonthDetailPageProps> = ({
                 ) : (
                   <>
                     <div className="w-1/4 p-3 text-center text-gray-900 border-r border-gray-100 font-medium">
-                      {item.date}
+                      {formatAppDate(item.date)}
                     </div>
                     <div className="w-1/4 p-3 text-right text-gray-900 border-r border-gray-100">
                       {formatNumber(item.j2n)}

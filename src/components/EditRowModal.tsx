@@ -3,6 +3,8 @@ import { X, Loader2, CheckCircle, AlertCircle, Edit3 } from 'lucide-react';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 import { fetchRowForEdit, updateSheetRow } from '../services/googleSheetsService';
 import type { NewRowData } from '../services/googleSheetsService';
+import { formatAmount, formatAppDate, parseFormattedNumber } from '../utils/formatters';
+import FormattedDateInput from './FormattedDateInput';
 
 interface EditRowModalProps {
   isOpen: boolean;
@@ -30,6 +32,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
   const [supplier, setSupplier] = useState('');
   const [amountCNY, setAmountCNY] = useState('');
   const [sacks, setSacks] = useState('');
+  const [dateX, setDateX] = useState('');
   const [cnyToday, setCnyToday] = useState('');
   const [cnyMA, setCnyMA] = useState('');
   const [cbm, setCbm] = useState('');
@@ -41,6 +44,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
     setSupplier('');
     setAmountCNY('');
     setSacks('');
+    setDateX('');
     setCnyToday('');
     setCnyMA('');
     setCbm('');
@@ -62,20 +66,11 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
           setError(null);
           const data = await fetchRowForEdit(accessToken, sheetId, rowNumber, selectedYear);
 
-          // Convert date format if needed (from serial or display format to YYYY-MM-DD)
-          let dateValue = data.date;
-          if (dateValue && !dateValue.includes('-')) {
-            // Try to parse as a date string like "1/15/2026" or serial number
-            const parsed = new Date(dateValue);
-            if (!isNaN(parsed.getTime())) {
-              dateValue = parsed.toISOString().split('T')[0];
-            }
-          }
-
-          setDate(dateValue);
+          setDate(data.date);
           setSupplier(data.supplier);
-          setAmountCNY(data.amountCNY);
+          setAmountCNY(formatAmount(data.amountCNY));
           setSacks(data.sacks);
+          setDateX(data.dateX);
           setCnyToday(data.cnyToday);
           setCnyMA(data.cnyMA);
           setCbm(data.cbm);
@@ -112,12 +107,13 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
       const rowData: NewRowData = {
         date: date || undefined,
         supplier: supplier || undefined,
-        amountCNY: amountCNY ? parseFloat(amountCNY) : undefined,
+        amountCNY: parseFormattedNumber(amountCNY),
         sacks: sacks ? parseFloat(sacks) : undefined,
         cnyToday: cnyToday ? parseFloat(cnyToday) : undefined,
         cnyMA: cnyMA ? parseFloat(cnyMA) : undefined,
         cbm: cbm ? parseFloat(cbm) : undefined,
         drNumber: drNumber || undefined,
+        dateX: dateX || undefined,
         colN: colN || undefined,
       };
 
@@ -140,7 +136,7 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
         setError(errorMessage);
       }
     }
-  }, [accessToken, date, supplier, amountCNY, sacks, cnyToday, cnyMA, cbm, drNumber, colN, rowNumber, onRowUpdated, onClose, resetForm, selectedYear]);
+  }, [accessToken, date, supplier, amountCNY, sacks, cnyToday, cnyMA, cbm, drNumber, dateX, colN, rowNumber, onRowUpdated, onClose, resetForm, selectedYear]);
 
   const handleClose = useCallback(() => {
     if (submitState !== 'submitting' && submitState !== 'loading') {
@@ -200,12 +196,10 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Date (B)</label>
-                  <input
-                    type="date"
+                  <FormattedDateInput
                     value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    onChange={setDate}
                     disabled={isProcessing}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                   />
                 </div>
                 <div>
@@ -221,14 +215,16 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
                 </div>
               </div>
 
-              {/* Row 2: Amount CNY & Sacks */}
+              {/* Row 2: Amount CNY & CBM */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Amount CNY (E)</label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     value={amountCNY}
-                    onChange={(e) => setAmountCNY(e.target.value)}
+                    onChange={(e) => setAmountCNY(e.target.value.replace(/[^\d.,-]/g, ''))}
+                    onBlur={() => setAmountCNY(formatAmount(amountCNY))}
                     disabled={isProcessing}
                     placeholder="0.00"
                     step="0.01"
@@ -236,13 +232,14 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Sacks (F)</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">CBM (S)</label>
                   <input
                     type="number"
-                    value={sacks}
-                    onChange={(e) => setSacks(e.target.value)}
+                    value={cbm}
+                    onChange={(e) => setCbm(e.target.value)}
                     disabled={isProcessing}
-                    placeholder="0"
+                    placeholder="0.00"
+                    step="0.01"
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                   />
                 </div>
@@ -276,20 +273,8 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
                 </div>
               </div>
 
-              {/* Row 4: CBM & DR Number */}
+              {/* Row 4: DR Number & Date X */}
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">CBM (S)</label>
-                  <input
-                    type="number"
-                    value={cbm}
-                    onChange={(e) => setCbm(e.target.value)}
-                    disabled={isProcessing}
-                    placeholder="0.00"
-                    step="0.01"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                  />
-                </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">DR Number (Y)</label>
                   <input
@@ -299,6 +284,21 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
                     disabled={isProcessing}
                     placeholder="Enter DR#"
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Date (X)</label>
+                  <input
+                    type="text"
+                    value={formatAppDate(dateX)}
+                    readOnly
+                    disabled={isProcessing}
+                    placeholder="No date"
+                    className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none disabled:opacity-50 ${
+                      drNumber.trim()
+                        ? 'border-gray-200'
+                        : 'border-red-600 bg-red-600 text-white placeholder:text-red-100'
+                    }`}
                   />
                 </div>
               </div>
