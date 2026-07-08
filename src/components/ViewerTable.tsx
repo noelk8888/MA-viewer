@@ -21,14 +21,20 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     const [error, setError] = useState<string | null>(null);
     const [showAddRowModal, setShowAddRowModal] = useState(false);
     const [selectedYear, setSelectedYear] = useState<string>('2026');
-    const [selectionModeType, setSelectionModeType] = useState<'DR_CBM' | 'SUPPLIER' | null>(null);
+    const [selectionModeType, setSelectionModeType] = useState<'DR_CBM' | 'SUPPLIER' | 'ISSUE_DR' | null>(null);
     const [selectedRowIndices, setSelectedRowIndices] = useState<number[]>([]);
-    const [selectionType, setSelectionType] = useState<'DR' | 'CBM' | 'SUPPLIER' | null>(null);
+    const [selectionType, setSelectionType] = useState<'DR' | 'CBM' | 'SUPPLIER' | 'ISSUE_DR' | null>(null);
     const [isProcessingSoa, setIsProcessingSoa] = useState(false);
     const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
     const [trend, setTrend] = useState<'up' | 'down' | 'neutral'>('neutral');
 
     const { accessToken, login, logout, isAuthenticated } = useGoogleAuth();
+
+    const toggleSelectionMode = (mode: 'DR_CBM' | 'SUPPLIER' | 'ISSUE_DR') => {
+        setSelectionModeType(currentMode => currentMode === mode ? null : mode);
+        setSelectedRowIndices([]);
+        setSelectionType(null);
+    };
 
     // Toggle dark mode
     const toggleDarkMode = () => {
@@ -155,52 +161,58 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
 
             {/* Year Tabs */}
             <div className="flex border-b border-gray-200 bg-white sticky top-[60px] z-20 shadow-sm">
-                {['2026', '2025', '2024', '2023'].map(year => (
-                    <button
-                        key={year}
-                        onClick={() => setSelectedYear(year)}
-                        className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                            selectedYear === year 
-                                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' 
-                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                        }`}
-                    >
-                        {year}
-                    </button>
-                ))}
+                <button
+                    onClick={() => setSelectedYear('2026')}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                        selectedYear === '2026'
+                            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                    2026
+                </button>
+                <button
+                    onClick={() => toggleSelectionMode('SUPPLIER')}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                        selectionModeType === 'SUPPLIER'
+                            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    }`}
+                    title="Toggle Supplier Selection Mode"
+                >
+                    GenBill
+                </button>
+                <button
+                    onClick={() => toggleSelectionMode('ISSUE_DR')}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                        selectionModeType === 'ISSUE_DR'
+                            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    }`}
+                    title="Select an entry to issue a DR"
+                >
+                    Issue DR
+                </button>
+                <button
+                    onClick={() => toggleSelectionMode('DR_CBM')}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                        selectionModeType === 'DR_CBM'
+                            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    }`}
+                    title="Toggle DR Selection Mode"
+                >
+                    Issue SOA
+                </button>
             </div>
 
             {/* Table Headers */}
             <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[97px] z-20 shadow-sm">
-                <div 
-                    className="p-3 border-r border-gray-200/50 cursor-pointer hover:bg-gray-200 transition-colors select-none"
-                    onClick={() => {
-                        if (selectionModeType === 'SUPPLIER') {
-                            setSelectionModeType(null);
-                        } else {
-                            setSelectionModeType('SUPPLIER');
-                        }
-                        setSelectedRowIndices([]);
-                        setSelectionType(null);
-                    }}
-                    title="Toggle Supplier Selection Mode"
-                >
-                    Supplier {selectionModeType === 'SUPPLIER' && <span className="text-[10px] ml-1 text-blue-600 font-bold">(Cancel)</span>}
+                <div className="p-3 border-r border-gray-200/50">
+                    Supplier
                 </div>
-                <div 
-                    className="p-3 text-center border-r border-gray-200/50 cursor-pointer hover:bg-gray-200 transition-colors select-none"
-                    onClick={() => {
-                        if (selectionModeType === 'DR_CBM') {
-                            setSelectionModeType(null);
-                        } else {
-                            setSelectionModeType('DR_CBM');
-                        }
-                        setSelectedRowIndices([]);
-                        setSelectionType(null);
-                    }}
-                    title="Toggle DR Selection Mode"
-                >
-                    DR {selectionModeType === 'DR_CBM' && <span className="text-[10px] ml-1 text-blue-600 font-bold">(Cancel)</span>}
+                <div className="p-3 text-center border-r border-gray-200/50">
+                    DR
                 </div>
                 <div className="p-3 text-right border-r border-gray-200/50">RMB / PHP</div>
                 <div className="p-3 text-center">CBM</div>
@@ -237,9 +249,12 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                             onToggleSelect={(rowIndex, type) => {
                                 setSelectedRowIndices(prev => {
                                     const isSelected = prev.includes(rowIndex);
+                                    const selectionLimit = selectionModeType === 'ISSUE_DR' ? 1 : 3;
                                     
-                                    if (!isSelected && prev.length >= 3) {
-                                        alert("You can only select up to 3 items for the SOA.");
+                                    if (!isSelected && prev.length >= selectionLimit) {
+                                        alert(selectionModeType === 'ISSUE_DR'
+                                            ? "You can only select one entry to issue a DR."
+                                            : "You can only select up to 3 items.");
                                         return prev;
                                     }
 
@@ -368,7 +383,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                                 PRINT
                             </button>
                         </>
-                    ) : (
+                    ) : selectionModeType === 'SUPPLIER' ? (
                         <button
                             onClick={async () => {
                                 if (!isAuthenticated || !accessToken) {
@@ -407,6 +422,22 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                             className="px-4 py-1.5 bg-purple-600 text-white text-sm font-medium rounded-full hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                         >
                             {isProcessingSoa ? 'PROCESSING...' : 'GENERATE BILL'}
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => {
+                                const rowNumber = selectedRowIndices[0];
+                                if (!rowNumber) return;
+
+                                window.open(`https://drsheet.vercel.app/?row=${rowNumber}`, '_blank');
+                                setSelectionModeType(null);
+                                setSelectedRowIndices([]);
+                                setSelectionType(null);
+                            }}
+                            disabled={selectedRowIndices.length !== 1}
+                            className="px-4 py-1.5 bg-red-600 text-white text-sm font-medium rounded-full hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                        >
+                            ISSUE DR
                         </button>
                     )}
                     <button

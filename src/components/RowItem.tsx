@@ -10,11 +10,11 @@ interface RowItemProps {
     row: SheetRow;
     onImageUpdated?: () => void;
     selectedYear: string;
-    selectionModeType?: 'DR_CBM' | 'SUPPLIER' | null;
+    selectionModeType?: 'DR_CBM' | 'SUPPLIER' | 'ISSUE_DR' | null;
     isSelected?: boolean;
-    selectionType?: 'DR' | 'CBM' | 'SUPPLIER' | null;
+    selectionType?: 'DR' | 'CBM' | 'SUPPLIER' | 'ISSUE_DR' | null;
     selectedCount?: number;
-    onToggleSelect?: (rowIndex: number, type: 'DR' | 'CBM' | 'SUPPLIER') => void;
+    onToggleSelect?: (rowIndex: number, type: 'DR' | 'CBM' | 'SUPPLIER' | 'ISSUE_DR') => void;
 }
 
 const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, selectionModeType, isSelected, selectionType, selectedCount = 0, onToggleSelect }) => {
@@ -32,13 +32,20 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, se
             <div className="grid grid-cols-4 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
                 {/* COL 1: Supplier Info */}
                 <div className="p-3 flex flex-row items-center gap-2 border-r border-gray-100/50">
-                    {selectionModeType === 'SUPPLIER' && (
+                    {(selectionModeType === 'SUPPLIER' || selectionModeType === 'ISSUE_DR') && (
                         <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={() => onToggleSelect?.(row.originalIndex, 'SUPPLIER')}
-                            disabled={!isSelected && selectedCount >= 3}
-                            className="w-5 h-5 text-purple-600 rounded border-gray-300 focus:ring-purple-500 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                            onChange={() => onToggleSelect?.(
+                                row.originalIndex,
+                                selectionModeType === 'ISSUE_DR' ? 'ISSUE_DR' : 'SUPPLIER'
+                            )}
+                            disabled={!isSelected && selectedCount >= (selectionModeType === 'ISSUE_DR' ? 1 : 3)}
+                            className={`w-5 h-5 rounded border-gray-300 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0 ${
+                                selectionModeType === 'ISSUE_DR'
+                                    ? 'text-red-600 focus:ring-red-500'
+                                    : 'text-purple-600 focus:ring-purple-500'
+                            }`}
                         />
                     )}
                     <div className="flex flex-col justify-center space-y-1 text-xs sm:text-sm w-full">

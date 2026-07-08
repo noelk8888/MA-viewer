@@ -370,13 +370,9 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
 
             {/* Action Buttons */}
             <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => window.open(`https://drsheet.vercel.app/?row=${rowNumber}`, '_blank')}
-                disabled={isProcessing}
-                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
-              >
+              <div className="flex-1 px-4 py-2.5 bg-red-100 text-red-700 rounded-xl font-medium text-center">
                 ISSUE DR
-              </button>
+              </div>
               <button
                 onClick={handleSubmit}
                 disabled={isProcessing}
