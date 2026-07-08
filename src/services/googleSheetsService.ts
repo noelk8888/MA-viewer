@@ -636,10 +636,10 @@ export const generateSOA = async (
       const row = selectedRowsData[i];
       let c8Value = '';
       if (selectionType === 'DR') {
-        c8Value = (row.Remarks || '').substring(0, 5);
+        c8Value = (row.Remarks || '').substring(0, 6);
       } else {
         const remarks = row.Remarks || '';
-        c8Value = remarks.length >= 5 ? remarks.substring(0, 2) + remarks.slice(-3) : remarks;
+        c8Value = remarks.length >= 6 ? remarks.substring(0, 3) + remarks.slice(-3) : remarks;
       }
 
       const d8Value = selectionType === 'DR' ? (row.PHP || '') : (row.CBMPHP || '');
