@@ -143,12 +143,6 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                     >
                         {i1Value}
                     </span>
-                    <button
-                        onClick={toggleDarkMode}
-                        className={`ml-3 px-2 py-1 text-[10px] font-bold rounded shadow-sm border transition-colors ${isDark ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-200 hover:bg-gray-50'}`}
-                    >
-                        {isDark ? 'DARK' : 'LIGHT'}
-                    </button>
                 </h1>
                 <button
                     onClick={loadData}
@@ -203,6 +197,17 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                     title="Toggle DR Selection Mode"
                 >
                     Issue SOA
+                </button>
+                <button
+                    onClick={toggleDarkMode}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                        isDark
+                            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    }`}
+                    title="Toggle dark mode"
+                >
+                    {isDark ? 'DARK' : 'LIGHT'}
                 </button>
             </div>
 

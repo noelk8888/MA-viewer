@@ -303,36 +303,6 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
                 </div>
               </div>
 
-              {/* Row 5: Payment Status (Col N) */}
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                <label className="block text-xs font-medium text-gray-600 mb-2">Payment Status (Col N)</label>
-                <div className="flex items-center gap-6">
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer select-none">
-                    <input
-                      type="radio"
-                      name="paymentStatus"
-                      value="Y"
-                      checked={colN === 'Y'}
-                      onChange={() => setColN('Y')}
-                      disabled={isProcessing}
-                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
-                    />
-                    Paid
-                  </label>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer select-none">
-                    <input
-                      type="radio"
-                      name="paymentStatus"
-                      value=""
-                      checked={colN !== 'Y'}
-                      onChange={() => setColN('')}
-                      disabled={isProcessing}
-                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
-                    />
-                    Unpaid
-                  </label>
-                </div>
-              </div>
             </div>
 
             {/* Status Messages */}
@@ -368,15 +338,41 @@ const EditRowModal: React.FC<EditRowModalProps> = ({
               </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 mt-6">
-              <div className="flex-1 px-4 py-2.5 bg-red-100 text-red-700 rounded-xl font-medium text-center">
-                ISSUE DR
+            {/* Payment Status and Update Action */}
+            <div className="grid grid-cols-2 gap-3 mt-4 items-stretch">
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <label className="block text-xs font-medium text-gray-600 mb-2">Payment Status (Col N)</label>
+                <div className="flex items-center gap-6">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer select-none">
+                    <input
+                      type="radio"
+                      name="paymentStatus"
+                      value="Y"
+                      checked={colN === 'Y'}
+                      onChange={() => setColN('Y')}
+                      disabled={isProcessing}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+                    />
+                    Paid
+                  </label>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer select-none">
+                    <input
+                      type="radio"
+                      name="paymentStatus"
+                      value=""
+                      checked={colN !== 'Y'}
+                      onChange={() => setColN('')}
+                      disabled={isProcessing}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+                    />
+                    Unpaid
+                  </label>
+                </div>
               </div>
               <button
                 onClick={handleSubmit}
                 disabled={isProcessing}
-                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="h-full min-h-[72px] px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isProcessing ? (
                   <>
