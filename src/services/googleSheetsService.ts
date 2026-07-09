@@ -472,7 +472,11 @@ export const fetchMonthDetailData = async (
               const date = source[5] || '';       // F
               const details = source[7] || '';    // H
               const drNum = source[9] || '';      // J
-              const amount = parseVal(source[11]);// L
+              const amount = (
+                parseVal(source[11]) + // L
+                parseVal(source[13]) + // N
+                parseVal(source[15])   // P
+              );
 
               if (!date && !details && !drNum && amount === 0) continue; // Skip blank rows
 
