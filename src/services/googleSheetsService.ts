@@ -487,10 +487,20 @@ export const fetchMonthDetailData = async (
               if (row > data.length) break;
 
               const source = data[row - 1] || [];
-              
               const details = source[7] || '';     // H
               const j2n = parseVal(source[13]);    // N
-              const jkb = parseVal(source[15]);    // P
+              const isCbmRow = details.trim().toUpperCase() === 'CBM';
+
+              // Each item row is paired with the immediately following CBM row.
+              // Display both values on the item row and omit the separate CBM row.
+              if (isCbmRow) continue;
+
+              const partnerSource = data[row] || [];
+              const partnerDetails = partnerSource[7] || ''; // H on the next row
+              const hasCbmPartner = partnerDetails.trim().toUpperCase() === 'CBM';
+              const jkb = hasCbmPartner
+                ? parseVal(partnerSource[15])       // P on the paired CBM row
+                : parseVal(source[15]);             // P fallback on the item row
               const nck = 0;
               
               if (!details && j2n === 0 && jkb === 0) {
@@ -499,6 +509,8 @@ export const fetchMonthDetailData = async (
               }
 
               items.push({ date: '', details, j2n, jkb, nck, sourceRow: row });
+
+              if (hasCbmPartner) row++;
             }
           } else {
             const startRow = 7 + (monthIndex * 8);
