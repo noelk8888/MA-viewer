@@ -27,7 +27,7 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, se
 
     // Logic: Color is red if Remarks (Col Y) is empty
     const isColorAlert = !row.Remarks || row.Remarks.trim() === '';
-    const colBDisplay = formatAppDate(row.Supplier) || row.Supplier || '-';
+    const colBDisplay = row.Supplier?.trim() || '-';
 
     return (
         <>
@@ -53,7 +53,7 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, se
                     <div className="flex flex-col justify-center space-y-1 text-xs sm:text-sm w-full">
                         <button
                             onClick={() => setShowEditModal(true)}
-                            className="text-sm sm:text-base leading-tight font-normal text-white truncate hover:underline cursor-pointer text-left"
+                            className="block min-h-[1.25rem] text-sm sm:text-base leading-tight font-normal text-gray-100 truncate hover:underline cursor-pointer text-left"
                             title={colBDisplay}
                         >
                             {colBDisplay}
