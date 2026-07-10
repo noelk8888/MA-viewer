@@ -67,7 +67,7 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, se
                         {/* COL X - Clickable date to edit */}
                         <button
                             onClick={() => setShowEditModal(true)}
-                            className={`text-sm sm:text-base leading-tight ${isColorAlert ? 'font-semibold text-red-500' : 'font-extrabold text-green-500'} hover:underline cursor-pointer`}
+                            className={`text-sm sm:text-base leading-tight ${isColorAlert ? 'font-normal text-red-500' : 'font-extrabold text-green-500'} hover:underline cursor-pointer`}
                         >
                             {formatAppDate(row.Color) || '-'}
                         </button>
