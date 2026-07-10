@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import { formatAppDate, toIsoDate } from '../utils/formatters';
+import { toIsoDate } from '../utils/formatters';
 
 const SHEETS_API_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
 
@@ -618,7 +618,7 @@ export const generateSOA = async (
   const soaGid = '1049592506';
   const sheetName = await getSheetNameByGid(accessToken, spreadsheetId, soaGid);
 
-  const dateStr = formatAppDate(new Date().toISOString().slice(0, 10));
+  const todayIso = new Date().toISOString().slice(0, 10);
   
   let b7Value = '';
   if (selectionType === 'DR') {
@@ -649,7 +649,7 @@ export const generateSOA = async (
   }
 
   const data = [
-    { range: `'${sheetName}'!D2`, values: [[dateStr]] },
+    { range: `'${sheetName}'!D2`, values: [[todayIso]] },
     { range: `'${sheetName}'!B7`, values: [[b7Value]] },
     { range: `'${sheetName}'!A8:D10`, values: rowsData },
     { range: `'${sheetName}'!D11`, values: [['=SUM(D8:D10)']] }
@@ -673,6 +673,46 @@ export const generateSOA = async (
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error?.message || 'Failed to update SOA sheet');
+  }
+
+  const formatResponse = await fetch(
+    `${SHEETS_API_BASE}/${spreadsheetId}:batchUpdate`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        requests: [
+          {
+            repeatCell: {
+              range: {
+                sheetId: Number(soaGid),
+                startRowIndex: 1,
+                endRowIndex: 2,
+                startColumnIndex: 3,
+                endColumnIndex: 4,
+              },
+              cell: {
+                userEnteredFormat: {
+                  numberFormat: {
+                    type: 'DATE',
+                    pattern: 'dd-mmm-yyyy',
+                  },
+                },
+              },
+              fields: 'userEnteredFormat.numberFormat',
+            },
+          },
+        ],
+      }),
+    }
+  );
+
+  if (!formatResponse.ok) {
+    const error = await formatResponse.json();
+    throw new Error(error.error?.message || 'Failed to format SOA date cell');
   }
 };
 
