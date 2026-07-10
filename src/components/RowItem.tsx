@@ -27,6 +27,7 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, se
 
     // Logic: Color is red if Remarks (Col Y) is empty
     const isColorAlert = !row.Remarks || row.Remarks.trim() === '';
+    const colBDisplay = formatAppDate(row.Supplier) || row.Supplier || '-';
 
     return (
         <>
@@ -53,9 +54,9 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, se
                         <button
                             onClick={() => setShowEditModal(true)}
                             className="text-sm sm:text-base leading-tight font-normal text-white truncate hover:underline cursor-pointer text-left"
-                            title={row.Supplier}
+                            title={colBDisplay}
                         >
-                            {row.Supplier || '-'}
+                            {colBDisplay}
                     </button>
                     <div className="text-gray-500 font-medium font-mono text-[10px] sm:text-xs">
                         {row.Code} ({row.CnyToday})
@@ -73,7 +74,7 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, se
                         </button>
                         {/* COL Y */}
                         {row.Remarks && row.Remarks.trim().toUpperCase() !== 'Y' && (
-                            <span className="text-sm sm:text-base leading-tight px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded-md">
+                            <span className="text-sm sm:text-base leading-tight font-normal px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded-md">
                                 {row.Remarks}
                             </span>
                         )}
