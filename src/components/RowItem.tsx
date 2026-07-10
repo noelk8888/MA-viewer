@@ -52,7 +52,7 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, se
                     <div className="flex flex-col justify-center space-y-1 text-xs sm:text-sm w-full">
                         <button
                             onClick={() => setShowEditModal(true)}
-                            className="font-bold text-gray-900 truncate hover:underline cursor-pointer text-left"
+                            className="text-xs sm:text-sm font-normal text-white truncate hover:underline cursor-pointer text-left"
                             title={row.Supplier}
                         >
                             {row.Supplier || '-'}
@@ -67,13 +67,13 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, se
                         {/* COL X - Clickable date to edit */}
                         <button
                             onClick={() => setShowEditModal(true)}
-                            className={`font-semibold ${isColorAlert ? 'text-red-500' : 'text-green-500'} hover:underline cursor-pointer`}
+                            className={`text-xs sm:text-sm ${isColorAlert ? 'font-semibold text-red-500' : 'font-bold text-green-500'} hover:underline cursor-pointer`}
                         >
                             {formatAppDate(row.Color) || '-'}
                         </button>
                         {/* COL Y */}
                         {row.Remarks && row.Remarks.trim().toUpperCase() !== 'Y' && (
-                            <span className="text-[10px] px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded-md">
+                            <span className="text-xs sm:text-sm px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded-md">
                                 {row.Remarks}
                             </span>
                         )}
