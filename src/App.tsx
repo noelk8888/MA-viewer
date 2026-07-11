@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 
 function AppContent() {
   const { isAuthenticated, isInitializing, logout } = useGoogleAuth();
-  const [view, setView] = useState<'viewer' | 'summary' | 'month' | 'account'>('summary');
+  const [view, setView] = useState<'viewer' | 'summary' | 'month' | 'account'>('viewer');
   const [selectedMonth, setSelectedMonth] = useState<{ index: number; label: string } | null>(null);
   useEffect(() => {
     // Keep this for any future initialization if needed, or remove completely if not
@@ -52,7 +52,6 @@ function AppContent() {
       ) : view === 'summary' ? (
         <SummaryPage
           onBack={() => setView('viewer')}
-          onAccountsClick={() => setView('account')}
           onMonthClick={(index, label) => {
             setSelectedMonth({ index, label });
             setView('month');
@@ -67,7 +66,14 @@ function AppContent() {
       ) : view === 'account' ? <AccountPage onBack={() => setView('viewer')} /> : null}
 
       <footer className="py-6 text-center text-xs text-gray-400">
-        <p>Inventory Viewer App • {new Date().getFullYear()}</p>
+        <button
+          type="button"
+          onClick={() => setView('account')}
+          className="hover:text-blue-600 hover:underline transition-colors"
+          title="Open account summary"
+        >
+          Inventory Viewer App • {new Date().getFullYear()}
+        </button>
       </footer>
     </div>
   );
