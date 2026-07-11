@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { fetchAccountData, type AccountData } from '../services/googleSheetsService';
+import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 
 interface AccountPageProps { onBack: () => void; }
 const formatNumber = (value: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
@@ -9,12 +10,14 @@ export const AccountPage: React.FC<AccountPageProps> = ({ onBack }) => {
   const [data, setData] = useState<AccountData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { accessToken } = useGoogleAuth();
   const loadData = async () => {
     setLoading(true); setError(null);
-    try { setData(await fetchAccountData()); } catch (err: any) { setError(err.message || 'Failed to load account data'); }
+    if (!accessToken) return;
+    try { setData(await fetchAccountData(accessToken)); } catch (err: any) { setError(err.message || 'Failed to load account data'); }
     finally { setLoading(false); }
   };
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [accessToken]);
   const cell = 'p-3 border-r border-gray-100 text-right';
   return <div className="w-full max-w-3xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100 my-4 sm:my-8">
     <div className="p-4 border-b border-gray-100 flex items-center gap-4 sticky top-0 z-10 backdrop-blur-md bg-white/80">

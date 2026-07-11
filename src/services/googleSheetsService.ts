@@ -342,28 +342,37 @@ const parseAccountValue = (value: unknown) => {
   return Number.isFinite(number) ? number : 0;
 };
 
-export const fetchAccountData = async (): Promise<AccountData> => {
+export const fetchAccountData = async (accessToken: string): Promise<AccountData> => {
   const months = ['JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-  const columns = ['N', 'P', 'R', 'T', 'V', 'X'];
   const firstSheetId = '1yMce9uSYxzUZxJTcxg1_UtlSsOut50rXeoVYtbA-q-8';
   const marlonSheetId = '1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM';
 
-  const [firstResponse, marlonResponse] = await Promise.all([
-    fetch(`https://docs.google.com/spreadsheets/d/${firstSheetId}/export?format=csv&gid=50440179&t=${Date.now()}`),
-    fetch(`https://docs.google.com/spreadsheets/d/${marlonSheetId}/export?format=csv&gid=213812473&t=${Date.now()}`),
+  const headers = { Authorization: `Bearer ${accessToken}` };
+  const getTabTitle = async (spreadsheetId: string, gid: number) => {
+    const response = await fetch(`${SHEETS_API_BASE}/${spreadsheetId}?fields=sheets.properties`, { headers });
+    if (!response.ok) throw new Error(`Unable to access Google Sheet (${response.status})`);
+    const result = await response.json();
+    const sheet = result.sheets?.find((entry: any) => entry.properties?.sheetId === gid);
+    if (!sheet) throw new Error(`Google Sheet tab ${gid} was not found`);
+    return sheet.properties.title.replace(/'/g, "''");
+  };
+  const getValues = async (spreadsheetId: string, tab: string, range: string) => {
+    const response = await fetch(`${SHEETS_API_BASE}/${spreadsheetId}/values/${encodeURIComponent(`'${tab}'!${range}`)}?valueRenderOption=UNFORMATTED_VALUE`, { headers });
+    if (!response.ok) throw new Error(`Unable to read account values (${response.status})`);
+    return (await response.json()).values || [];
+  };
+  const [firstTab, marlonTab] = await Promise.all([
+    getTabTitle(firstSheetId, 50440179), getTabTitle(marlonSheetId, 213812473),
   ]);
-  if (!firstResponse.ok || !marlonResponse.ok) throw new Error('Unable to load account data from Google Sheets');
-
-  const [firstCsv, marlonCsv] = await Promise.all([firstResponse.text(), marlonResponse.text()]);
-  const parseCsv = (csv: string) => new Promise<string[][]>((resolve, reject) => {
-    Papa.parse(csv, { header: false, complete: result => resolve(result.data as string[][]), error: reject });
-  });
-  const [firstRows, marlonRows] = await Promise.all([parseCsv(firstCsv), parseCsv(marlonCsv)]);
-  const columnIndex = (column: string) => column.charCodeAt(0) - 65;
+  const [firstRows, marlonRows] = await Promise.all([
+    getValues(firstSheetId, firstTab, 'N50:X51'),
+    getValues(marlonSheetId, marlonTab, 'B62:B102'),
+  ]);
   const items = months.map((label, index) => {
-    const sm = parseAccountValue(firstRows[49]?.[columnIndex(columns[index])]);
-    const marilu = parseAccountValue(firstRows[50]?.[columnIndex(columns[index])]);
-    const marlon = parseAccountValue(marlonRows[61 + index * 8]?.[1]);
+    const sourceColumn = index * 2;
+    const sm = parseAccountValue(firstRows[0]?.[sourceColumn]);
+    const marilu = parseAccountValue(firstRows[1]?.[sourceColumn]);
+    const marlon = parseAccountValue(marlonRows[index * 8]?.[0]);
     return { label, sm, marlon, marilu, total: sm + marlon + marilu };
   });
   const total = items.reduce((sum, item) => ({
