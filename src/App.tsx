@@ -57,18 +57,23 @@ function AppContent() {
             setView('month');
           }}
         />
-      ) : selectedMonth ? (
+      ) : view === 'month' && selectedMonth ? (
         <MonthDetailPage
           monthIndex={selectedMonth.index}
           monthLabel={selectedMonth.label}
           onBack={() => setView('summary')}
         />
-      ) : view === 'account' ? <AccountPage onBack={() => setView('viewer')} /> : null}
+      ) : view === 'account' ? (
+        <AccountPage onBack={() => setView('viewer')} />
+      ) : null}
 
       <footer className="py-6 text-center text-xs text-gray-400">
         <button
           type="button"
-          onClick={() => setView('account')}
+          onClick={() => {
+            setSelectedMonth(null);
+            setView('account');
+          }}
           className="hover:text-blue-600 hover:underline transition-colors"
           title="Open account summary"
         >
