@@ -7,6 +7,7 @@ const SHEET_ID = '1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM';
 
 interface SummaryPageProps {
   onBack: () => void;
+  onAccountsClick: () => void;
   onMonthClick: (monthIndex: number, monthLabel: string) => void;
 }
 
@@ -14,7 +15,7 @@ const formatNumber = (num: number) => {
   return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(num);
 };
 
-export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack, onMonthClick }) => {
+export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack, onAccountsClick, onMonthClick }) => {
   const { accessToken } = useGoogleAuth();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<SummaryData | null>(null);
@@ -50,7 +51,17 @@ export const SummaryPage: React.FC<SummaryPageProps> = ({ onBack, onMonthClick }
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-lg font-bold text-gray-900 flex-1">SUMMARY of accounts</h1>
+        <h1 className="text-lg font-bold text-gray-900 flex-1">
+          SUMMARY of{' '}
+          <button
+            type="button"
+            onClick={onAccountsClick}
+            className="hover:underline hover:text-blue-600 transition-colors"
+            title="Open account summary"
+          >
+            accounts
+          </button>
+        </h1>
         <button
           onClick={loadData}
           disabled={loading}

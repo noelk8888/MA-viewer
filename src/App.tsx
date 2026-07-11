@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 
 function AppContent() {
   const { isAuthenticated, isInitializing, logout } = useGoogleAuth();
-  const [view, setView] = useState<'viewer' | 'summary' | 'month' | 'account'>('viewer');
+  const [view, setView] = useState<'viewer' | 'summary' | 'month' | 'account'>('summary');
   const [selectedMonth, setSelectedMonth] = useState<{ index: number; label: string } | null>(null);
   useEffect(() => {
     // Keep this for any future initialization if needed, or remove completely if not
@@ -52,6 +52,7 @@ function AppContent() {
       ) : view === 'summary' ? (
         <SummaryPage
           onBack={() => setView('viewer')}
+          onAccountsClick={() => setView('account')}
           onMonthClick={(index, label) => {
             setSelectedMonth({ index, label });
             setView('month');
