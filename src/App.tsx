@@ -1,6 +1,7 @@
 import ViewerTable from './components/ViewerTable'
 import { SummaryPage } from './components/SummaryPage'
 import { MonthDetailPage } from './components/MonthDetailPage'
+import { AccountPage } from './components/AccountPage'
 import { GoogleAuthProvider, useGoogleAuth } from './contexts/GoogleAuthContext'
 import { LoginScreen } from './components/LoginScreen'
 import { Loader2, LogOut } from 'lucide-react'
@@ -8,7 +9,7 @@ import { useState, useEffect } from 'react';
 
 function AppContent() {
   const { isAuthenticated, isInitializing, logout } = useGoogleAuth();
-  const [view, setView] = useState<'viewer' | 'summary' | 'month'>('viewer');
+  const [view, setView] = useState<'viewer' | 'summary' | 'month' | 'account'>('viewer');
   const [selectedMonth, setSelectedMonth] = useState<{ index: number; label: string } | null>(null);
   useEffect(() => {
     // Keep this for any future initialization if needed, or remove completely if not
@@ -47,7 +48,7 @@ function AppContent() {
       </div>
 
       {view === 'viewer' ? (
-        <ViewerTable onSummaryClick={() => setView('summary')} />
+        <ViewerTable onSummaryClick={() => setView('account')} />
       ) : view === 'summary' ? (
         <SummaryPage
           onBack={() => setView('viewer')}
@@ -62,7 +63,7 @@ function AppContent() {
           monthLabel={selectedMonth.label}
           onBack={() => setView('summary')}
         />
-      ) : null}
+      ) : view === 'account' ? <AccountPage onBack={() => setView('viewer')} /> : null}
 
       <footer className="py-6 text-center text-xs text-gray-400">
         <p>Inventory Viewer App • {new Date().getFullYear()}</p>

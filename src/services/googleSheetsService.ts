@@ -324,6 +324,55 @@ export interface SummaryData {
   jkbValue: string;
 }
 
+export interface AccountItem {
+  label: string;
+  sm: number;
+  marlon: number;
+  marilu: number;
+  total: number;
+}
+
+export interface AccountData {
+  items: AccountItem[];
+  total: AccountItem;
+}
+
+const parseAccountValue = (value: unknown) => {
+  const number = parseFloat(String(value ?? '').replace(/,/g, '').replace(/\s/g, ''));
+  return Number.isFinite(number) ? number : 0;
+};
+
+export const fetchAccountData = async (): Promise<AccountData> => {
+  const months = ['JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  const columns = ['N', 'P', 'R', 'T', 'V', 'X'];
+  const firstSheetId = '1yMce9uSYxzUZxJTcxg1_UtlSsOut50rXeoVYtbA-q-8';
+  const marlonSheetId = '1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM';
+
+  const [firstResponse, marlonResponse] = await Promise.all([
+    fetch(`https://docs.google.com/spreadsheets/d/${firstSheetId}/export?format=csv&gid=50440179&t=${Date.now()}`),
+    fetch(`https://docs.google.com/spreadsheets/d/${marlonSheetId}/export?format=csv&gid=213812473&t=${Date.now()}`),
+  ]);
+  if (!firstResponse.ok || !marlonResponse.ok) throw new Error('Unable to load account data from Google Sheets');
+
+  const [firstCsv, marlonCsv] = await Promise.all([firstResponse.text(), marlonResponse.text()]);
+  const parseCsv = (csv: string) => new Promise<string[][]>((resolve, reject) => {
+    Papa.parse(csv, { header: false, complete: result => resolve(result.data as string[][]), error: reject });
+  });
+  const [firstRows, marlonRows] = await Promise.all([parseCsv(firstCsv), parseCsv(marlonCsv)]);
+  const columnIndex = (column: string) => column.charCodeAt(0) - 65;
+  const items = months.map((label, index) => {
+    const sm = parseAccountValue(firstRows[49]?.[columnIndex(columns[index])]);
+    const marilu = parseAccountValue(firstRows[50]?.[columnIndex(columns[index])]);
+    const marlon = parseAccountValue(marlonRows[61 + index * 8]?.[1]);
+    return { label, sm, marlon, marilu, total: sm + marlon + marilu };
+  });
+  const total = items.reduce((sum, item) => ({
+    label: 'TOTAL', sm: sum.sm + item.sm, marlon: sum.marlon + item.marlon,
+    marilu: sum.marilu + item.marilu, total: sum.total + item.total,
+  }), { label: 'TOTAL', sm: 0, marlon: 0, marilu: 0, total: 0 });
+  return { items, total };
+};
+
 export const fetchSummaryData = async (
   sheetId: string
 ): Promise<SummaryData> => {
