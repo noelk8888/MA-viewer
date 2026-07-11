@@ -48,7 +48,7 @@ function AppContent() {
       </div>
 
       {view === 'viewer' ? (
-        <ViewerTable onSummaryClick={() => setView('account')} />
+        <ViewerTable onSummaryClick={() => setView('summary')} />
       ) : view === 'summary' ? (
         <SummaryPage
           onBack={() => setView('viewer')}

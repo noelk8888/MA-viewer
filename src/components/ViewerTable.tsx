@@ -135,12 +135,14 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                         {trend === 'down' && <TrendingDown size={16} className="text-red-500" />}
                     </span>
                     <span className="text-gray-300 font-light">|</span>
-                    <span 
+                    <button
+                        type="button"
                         className={`${loading ? 'opacity-50 animate-pulse' : ''} hover:underline cursor-pointer`}
                         onClick={onSummaryClick}
+                        title="Open J2N, JKB, and NCK summary"
                     >
                         {i1Value}
-                    </span>
+                    </button>
                 </h1>
                 <button
                     onClick={loadData}
