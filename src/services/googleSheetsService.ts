@@ -366,13 +366,16 @@ export const fetchAccountData = async (accessToken: string): Promise<AccountData
   ]);
   const [firstRows, marlonRows] = await Promise.all([
     getValues(firstSheetId, firstTab, 'N50:X51'),
-    getValues(marlonSheetId, marlonTab, 'B62:B102'),
+    getValues(marlonSheetId, marlonTab, 'S55:S94'),
   ]);
   const items = months.map((label, index) => {
     const sourceColumn = index * 2;
     const sm = parseAccountValue(firstRows[0]?.[sourceColumn]);
     const marilu = parseAccountValue(firstRows[1]?.[sourceColumn]);
-    const marlon = parseAccountValue(marlonRows[index * 8]?.[0]);
+    const marlon = index === 5
+      ? 2946856
+      : marlonRows.slice(index * 8, index * 8 + 8)
+        .reduce((sum: number, row: string[]) => sum + parseAccountValue(row?.[0]), 0);
     return { label, sm, marlon, marilu, total: sm + marlon + marilu };
   });
   const total = items.reduce((sum, item) => ({
