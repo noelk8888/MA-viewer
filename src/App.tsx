@@ -4,11 +4,11 @@ import { MonthDetailPage } from './components/MonthDetailPage'
 import { AccountPage } from './components/AccountPage'
 import { GoogleAuthProvider, useGoogleAuth } from './contexts/GoogleAuthContext'
 import { LoginScreen } from './components/LoginScreen'
-import { Loader2, LogOut } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react';
 
 function AppContent() {
-  const { isAuthenticated, isInitializing, logout } = useGoogleAuth();
+  const { isAuthenticated, isInitializing } = useGoogleAuth();
   const [view, setView] = useState<'viewer' | 'summary' | 'month' | 'account'>('viewer');
   const [selectedMonth, setSelectedMonth] = useState<{ index: number; label: string } | null>(null);
   useEffect(() => {
@@ -35,18 +35,6 @@ function AppContent() {
   // Show main app if authenticated
   return (
     <div className="min-h-screen w-full bg-[#f8f9fa] sm:py-8 sm:px-4">
-      {/* Logout Button */}
-      <div className="fixed top-4 right-4 z-50">
-        <button
-          onClick={logout}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
-          title="Sign out"
-        >
-          <LogOut size={16} />
-          <span className="hidden sm:inline">Sign Out</span>
-        </button>
-      </div>
-
       {view === 'viewer' ? (
         <ViewerTable onSummaryClick={() => setView('summary')} />
       ) : view === 'summary' ? (
