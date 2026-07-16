@@ -1,4 +1,4 @@
-import { RefreshCw, Plus, X, TrendingUp, TrendingDown } from 'lucide-react';
+import { RefreshCw, Plus, X, LogOut } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { fetchSheetData, type SheetRow } from '../services/sheetService';
 import { generateSOA, generateBill } from '../services/googleSheetsService';
@@ -8,7 +8,6 @@ import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 import { formatAppDate } from '../utils/formatters';
 
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=311571294#gid=311571294';
-const RATES_FOLDER_URL = 'https://drive.google.com/drive/folders/1MsJRVArZGMTmqcOuCr4pvhY1-aE_HPqT?usp=drive_link';
 
 interface ViewerTableProps {
   onSummaryClick?: () => void;
@@ -16,7 +15,6 @@ interface ViewerTableProps {
 
 const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     const [data, setData] = useState<SheetRow[]>([]);
-    const [rate, setRate] = useState<string>('0');
     const [i1Value, setI1Value] = useState<string>('0');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -27,7 +25,6 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     const [selectionType, setSelectionType] = useState<'DR' | 'CBM' | 'SUPPLIER' | 'ISSUE_DR' | null>(null);
     const [isProcessingSoa, setIsProcessingSoa] = useState(false);
     const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
-    const [trend, setTrend] = useState<'up' | 'down' | 'neutral'>('neutral');
 
     const { accessToken, login, logout, isAuthenticated } = useGoogleAuth();
 
@@ -54,7 +51,6 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
         try {
             const result = await fetchSheetData(selectedYear);
             setData(result.rows);
-            setRate(result.rate);
             setI1Value(result.i1Value);
         } catch (err) {
             console.error(err);
@@ -67,39 +63,6 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
     useEffect(() => {
         loadData();
     }, [selectedYear]);
-
-    useEffect(() => {
-        if (!rate || rate === '0') return;
-        
-        try {
-            const todayStr = new Date().toDateString();
-            const stored = JSON.parse(localStorage.getItem('cny_rate_data') || '{"rate": "0", "previousRate": "0", "date": ""}');
-            
-            let prevRate = stored.previousRate;
-            let currRate = stored.rate;
-            
-            if (rate !== currRate) {
-                if (stored.date !== todayStr) {
-                    prevRate = currRate;
-                }
-                currRate = rate;
-                localStorage.setItem('cny_rate_data', JSON.stringify({ rate: currRate, previousRate: prevRate, date: todayStr }));
-            } else if (stored.date !== todayStr) {
-                localStorage.setItem('cny_rate_data', JSON.stringify({ rate: currRate, previousRate: prevRate, date: todayStr }));
-            }
-            
-            const currNum = parseFloat(currRate.replace(/,/g, ''));
-            const prevNum = parseFloat(prevRate.replace(/,/g, ''));
-            
-            if (!isNaN(prevNum) && prevNum > 0 && !isNaN(currNum)) {
-                if (currNum > prevNum) setTrend('up');
-                else if (currNum < prevNum) setTrend('down');
-                else setTrend('neutral');
-            }
-        } catch (e) {
-            console.error('Error tracking rate history', e);
-        }
-    }, [rate]);
 
     return (
         <div className="w-full max-w-2xl mx-auto bg-white shadow-xl rounded-2xl border border-gray-100 my-4 sm:my-8 relative">
@@ -122,18 +85,15 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
                         <Plus size={14} />
                     </button>
                     <span className="text-gray-300 font-light">|</span>
-                    <span className="flex items-center gap-1">
-                        <a
-                            href={RATES_FOLDER_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`hover:underline cursor-pointer ${loading ? 'opacity-50 animate-pulse' : ''}`}
-                        >
-                            {rate}
-                        </a>
-                        {trend === 'up' && <TrendingUp size={16} className="text-green-500" />}
-                        {trend === 'down' && <TrendingDown size={16} className="text-red-500" />}
-                    </span>
+                    <button
+                        type="button"
+                        onClick={logout}
+                        className="flex items-center gap-1 hover:underline cursor-pointer"
+                        title="Sign out"
+                    >
+                        <LogOut size={16} />
+                        <span>Sign Out</span>
+                    </button>
                     <span className="text-gray-300 font-light">|</span>
                     <button
                         type="button"
