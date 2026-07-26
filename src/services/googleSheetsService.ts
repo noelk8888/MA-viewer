@@ -526,9 +526,12 @@ export const fetchMonthDetailData = async (
           const items: MonthDetailItem[] = [];
 
           if (monthLabel === 'DR') {
-            for (let row = 110; row <= 130; row++) {
-              if (row > data.length) break;
+            // DR entries continue until the next (China) summary section.
+            // Do not cap this range: new DR rows were being omitted after row
+            // 130, leaving the drill-down total lower than the summary.
+            for (let row = 110; row <= data.length; row++) {
               const source = data[row - 1] || [];
+              if ((source[5] || '').trim().toUpperCase() === 'CNY RATE') break;
               const date = source[5] || '';       // F
               const details = source[7] || '';    // H
               const drNum = source[9] || '';      // J
