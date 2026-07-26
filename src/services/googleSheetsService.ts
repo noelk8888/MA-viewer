@@ -532,10 +532,13 @@ export const fetchMonthDetailData = async (
               const date = source[5] || '';       // F
               const details = source[7] || '';    // H
               const drNum = source[9] || '';      // J
+              // The summary's DR row is calculated from the account totals in
+              // columns S–U.  Use those same values for each DR here so the
+              // drill-down total always reconciles with the summary.
               const amount = (
-                parseVal(source[11]) + // L
-                parseVal(source[13]) + // N
-                parseVal(source[15])   // P
+                parseVal(source[18]) + // S - J2N
+                parseVal(source[19]) + // T - JKB
+                parseVal(source[20])   // U - NCK
               );
 
               if (!date && !details && !drNum && amount === 0) continue; // Skip blank rows
