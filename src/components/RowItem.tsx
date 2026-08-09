@@ -27,6 +27,7 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, se
 
     // Logic: Color is red if Remarks (Col Y) is empty
     const isColorAlert = !row.Remarks || row.Remarks.trim() === '';
+    const isPaid = row.colN?.trim().toUpperCase() === "Y";
     const colBDisplay = row.Supplier?.trim() || '-';
 
     return (
@@ -53,28 +54,28 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, se
                     <div className="flex flex-col justify-center space-y-1 text-xs sm:text-sm w-full">
                         <button
                             onClick={() => setShowEditModal(true)}
-                            className="block min-h-[1.25rem] text-sm sm:text-base leading-tight font-normal text-gray-600 truncate hover:underline cursor-pointer text-left"
+                            className={`block min-h-[1.25rem] text-sm sm:text-base leading-tight font-normal truncate hover:underline cursor-pointer text-left ${isPaid ? "text-gray-400" : "text-gray-600"}`}
                             title={colBDisplay}
                         >
                             {colBDisplay}
                     </button>
-                    <div className="text-gray-500 font-medium font-mono text-[10px] sm:text-xs">
+                    <div className={`font-medium font-mono text-[10px] sm:text-xs ${isPaid ? "text-gray-400" : "text-gray-500"}`}>
                         {row.Code} ({row.CnyToday})
                     </div>
-                    <div className="text-gray-600 line-clamp-2 leading-tight">
+                    <div className={`line-clamp-2 leading-tight ${isPaid ? "text-gray-400" : "text-gray-600"}`}>
                         {row.Description}
                     </div>
                     <div className="flex flex-wrap gap-1 items-center mt-1">
                         {/* COL X - Clickable date to edit */}
                         <button
                             onClick={() => setShowEditModal(true)}
-                            className={`text-sm sm:text-base leading-tight ${isColorAlert ? 'font-normal text-red-500' : 'font-extrabold text-green-500'} hover:underline cursor-pointer`}
+                            className={`text-sm sm:text-base leading-tight hover:underline cursor-pointer ${isPaid ? "font-normal text-gray-400" : isColorAlert ? "font-normal text-red-500" : "font-extrabold text-green-500"}`}
                         >
                             {formatAppDate(row.Color) || '-'}
                         </button>
                         {/* COL Y */}
                         {row.Remarks && row.Remarks.trim().toUpperCase() !== 'Y' && (
-                            <span className="text-sm sm:text-base leading-tight font-normal px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded-md">
+                            <span className={`text-sm sm:text-base leading-tight font-normal px-1.5 py-0.5 rounded-md ${isPaid ? "bg-gray-100/20 text-gray-400" : "bg-yellow-100 text-yellow-800"}`}>
                                 {row.Remarks}
                             </span>
                         )}
@@ -125,24 +126,24 @@ const RowItem: React.FC<RowItemProps> = ({ row, onImageUpdated, selectedYear, se
 
                 {/* COL 3: Pricing */}
                 <div className="p-3 flex flex-col justify-center items-end space-y-1 text-right border-r border-gray-100/50 bg-gray-50/30">
-                    <div className="font-bold text-emerald-600 text-sm sm:text-base whitespace-nowrap">
+                    <div className={`font-bold text-sm sm:text-base whitespace-nowrap ${isPaid ? "text-gray-400" : "text-emerald-600"}`}>
                         <span className="text-xs mr-0.5 opacity-70">¥</span>{formatAmount(row.RMB)}
                     </div>
-                    <div className="font-medium text-gray-600 text-xs sm:text-sm whitespace-nowrap">
+                    <div className={`font-medium text-xs sm:text-sm whitespace-nowrap ${isPaid ? "text-gray-400" : "text-gray-600"}`}>
                         <span className="text-[10px] mr-0.5 opacity-70">₱</span>{row.PHP}
                     </div>
                     {row.CBMValue && (
-                        <div className="font-bold text-emerald-600 text-sm sm:text-base whitespace-nowrap">
+                        <div className={`font-bold text-sm sm:text-base whitespace-nowrap ${isPaid ? "text-gray-400" : "text-emerald-600"}`}>
                             <span className="text-xs mr-0.5 opacity-70">¥</span>{row.CBMValue}
                         </div>
                     )}
                     {row.CBMPHP && (
-                        <div className="font-medium text-gray-600 text-xs sm:text-sm whitespace-nowrap">
+                        <div className={`font-medium text-xs sm:text-sm whitespace-nowrap ${isPaid ? "text-gray-400" : "text-gray-600"}`}>
                             <span className="text-[10px] mr-0.5 opacity-70">₱</span>{row.CBMPHP}
                         </div>
                     )}
-                    {row.colN?.trim().toUpperCase() === 'Y' && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-red-100 text-yellow-600 rounded-md mt-1 inline-block">
+                    {isPaid && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-100/20 text-gray-400 rounded-md mt-1 inline-block">
                             PAID
                         </span>
                     )}
