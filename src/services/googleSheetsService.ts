@@ -390,7 +390,8 @@ export const fetchAccountData = async (accessToken: string): Promise<AccountData
     total: check2027Sm + check2027Marilu,
   });
   const total = items.reduce((sum, item) => ({
-    label: 'TOTAL', sm: sum.sm + item.sm, marlon: sum.marlon + item.marlon,
+    // CASH is shown as a reference line and is excluded only from the SM grand total.
+    label: 'TOTAL', sm: sum.sm + (item.label === 'CASH' ? 0 : item.sm), marlon: sum.marlon + item.marlon,
     marilu: sum.marilu + item.marilu, total: sum.total + item.total,
   }), { label: 'TOTAL', sm: 0, marlon: 0, marilu: 0, total: 0 });
   return { items, total };
