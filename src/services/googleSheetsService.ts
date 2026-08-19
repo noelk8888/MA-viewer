@@ -343,7 +343,7 @@ const parseAccountValue = (value: unknown) => {
 };
 
 export const fetchAccountData = async (accessToken: string): Promise<AccountData> => {
-  const months = ['JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  const months = ['CASH', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
   const firstSheetId = '1yMce9uSYxzUZxJTcxg1_UtlSsOut50rXeoVYtbA-q-8';
   const marlonSheetId = '1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM';
 
@@ -361,14 +361,17 @@ export const fetchAccountData = async (accessToken: string): Promise<AccountData
     if (!response.ok) throw new Error(`Unable to read account values (${response.status})`);
     return (await response.json()).values || [];
   };
-  const [firstTab, marlonTab] = await Promise.all([
-    getTabTitle(firstSheetId, 50440179), getTabTitle(marlonSheetId, 213812473),
+  const [firstTab, marlonTab, check2027Tab] = await Promise.all([
+    getTabTitle(firstSheetId, 50440179),
+    getTabTitle(marlonSheetId, 213812473),
+    getTabTitle(firstSheetId, 1251326182),
   ]);
-  const [firstRows, marlonRows] = await Promise.all([
+  const [firstRows, marlonRows, check2027Rows] = await Promise.all([
     getValues(firstSheetId, firstTab, 'N50:X51'),
     getValues(marlonSheetId, marlonTab, 'S55:S102'),
+    getValues(firstSheetId, check2027Tab, 'B50:B51'),
   ]);
-  const items = months.map((label, index) => {
+  const items: AccountItem[] = months.map((label, index) => {
     const sourceColumn = index * 2;
     const sm = parseAccountValue(firstRows[0]?.[sourceColumn]);
     const marilu = parseAccountValue(firstRows[1]?.[sourceColumn]);
@@ -376,6 +379,15 @@ export const fetchAccountData = async (accessToken: string): Promise<AccountData
       .slice(index * 8, index * 8 + 8)
       .reduce((sum: number, row: string[]) => sum + parseAccountValue(row?.[0]), 0);
     return { label, sm, marlon, marilu, total: sm + marlon + marilu };
+  });
+  const check2027Sm = parseAccountValue(check2027Rows[0]?.[0]);
+  const check2027Marilu = parseAccountValue(check2027Rows[1]?.[0]);
+  items.push({
+    label: '2027',
+    sm: check2027Sm,
+    marlon: 0,
+    marilu: check2027Marilu,
+    total: check2027Sm + check2027Marilu,
   });
   const total = items.reduce((sum, item) => ({
     label: 'TOTAL', sm: sum.sm + item.sm, marlon: sum.marlon + item.marlon,
