@@ -824,6 +824,9 @@ export const generateBill = async (
 
   const rawDataResult = await fetchResponse.json();
   const valueRanges = rawDataResult.valueRanges || [];
+  const firstRawRow = valueRanges[0]?.values?.[0] || [];
+  const billG6Value = firstRawRow[9] ? String(firstRawRow[9]) : '';
+  const billG19Value = firstRawRow[14] ? String(firstRawRow[14]) : '';
 
   // 2. Prepare target data arrays
   const rows10To12 = [];
@@ -863,8 +866,10 @@ export const generateBill = async (
   const targetSheetName = await getSheetNameByGid(accessToken, spreadsheetId, billGid);
 
   const data = [
+    { range: `'${targetSheetName}'!G6`, values: [[billG6Value]] },
     { range: `'${targetSheetName}'!B10:F12`, values: rows10To12 },
-    { range: `'${targetSheetName}'!B13:F15`, values: rows13To15 }
+    { range: `'${targetSheetName}'!B13:F15`, values: rows13To15 },
+    { range: `'${targetSheetName}'!G19`, values: [[billG19Value]] }
   ];
 
   const updateResponse = await fetch(
