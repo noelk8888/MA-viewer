@@ -866,6 +866,7 @@ export const generateBill = async (
   const targetSheetName = await getSheetNameByGid(accessToken, spreadsheetId, billGid);
 
   const data = [
+    { range: `'${targetSheetName}'!D6`, values: [['=CEILING(G8,1000)']] },
     { range: `'${targetSheetName}'!G6`, values: [[billG6Value]] },
     { range: `'${targetSheetName}'!B10:F12`, values: rows10To12 },
     { range: `'${targetSheetName}'!B13:F15`, values: rows13To15 },
