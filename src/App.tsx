@@ -9,12 +9,19 @@ import { LoginScreen } from './components/LoginScreen'
 import { Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react';
 
+const todayInputValue = () => {
+  const today = new Date();
+  const offset = today.getTimezoneOffset();
+  return new Date(today.getTime() - offset * 60_000).toISOString().slice(0, 10);
+};
+
 function AppContent() {
   const { isAuthenticated, isInitializing } = useGoogleAuth();
   const [view, setView] = useState<'viewer' | 'summary' | 'month' | 'account' | 'supplierSummary' | 'supplierMonth'>('viewer');
   const [selectedMonth, setSelectedMonth] = useState<{ index: number; label: string } | null>(null);
   const [monthBackView, setMonthBackView] = useState<'summary' | 'supplierSummary'>('summary');
   const [selectedSupplierMonth, setSelectedSupplierMonth] = useState<string | null>(null);
+  const [supplierCutoffDate, setSupplierCutoffDate] = useState(todayInputValue);
   useEffect(() => {
     // Keep this for any future initialization if needed, or remove completely if not
   }, [isAuthenticated]);
@@ -61,6 +68,8 @@ function AppContent() {
       ) : view === 'supplierSummary' ? (
         <SupplierSummaryPage
           onBack={() => setView('viewer')}
+          cutoffDate={supplierCutoffDate}
+          onCutoffDateChange={setSupplierCutoffDate}
           onMonthClick={(month) => { setSelectedSupplierMonth(month); setView('supplierMonth'); }}
           onSpecialClick={(index, label) => {
             setSelectedMonth({ index, label });
@@ -69,7 +78,7 @@ function AppContent() {
           }}
         />
       ) : view === 'supplierMonth' && selectedSupplierMonth ? (
-        <SupplierMonthDetailPage month={selectedSupplierMonth} onBack={() => setView('supplierSummary')} />
+        <SupplierMonthDetailPage month={selectedSupplierMonth} cutoffDate={supplierCutoffDate} onBack={() => setView('supplierSummary')} />
       ) : null}
 
       <footer className="py-6 text-center text-xs text-gray-400">

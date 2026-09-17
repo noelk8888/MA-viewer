@@ -378,7 +378,13 @@ const supplierMonthLabel = (value: unknown) => {
   return parsed ? `${SUPPLIER_MONTHS[parsed.month]} ${parsed.year}` : '';
 };
 
-const fetchSupplierRows = async (accessToken: string): Promise<SupplierMonthItem[]> => {
+const cutoffDateValue = (cutoffDate?: string) => {
+  if (!cutoffDate) return Number.NEGATIVE_INFINITY;
+  const [year, month, day] = cutoffDate.split('-').map(Number);
+  return year && month && day ? Date.UTC(year, month - 1, day) : Number.NEGATIVE_INFINITY;
+};
+
+const fetchSupplierRows = async (accessToken: string, cutoffDate?: string): Promise<SupplierMonthItem[]> => {
   const headers = { Authorization: `Bearer ${accessToken}` };
   const tab = await getSheetNameByGid(accessToken, SUPPLIER_TABLE_SHEET_ID, String(SUPPLIER_TABLE_GID));
   const response = await fetch(`${SHEETS_API_BASE}/${SUPPLIER_TABLE_SHEET_ID}/values/${encodeURIComponent(`'${tab}'!A:O`)}?valueRenderOption=FORMATTED_VALUE`, { headers });
@@ -388,11 +394,12 @@ const fetchSupplierRows = async (accessToken: string): Promise<SupplierMonthItem
     .map((row: string[], index: number) => ({ date: String(row[10] || '').trim(), amount: parseSupplierNumber(row[7]), jkb: parseSupplierNumber(row[12]), nck: parseSupplierNumber(row[13]), sourceRow: index + 1 }))
     // Column K (MA-PAID) is the authoritative filter. Rows with blank K are not part of this table.
     .filter((item: SupplierMonthItem) => item.date !== '' && parseSupplierDate(item.date) !== null)
+    .filter((item: SupplierMonthItem) => parseSupplierDate(item.date)!.sortValue >= cutoffDateValue(cutoffDate))
     .sort((a: SupplierMonthItem, b: SupplierMonthItem) => parseSupplierDate(a.date)!.sortValue - parseSupplierDate(b.date)!.sortValue || a.sourceRow - b.sourceRow);
 };
 
-export const fetchSupplierMonthSummaries = async (accessToken: string): Promise<SupplierMonthSummary[]> => {
-  const rows = await fetchSupplierRows(accessToken);
+export const fetchSupplierMonthSummaries = async (accessToken: string, cutoffDate?: string): Promise<SupplierMonthSummary[]> => {
+  const rows = await fetchSupplierRows(accessToken, cutoffDate);
   const groups = new Map<string, SupplierMonthSummary>();
   rows.forEach((item) => {
     const label = supplierMonthLabel(item.date);
@@ -403,8 +410,8 @@ export const fetchSupplierMonthSummaries = async (accessToken: string): Promise<
   return [...groups.values()].sort((a, b) => parseSupplierDate(a.items[0]?.date)!.sortValue - parseSupplierDate(b.items[0]?.date)!.sortValue);
 };
 
-export const fetchSupplierMonthDetails = async (accessToken: string, month: string): Promise<SupplierMonthSummary> => {
-  const summaries = await fetchSupplierMonthSummaries(accessToken);
+export const fetchSupplierMonthDetails = async (accessToken: string, month: string, cutoffDate?: string): Promise<SupplierMonthSummary> => {
+  const summaries = await fetchSupplierMonthSummaries(accessToken, cutoffDate);
   return summaries.find((summary) => summary.label === month) || { label: month, items: [], amount: 0, jkb: 0, nck: 0 };
 };
 
