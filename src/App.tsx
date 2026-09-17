@@ -8,6 +8,7 @@ import { GoogleAuthProvider, useGoogleAuth } from './contexts/GoogleAuthContext'
 import { LoginScreen } from './components/LoginScreen'
 import { Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react';
+import type { SupplierDateColumn } from './services/googleSheetsService';
 
 const todayInputValue = () => {
   const today = new Date();
@@ -17,11 +18,13 @@ const todayInputValue = () => {
 
 function AppContent() {
   const { isAuthenticated, isInitializing } = useGoogleAuth();
-  const [view, setView] = useState<'viewer' | 'summary' | 'month' | 'account' | 'supplierSummary' | 'supplierMonth'>('viewer');
+  const [view, setView] = useState<'viewer' | 'summary' | 'month' | 'account' | 'supplierSummary' | 'nckSummary' | 'supplierMonth'>('viewer');
   const [selectedMonth, setSelectedMonth] = useState<{ index: number; label: string } | null>(null);
-  const [monthBackView, setMonthBackView] = useState<'summary' | 'supplierSummary'>('summary');
+  const [monthBackView, setMonthBackView] = useState<'summary' | 'supplierSummary' | 'nckSummary'>('summary');
   const [selectedSupplierMonth, setSelectedSupplierMonth] = useState<string | null>(null);
   const [supplierCutoffDate, setSupplierCutoffDate] = useState(todayInputValue);
+  const [supplierDateColumn, setSupplierDateColumn] = useState<SupplierDateColumn>('K');
+  const [supplierMonthBackView, setSupplierMonthBackView] = useState<'supplierSummary' | 'nckSummary'>('supplierSummary');
   useEffect(() => {
     // Keep this for any future initialization if needed, or remove completely if not
   }, [isAuthenticated]);
@@ -68,17 +71,32 @@ function AppContent() {
       ) : view === 'supplierSummary' ? (
         <SupplierSummaryPage
           onBack={() => setView('viewer')}
+          dateColumn="K"
           cutoffDate={supplierCutoffDate}
           onCutoffDateChange={setSupplierCutoffDate}
-          onMonthClick={(month) => { setSelectedSupplierMonth(month); setView('supplierMonth'); }}
+          onMonthClick={(month) => { setSelectedSupplierMonth(month); setSupplierDateColumn('K'); setSupplierMonthBackView('supplierSummary'); setView('supplierMonth'); }}
+          onNckClick={() => setView('nckSummary')}
           onSpecialClick={(index, label) => {
             setSelectedMonth({ index, label });
             setMonthBackView('supplierSummary');
             setView('month');
           }}
         />
+      ) : view === 'nckSummary' ? (
+        <SupplierSummaryPage
+          onBack={() => setView('supplierSummary')}
+          dateColumn="O"
+          cutoffDate={supplierCutoffDate}
+          onCutoffDateChange={setSupplierCutoffDate}
+          onMonthClick={(month) => { setSelectedSupplierMonth(month); setSupplierDateColumn('O'); setSupplierMonthBackView('nckSummary'); setView('supplierMonth'); }}
+          onSpecialClick={(index, label) => {
+            setSelectedMonth({ index, label });
+            setMonthBackView('nckSummary');
+            setView('month');
+          }}
+        />
       ) : view === 'supplierMonth' && selectedSupplierMonth ? (
-        <SupplierMonthDetailPage month={selectedSupplierMonth} cutoffDate={supplierCutoffDate} onBack={() => setView('supplierSummary')} />
+        <SupplierMonthDetailPage month={selectedSupplierMonth} cutoffDate={supplierCutoffDate} dateColumn={supplierDateColumn} onBack={() => setView(supplierMonthBackView)} />
       ) : null}
 
       <footer className="py-6 text-center text-xs text-gray-400">
