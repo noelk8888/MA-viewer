@@ -13,6 +13,7 @@ function AppContent() {
   const { isAuthenticated, isInitializing } = useGoogleAuth();
   const [view, setView] = useState<'viewer' | 'summary' | 'month' | 'account' | 'supplierSummary' | 'supplierMonth'>('viewer');
   const [selectedMonth, setSelectedMonth] = useState<{ index: number; label: string } | null>(null);
+  const [monthBackView, setMonthBackView] = useState<'summary' | 'supplierSummary'>('summary');
   const [selectedSupplierMonth, setSelectedSupplierMonth] = useState<string | null>(null);
   useEffect(() => {
     // Keep this for any future initialization if needed, or remove completely if not
@@ -45,6 +46,7 @@ function AppContent() {
           onBack={() => setView('viewer')}
           onMonthClick={(index, label) => {
             setSelectedMonth({ index, label });
+            setMonthBackView('summary');
             setView('month');
           }}
         />
@@ -52,12 +54,20 @@ function AppContent() {
         <MonthDetailPage
           monthIndex={selectedMonth.index}
           monthLabel={selectedMonth.label}
-          onBack={() => setView('summary')}
+          onBack={() => setView(monthBackView)}
         />
       ) : view === 'account' ? (
         <AccountPage onBack={() => setView('viewer')} />
       ) : view === 'supplierSummary' ? (
-        <SupplierSummaryPage onBack={() => setView('viewer')} onMonthClick={(month) => { setSelectedSupplierMonth(month); setView('supplierMonth'); }} />
+        <SupplierSummaryPage
+          onBack={() => setView('viewer')}
+          onMonthClick={(month) => { setSelectedSupplierMonth(month); setView('supplierMonth'); }}
+          onSpecialClick={(index, label) => {
+            setSelectedMonth({ index, label });
+            setMonthBackView('supplierSummary');
+            setView('month');
+          }}
+        />
       ) : view === 'supplierMonth' && selectedSupplierMonth ? (
         <SupplierMonthDetailPage month={selectedSupplierMonth} onBack={() => setView('supplierSummary')} />
       ) : null}
