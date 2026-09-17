@@ -365,11 +365,14 @@ const parseSupplierNumber = (value: unknown) => {
 
 const parseSupplierDate = (value: unknown) => {
   const text = String(value ?? '').trim();
-  const match = text.match(/^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\s+(\d{1,2})(?:[^0-9]+(20\d{2}))?/i);
-  if (!match) return null;
-  const month = SUPPLIER_MONTHS.indexOf(match[1].slice(0, 3).toUpperCase());
-  const day = Number(match[2]);
-  const year = match[3] ? Number(match[3]) : SUPPLIER_TABLE_YEAR;
+  const monthFirst = text.match(/^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\s+(\d{1,2})(?:[^0-9]+(20\d{2}))?/i);
+  const dayFirst = text.match(/^(\d{1,2})[-/\s](JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*[-/\s](20\d{2})$/i);
+  if (!monthFirst && !dayFirst) return null;
+  const monthText = monthFirst?.[1] || dayFirst![2];
+  const month = SUPPLIER_MONTHS.indexOf(monthText.slice(0, 3).toUpperCase());
+  const day = Number(monthFirst?.[2] || dayFirst![1]);
+  const yearText = monthFirst?.[3] || dayFirst![3];
+  const year = yearText ? Number(yearText) : SUPPLIER_TABLE_YEAR;
   return { month, day, year, sortValue: Date.UTC(year, month, day) };
 };
 
