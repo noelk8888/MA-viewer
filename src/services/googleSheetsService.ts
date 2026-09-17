@@ -355,24 +355,27 @@ export interface SupplierMonthSummary {
 
 const SUPPLIER_TABLE_SHEET_ID = '1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM';
 const SUPPLIER_TABLE_GID = 164287476;
+const SUPPLIER_TABLE_YEAR = 2026;
+const SUPPLIER_MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
 const parseSupplierNumber = (value: unknown) => {
   const parsed = parseFloat(String(value ?? '').replace(/,/g, '').replace(/[^0-9.-]/g, ''));
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const supplierDateValue = (value: unknown) => {
+const parseSupplierDate = (value: unknown) => {
   const text = String(value ?? '').trim();
-  const parsed = Date.parse(text);
-  return Number.isNaN(parsed) ? Number.MAX_SAFE_INTEGER : parsed;
+  const match = text.match(/^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\s+(\d{1,2})(?:[^0-9]+(20\d{2}))?/i);
+  if (!match) return null;
+  const month = SUPPLIER_MONTHS.indexOf(match[1].slice(0, 3).toUpperCase());
+  const day = Number(match[2]);
+  const year = match[3] ? Number(match[3]) : SUPPLIER_TABLE_YEAR;
+  return { month, day, year, sortValue: Date.UTC(year, month, day) };
 };
 
 const supplierMonthLabel = (value: unknown) => {
-  const text = String(value ?? '').trim();
-  const parsed = Date.parse(text);
-  if (!Number.isNaN(parsed)) return new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(new Date(parsed)).toUpperCase();
-  const match = text.match(/(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*[^0-9]*(20\d{2})/i);
-  return match ? `${match[1].toUpperCase()} ${match[2]}` : text || 'UNKNOWN';
+  const parsed = parseSupplierDate(value);
+  return parsed ? `${SUPPLIER_MONTHS[parsed.month]} ${parsed.year}` : '';
 };
 
 const fetchSupplierRows = async (accessToken: string): Promise<SupplierMonthItem[]> => {
@@ -381,9 +384,11 @@ const fetchSupplierRows = async (accessToken: string): Promise<SupplierMonthItem
   const response = await fetch(`${SHEETS_API_BASE}/${SUPPLIER_TABLE_SHEET_ID}/values/${encodeURIComponent(`'${tab}'!A:O`)}?valueRenderOption=FORMATTED_VALUE`, { headers });
   if (!response.ok) throw new Error(`Unable to read supplier data (${response.status})`);
   const rows = (await response.json()).values || [];
-  return rows.map((row: string[], index: number) => ({ date: row[10] || '', amount: parseSupplierNumber(row[7]), jkb: parseSupplierNumber(row[12]), nck: parseSupplierNumber(row[13]), sourceRow: index + 1 }))
-    .filter((item: SupplierMonthItem) => item.date || item.amount || item.jkb || item.nck)
-    .sort((a: SupplierMonthItem, b: SupplierMonthItem) => supplierDateValue(a.date) - supplierDateValue(b.date));
+  return rows
+    .map((row: string[], index: number) => ({ date: String(row[10] || '').trim(), amount: parseSupplierNumber(row[7]), jkb: parseSupplierNumber(row[12]), nck: parseSupplierNumber(row[13]), sourceRow: index + 1 }))
+    // Column K (MA-PAID) is the authoritative filter. Rows with blank K are not part of this table.
+    .filter((item: SupplierMonthItem) => item.date !== '' && parseSupplierDate(item.date) !== null)
+    .sort((a: SupplierMonthItem, b: SupplierMonthItem) => parseSupplierDate(a.date)!.sortValue - parseSupplierDate(b.date)!.sortValue || a.sourceRow - b.sourceRow);
 };
 
 export const fetchSupplierMonthSummaries = async (accessToken: string): Promise<SupplierMonthSummary[]> => {
@@ -395,7 +400,7 @@ export const fetchSupplierMonthSummaries = async (accessToken: string): Promise<
     current.items.push(item); current.amount += item.amount; current.jkb += item.jkb; current.nck += item.nck;
     groups.set(label, current);
   });
-  return [...groups.values()];
+  return [...groups.values()].sort((a, b) => parseSupplierDate(a.items[0]?.date)!.sortValue - parseSupplierDate(b.items[0]?.date)!.sortValue);
 };
 
 export const fetchSupplierMonthDetails = async (accessToken: string, month: string): Promise<SupplierMonthSummary> => {
