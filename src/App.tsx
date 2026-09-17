@@ -2,6 +2,8 @@ import ViewerTable from './components/ViewerTable'
 import { SummaryPage } from './components/SummaryPage'
 import { MonthDetailPage } from './components/MonthDetailPage'
 import { AccountPage } from './components/AccountPage'
+import { SupplierSummaryPage } from './components/SupplierSummaryPage'
+import { SupplierMonthDetailPage } from './components/SupplierMonthDetailPage'
 import { GoogleAuthProvider, useGoogleAuth } from './contexts/GoogleAuthContext'
 import { LoginScreen } from './components/LoginScreen'
 import { Loader2 } from 'lucide-react'
@@ -9,8 +11,9 @@ import { useState, useEffect } from 'react';
 
 function AppContent() {
   const { isAuthenticated, isInitializing } = useGoogleAuth();
-  const [view, setView] = useState<'viewer' | 'summary' | 'month' | 'account'>('viewer');
+  const [view, setView] = useState<'viewer' | 'summary' | 'month' | 'account' | 'supplierSummary' | 'supplierMonth'>('viewer');
   const [selectedMonth, setSelectedMonth] = useState<{ index: number; label: string } | null>(null);
+  const [selectedSupplierMonth, setSelectedSupplierMonth] = useState<string | null>(null);
   useEffect(() => {
     // Keep this for any future initialization if needed, or remove completely if not
   }, [isAuthenticated]);
@@ -36,7 +39,7 @@ function AppContent() {
   return (
     <div className="min-h-screen w-full bg-[#f8f9fa] sm:py-8 sm:px-4">
       {view === 'viewer' ? (
-        <ViewerTable onSummaryClick={() => setView('summary')} />
+        <ViewerTable onSummaryClick={() => setView('summary')} onSupplierClick={() => setView('supplierSummary')} />
       ) : view === 'summary' ? (
         <SummaryPage
           onBack={() => setView('viewer')}
@@ -53,6 +56,10 @@ function AppContent() {
         />
       ) : view === 'account' ? (
         <AccountPage onBack={() => setView('viewer')} />
+      ) : view === 'supplierSummary' ? (
+        <SupplierSummaryPage onBack={() => setView('viewer')} onMonthClick={(month) => { setSelectedSupplierMonth(month); setView('supplierMonth'); }} />
+      ) : view === 'supplierMonth' && selectedSupplierMonth ? (
+        <SupplierMonthDetailPage month={selectedSupplierMonth} onBack={() => setView('supplierSummary')} />
       ) : null}
 
       <footer className="py-6 text-center text-xs text-gray-400">

@@ -11,9 +11,10 @@ const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCW
 
 interface ViewerTableProps {
   onSummaryClick?: () => void;
+  onSupplierClick?: () => void;
 }
 
-const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
+const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierClick }) => {
     const [data, setData] = useState<SheetRow[]>([]);
     const [rate, setRate] = useState<string>('0');
     const [i1Value, setI1Value] = useState<string>('0');
@@ -198,9 +199,9 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick }) => {
 
             {/* Table Headers */}
             <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[97px] z-20 shadow-sm">
-                <div className="p-3 border-r border-gray-200/50">
+                <button type="button" onClick={onSupplierClick} className="p-3 border-r border-gray-200/50 text-left hover:text-blue-600 hover:underline" title="Open supplier summary">
                     Supplier
-                </div>
+                </button>
                 <div className="p-3 text-center border-r border-gray-200/50">
                     DR
                 </div>

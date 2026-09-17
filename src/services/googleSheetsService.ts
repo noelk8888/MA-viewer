@@ -337,6 +337,72 @@ export interface AccountData {
   total: AccountItem;
 }
 
+export interface SupplierMonthItem {
+  date: string;
+  amount: number;
+  jkb: number;
+  nck: number;
+  sourceRow: number;
+}
+
+export interface SupplierMonthSummary {
+  label: string;
+  items: SupplierMonthItem[];
+  amount: number;
+  jkb: number;
+  nck: number;
+}
+
+const SUPPLIER_TABLE_SHEET_ID = '1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM';
+const SUPPLIER_TABLE_GID = 164287476;
+
+const parseSupplierNumber = (value: unknown) => {
+  const parsed = parseFloat(String(value ?? '').replace(/,/g, '').replace(/[^0-9.-]/g, ''));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const supplierDateValue = (value: unknown) => {
+  const text = String(value ?? '').trim();
+  const parsed = Date.parse(text);
+  return Number.isNaN(parsed) ? Number.MAX_SAFE_INTEGER : parsed;
+};
+
+const supplierMonthLabel = (value: unknown) => {
+  const text = String(value ?? '').trim();
+  const parsed = Date.parse(text);
+  if (!Number.isNaN(parsed)) return new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(new Date(parsed)).toUpperCase();
+  const match = text.match(/(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*[^0-9]*(20\d{2})/i);
+  return match ? `${match[1].toUpperCase()} ${match[2]}` : text || 'UNKNOWN';
+};
+
+const fetchSupplierRows = async (accessToken: string): Promise<SupplierMonthItem[]> => {
+  const headers = { Authorization: `Bearer ${accessToken}` };
+  const tab = await getSheetNameByGid(accessToken, SUPPLIER_TABLE_SHEET_ID, String(SUPPLIER_TABLE_GID));
+  const response = await fetch(`${SHEETS_API_BASE}/${SUPPLIER_TABLE_SHEET_ID}/values/${encodeURIComponent(`'${tab}'!A:O`)}?valueRenderOption=FORMATTED_VALUE`, { headers });
+  if (!response.ok) throw new Error(`Unable to read supplier data (${response.status})`);
+  const rows = (await response.json()).values || [];
+  return rows.map((row: string[], index: number) => ({ date: row[10] || '', amount: parseSupplierNumber(row[7]), jkb: parseSupplierNumber(row[12]), nck: parseSupplierNumber(row[13]), sourceRow: index + 1 }))
+    .filter((item: SupplierMonthItem) => item.date || item.amount || item.jkb || item.nck)
+    .sort((a: SupplierMonthItem, b: SupplierMonthItem) => supplierDateValue(a.date) - supplierDateValue(b.date));
+};
+
+export const fetchSupplierMonthSummaries = async (accessToken: string): Promise<SupplierMonthSummary[]> => {
+  const rows = await fetchSupplierRows(accessToken);
+  const groups = new Map<string, SupplierMonthSummary>();
+  rows.forEach((item) => {
+    const label = supplierMonthLabel(item.date);
+    const current = groups.get(label) || { label, items: [], amount: 0, jkb: 0, nck: 0 };
+    current.items.push(item); current.amount += item.amount; current.jkb += item.jkb; current.nck += item.nck;
+    groups.set(label, current);
+  });
+  return [...groups.values()];
+};
+
+export const fetchSupplierMonthDetails = async (accessToken: string, month: string): Promise<SupplierMonthSummary> => {
+  const summaries = await fetchSupplierMonthSummaries(accessToken);
+  return summaries.find((summary) => summary.label === month) || { label: month, items: [], amount: 0, jkb: 0, nck: 0 };
+};
+
 const parseAccountValue = (value: unknown) => {
   const number = parseFloat(String(value ?? '').replace(/,/g, '').replace(/\s/g, ''));
   return Number.isFinite(number) ? number : 0;
