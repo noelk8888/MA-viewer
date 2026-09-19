@@ -3,7 +3,7 @@ import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { fetchSummaryData, fetchSupplierMonthSummaries, type SummaryData, type SupplierDateColumn, type SupplierMonthSummary } from '../services/googleSheetsService';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 
-const fmtAmount = (n: number) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+const fmtAmount = (n: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(n);
 const fmtWhole = (n: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(n);
 
 const SHEET_ID = '1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM';
