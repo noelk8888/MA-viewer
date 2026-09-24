@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { X, Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 import { uploadImageToDrive } from '../services/googleDriveService';
-import { updateSheetCell } from '../services/googleSheetsService';
+import { updateSheetCell, updateSheetCellByGid } from '../services/googleSheetsService';
 import type { ImageType } from '../services/googleSheetsService';
 
 interface ImageUploadModalProps {
@@ -12,6 +12,8 @@ interface ImageUploadModalProps {
   sheetRowNumber: number;
   onUploadComplete: () => void;
   selectedYear: string;
+  targetSheet?: { spreadsheetId: string; gid: string; column: 'F' | 'H' };
+  imageLabel?: string;
 }
 
 type UploadState = 'idle' | 'uploading' | 'updating-sheet' | 'success' | 'error';
@@ -23,6 +25,8 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
   sheetRowNumber,
   onUploadComplete,
   selectedYear,
+  targetSheet,
+  imageLabel,
 }) => {
   const { accessToken, isAuthenticated, login, logout, isLoading: authLoading, isConfigured, error: authError } = useGoogleAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -49,13 +53,21 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
     }
   }, []);
 
+  const resetState = useCallback(() => {
+    setSelectedFile(null);
+    setPreview(null);
+    setUploadState('idle');
+    setError(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, []);
+
   const handleUpload = useCallback(async () => {
     if (!selectedFile || !accessToken) return;
 
     const folderId = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
     const sheetId = import.meta.env.VITE_GOOGLE_SHEET_ID;
 
-    if (!folderId || !sheetId) {
+    if (!folderId || (!targetSheet && !sheetId)) {
       setError('Upload configuration missing (Drive Folder ID or Sheet ID)');
       return;
     }
@@ -67,7 +79,11 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
       const uploadResult = await uploadImageToDrive(selectedFile, accessToken, folderId);
 
       setUploadState('updating-sheet');
-      await updateSheetCell(accessToken, sheetId, sheetRowNumber, imageType, uploadResult.driveLink, selectedYear);
+      if (targetSheet) {
+        await updateSheetCellByGid(accessToken, targetSheet.spreadsheetId, targetSheet.gid, sheetRowNumber, targetSheet.column, uploadResult.driveLink);
+      } else {
+        await updateSheetCell(accessToken, sheetId, sheetRowNumber, imageType, uploadResult.driveLink, selectedYear);
+      }
 
       setUploadState('success');
       onUploadComplete();
@@ -87,17 +103,7 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
         setError(errorMessage);
       }
     }
-  }, [selectedFile, accessToken, sheetRowNumber, imageType, onUploadComplete, onClose, selectedYear]);
-
-  const resetState = useCallback(() => {
-    setSelectedFile(null);
-    setPreview(null);
-    setUploadState('idle');
-    setError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, []);
+  }, [selectedFile, accessToken, sheetRowNumber, imageType, onUploadComplete, onClose, selectedYear, targetSheet, resetState]);
 
   const handleClose = useCallback(() => {
     if (uploadState !== 'uploading' && uploadState !== 'updating-sheet') {
@@ -122,7 +128,7 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
         </button>
 
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Upload {imageType} Image
+          Upload {imageLabel || imageType} Image
         </h3>
 
         {!isConfigured ? (

@@ -17,6 +17,7 @@ const todayInputValue = () => {
 };
 
 function AppContent() {
+  const localNewMenuPreview = import.meta.env.DEV && new URLSearchParams(window.location.search).has('previewNewMenu');
   const { isAuthenticated, isInitializing } = useGoogleAuth();
   const [view, setView] = useState<'viewer' | 'summary' | 'month' | 'account' | 'supplierSummary' | 'nckSummary' | 'supplierMonth'>('viewer');
   const [selectedMonth, setSelectedMonth] = useState<{ index: number; label: string } | null>(null);
@@ -28,6 +29,10 @@ function AppContent() {
   useEffect(() => {
     // Keep this for any future initialization if needed, or remove completely if not
   }, [isAuthenticated]);
+
+  if (localNewMenuPreview) {
+    return <div className="min-h-screen w-full bg-[#f8f9fa] sm:py-8 sm:px-4"><ViewerTable initialNewMenu /></div>;
+  }
 
   // Show loading screen while checking session
   if (isInitializing) {

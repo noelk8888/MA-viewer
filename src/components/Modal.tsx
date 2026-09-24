@@ -13,8 +13,9 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content, onUpload
     const [copySuccess, setCopySuccess] = useState(false);
 
     // Extract Google Drive ID if present
-    const driveMatch = content?.match(/id=([a-zA-Z0-9_-]+)/);
-    const driveId = driveMatch?.[1];
+    const driveId = content?.match(/[?&]id=([a-zA-Z0-9_-]+)/)?.[1]
+        || content?.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)?.[1]
+        || content?.match(/\/d\/([a-zA-Z0-9_-]+)/)?.[1];
     const hasImage = !!driveId;
 
     // Image loading states - MUST be at top level (before any early returns)

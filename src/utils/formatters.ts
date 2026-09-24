@@ -15,6 +15,12 @@ export const toIsoDate = (value: string | number | null | undefined): string => 
     return `${isoMatch[1]}-${isoMatch[2].padStart(2, '0')}-${isoMatch[3].padStart(2, '0')}`;
   }
 
+  const dayMonthYearMatch = raw.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/);
+  if (dayMonthYearMatch) {
+    const month = MONTHS.findIndex(name => name.toLowerCase() === dayMonthYearMatch[2].toLowerCase());
+    if (month !== -1) return `${dayMonthYearMatch[3]}-${String(month + 1).padStart(2, '0')}-${dayMonthYearMatch[1].padStart(2, '0')}`;
+  }
+
   const slashMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
   if (slashMatch) {
     const year = slashMatch[3].length === 2 ? `20${slashMatch[3]}` : slashMatch[3];

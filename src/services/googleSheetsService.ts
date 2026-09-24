@@ -56,6 +56,33 @@ export const updateSheetCell = async (
   };
 };
 
+export const updateSheetCellByGid = async (
+  accessToken: string,
+  spreadsheetId: string,
+  gid: string,
+  sheetRowNumber: number,
+  column: 'F' | 'H',
+  driveLink: string
+): Promise<void> => {
+  const sheetName = await getSheetNameByGid(accessToken, spreadsheetId, gid);
+  const range = `'${sheetName.replace(/'/g, "''")}'!${column}${sheetRowNumber}`;
+  const response = await fetch(
+    `${SHEETS_API_BASE}/${spreadsheetId}/values/${encodeURIComponent(range)}?valueInputOption=RAW`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ range, values: [[driveLink]] }),
+    }
+  );
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || 'Failed to update Google Sheet');
+  }
+};
+
 // New row data interface
 export interface NewRowData {
   date?: string;           // Col B
@@ -769,7 +796,8 @@ export const getSheetNameByGid = async (
 
   const data = await response.json();
   const sheet = data.sheets?.find((s: any) => s.properties?.sheetId === Number(gid));
-  return sheet?.properties?.title || 'Sheet1';
+  if (!sheet?.properties?.title) throw new Error(`Sheet tab ${gid} was not found.`);
+  return sheet.properties.title;
 };
 
 export const generateSOA = async (

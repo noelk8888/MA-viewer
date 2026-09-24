@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { fetchSheetData, type SheetRow } from '../services/sheetService';
 import { generateSOA, generateBill } from '../services/googleSheetsService';
 import RowItem from './RowItem';
+import NewMenuTable from './NewMenuTable';
 import AddRowModal from './AddRowModal';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 import { formatAppDate } from '../utils/formatters';
@@ -12,15 +13,18 @@ const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCW
 interface ViewerTableProps {
   onSummaryClick?: () => void;
   onSupplierClick?: () => void;
+  initialNewMenu?: boolean;
 }
 
-const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierClick }) => {
+const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierClick, initialNewMenu = false }) => {
     const [data, setData] = useState<SheetRow[]>([]);
     const [rate, setRate] = useState<string>('0');
     const [i1Value, setI1Value] = useState<string>('0');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showAddRowModal, setShowAddRowModal] = useState(false);
+    const [showNewMenu, setShowNewMenu] = useState(initialNewMenu);
+    const [genBuyMode, setGenBuyMode] = useState(false);
     const [selectedYear] = useState<string>('2026');
     const [selectionModeType, setSelectionModeType] = useState<'DR_CBM' | 'SUPPLIER' | 'ISSUE_DR' | null>(null);
     const [selectedRowIndices, setSelectedRowIndices] = useState<number[]>([]);
@@ -32,6 +36,8 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierCli
     const { accessToken, login, logout, isAuthenticated } = useGoogleAuth();
 
     const toggleSelectionMode = (mode: 'DR_CBM' | 'SUPPLIER' | 'ISSUE_DR') => {
+        setShowNewMenu(false);
+        setGenBuyMode(false);
         setSelectionModeType(currentMode => currentMode === mode ? null : mode);
         setSelectedRowIndices([]);
         setSelectionType(null);
@@ -197,8 +203,20 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierCli
                 </button>
             </div>
 
+            {/* New menu row */}
+            <div className="flex border-b border-gray-200 bg-white sticky top-[97px] z-20 shadow-sm">
+                <button
+                    type="button"
+                    onClick={() => { setShowNewMenu(current => genBuyMode ? true : !current); setGenBuyMode(false); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors ${showNewMenu && !genBuyMode ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                >New Menu</button>
+                <button type="button" onClick={() => { setShowNewMenu(true); setGenBuyMode(true); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }} className={`flex-1 py-2 text-sm font-medium transition-colors ${genBuyMode ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>GenBUY</button>
+                <button type="button" disabled title="Coming soon" className="flex-1 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">GenSELL</button>
+            </div>
+
+            {showNewMenu ? <NewMenuTable key={genBuyMode ? 'buy' : 'browse'} genBuyMode={genBuyMode} /> : <>
             {/* Table Headers */}
-            <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[97px] z-20 shadow-sm">
+            <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[137px] z-20 shadow-sm">
                 <button type="button" onClick={onSupplierClick} className="p-3 border-r border-gray-200/50 text-left hover:text-blue-600 hover:underline" title="Open supplier summary">
                     Supplier
                 </button>
@@ -265,6 +283,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierCli
                     ))
                 )}
             </div>
+            </>}
 
             {/* Add Row Modal */}
             <AddRowModal
@@ -275,7 +294,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierCli
             />
 
             {/* Floating Action Bar */}
-            {selectionModeType && (
+            {!showNewMenu && selectionModeType && (
                 <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 px-6 py-3 flex items-center gap-4 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
                     <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
                         {selectedRowIndices.length} selected
