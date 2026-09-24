@@ -24,7 +24,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierCli
     const [error, setError] = useState<string | null>(null);
     const [showAddRowModal, setShowAddRowModal] = useState(false);
     const [showNewMenu, setShowNewMenu] = useState(initialNewMenu);
-    const [genBuyMode, setGenBuyMode] = useState(false);
+    const [generationMode, setGenerationMode] = useState<'buy' | 'sell' | null>(null);
     const [selectedYear] = useState<string>('2026');
     const [selectionModeType, setSelectionModeType] = useState<'DR_CBM' | 'SUPPLIER' | 'ISSUE_DR' | null>(null);
     const [selectedRowIndices, setSelectedRowIndices] = useState<number[]>([]);
@@ -37,7 +37,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierCli
 
     const toggleSelectionMode = (mode: 'DR_CBM' | 'SUPPLIER' | 'ISSUE_DR') => {
         setShowNewMenu(false);
-        setGenBuyMode(false);
+        setGenerationMode(null);
         setSelectionModeType(currentMode => currentMode === mode ? null : mode);
         setSelectedRowIndices([]);
         setSelectionType(null);
@@ -207,14 +207,14 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierCli
             <div className="flex border-b border-gray-200 bg-white sticky top-[97px] z-20 shadow-sm">
                 <button
                     type="button"
-                    onClick={() => { setShowNewMenu(current => genBuyMode ? true : !current); setGenBuyMode(false); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors ${showNewMenu && !genBuyMode ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                    onClick={() => { setShowNewMenu(current => generationMode ? true : !current); setGenerationMode(null); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors ${showNewMenu && !generationMode ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                 >New Menu</button>
-                <button type="button" onClick={() => { setShowNewMenu(true); setGenBuyMode(true); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }} className={`flex-1 py-2 text-sm font-medium transition-colors ${genBuyMode ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>GenBUY</button>
-                <button type="button" disabled title="Coming soon" className="flex-1 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">GenSELL</button>
+                <button type="button" onClick={() => { setShowNewMenu(true); setGenerationMode('buy'); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }} className={`flex-1 py-2 text-sm font-medium transition-colors ${generationMode === 'buy' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>GenBUY</button>
+                <button type="button" onClick={() => { setShowNewMenu(true); setGenerationMode('sell'); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }} className={`flex-1 py-2 text-sm font-medium transition-colors ${generationMode === 'sell' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>GenSELL</button>
             </div>
 
-            {showNewMenu ? <NewMenuTable key={genBuyMode ? 'buy' : 'browse'} genBuyMode={genBuyMode} /> : <>
+            {showNewMenu ? <NewMenuTable key={generationMode ?? 'browse'} generationMode={generationMode} /> : <>
             {/* Table Headers */}
             <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[137px] z-20 shadow-sm">
                 <button type="button" onClick={onSupplierClick} className="p-3 border-r border-gray-200/50 text-left hover:text-blue-600 hover:underline" title="Open supplier summary">

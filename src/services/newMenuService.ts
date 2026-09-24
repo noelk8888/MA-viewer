@@ -4,19 +4,40 @@ import { getSheetNameByGid } from './googleSheetsService';
 export const NEW_MENU_SHEET_ID = '1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM';
 export const NEW_MENU_GID = '216870307';
 export const GEN_BUY_GID = '1755470891';
+export const GEN_SELL_GID = '1307953980';
 
 export interface NewMenuRow {
   reference: string;
   date: string;
   supplier: string;
   cnyRate: string;
+  sellRate: string;
   amountCny: string;
   firstImage: string;
   secondImage: string;
   cbm: string;
   cbmFactor: string;
+  cbmSellPrice: string;
+  sharePercent: string;
   sheetRowNumber: number;
 }
+
+export const sortNewMenuRows = <T extends Pick<NewMenuRow, 'reference' | 'sheetRowNumber'>>(rows: T[]): T[] => {
+  const parts = (reference: string) => reference.trim().match(/^(\d{2})(\d+)([A-Za-z]*)$/);
+  return [...rows].sort((left, right) => {
+    const a = parts(left.reference);
+    const b = parts(right.reference);
+    if (a && b) {
+      return Number(b[1]) - Number(a[1])
+        || Number(a[2]) - Number(b[2])
+        || a[3].localeCompare(b[3])
+        || right.sheetRowNumber - left.sheetRowNumber;
+    }
+    if (a) return -1;
+    if (b) return 1;
+    return right.sheetRowNumber - left.sheetRowNumber;
+  });
+};
 
 export const fetchNewMenuRows = async (): Promise<NewMenuRow[]> => {
   const url = `https://docs.google.com/spreadsheets/d/${NEW_MENU_SHEET_ID}/export?format=csv&gid=${NEW_MENU_GID}&t=${Date.now()}`;
@@ -35,11 +56,14 @@ export const fetchNewMenuRows = async (): Promise<NewMenuRow[]> => {
           date: row[1]?.trim() || '',
           supplier: row[4]?.trim() || '',
           cnyRate: row[2]?.trim() || '',
+          sellRate: row[3]?.trim() || '',
           firstImage: row[5]?.trim() || '',
           amountCny: row[6]?.trim() || '',
           secondImage: row[7]?.trim() || '',
           cbm: row[8]?.trim() || '',
           cbmFactor: row[10]?.trim() || '',
+          cbmSellPrice: row[11]?.trim() || '',
+          sharePercent: row[12]?.trim() || '',
           sheetRowNumber: index + 1,
         })).filter(row => {
           const isHeader = ['reference', 'ref'].includes(row.reference.toLowerCase())
@@ -47,7 +71,7 @@ export const fetchNewMenuRows = async (): Promise<NewMenuRow[]> => {
           return !isHeader && Boolean(row.reference || row.date || row.supplier || row.amountCny || row.firstImage || row.secondImage || row.cbm);
         });
 
-        resolve(rows.reverse());
+        resolve(sortNewMenuRows(rows));
       },
       error: reject,
     });
