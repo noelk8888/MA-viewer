@@ -4,25 +4,12 @@ import Modal from './Modal';
 import ImageUploadModal from './ImageUploadModal';
 import { fetchNewMenuRows, generateBuyRows, GEN_BUY_GID, GEN_SELL_GID, NEW_MENU_GID, NEW_MENU_SHEET_ID, type NewMenuRow } from '../services/newMenuService';
 import { generateSellRows } from '../services/genSellService';
-import { formatAmount, formatAppDate, toIsoDate } from '../utils/formatters';
+import { formatAmount, formatAppDate } from '../utils/formatters';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 
 const imageId = (link: string) => link.match(/[?&]id=([\w-]+)/)?.[1]
   || link.match(/\/file\/d\/([\w-]+)/)?.[1]
   || link.match(/\/d\/([\w-]+)/)?.[1];
-
-const displayDate = (value: string): string => {
-  const iso = toIsoDate(value);
-  if (!iso) return value || '-';
-  const [year, month, day] = iso.split('-');
-  const monthName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(month) - 1];
-  return `${day}-${monthName}-${year}`;
-};
-
-const product = (...values: string[]): string => {
-  const parsed = values.map(value => Number(value.replace(/,/g, '').trim()));
-  return parsed.every(Number.isFinite) ? formatAmount(parsed.reduce((result, value) => result * value, 1)) : '-';
-};
 
 const NewMenuImage: React.FC<{
   link: string;
@@ -68,28 +55,16 @@ const NewMenuItem: React.FC<{
   <div className="grid grid-cols-4 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors min-h-28">
     <div className="p-3 flex flex-col justify-center gap-1 border-r border-gray-100/50 min-w-0 text-xs sm:text-sm">
       {generationMode && <label className="flex items-center gap-2 mb-1 text-blue-600 cursor-pointer"><input type="checkbox" checked={selected} onChange={onToggle} aria-label={`Select ${row.reference || row.supplier} for NewGenBill`} className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" /><span className="text-xs">NewGenBill</span></label>}
-      {generationMode ? <>
-        <div className="text-sm sm:text-base text-gray-600">{displayDate(row.date)}</div>
-        <div className="text-gray-600 break-words">{row.reference || '-'}</div>
-        <div className="font-bold text-emerald-600 break-words">{product(row.amountCny, row.sellRate, '1.05')}</div>
-      </> : <>
-        <div className="text-sm sm:text-base text-gray-600">{formatAppDate(row.date) || row.date || '-'}</div>
-        <div className="text-gray-600 break-words">{row.supplier || '-'}</div>
-        <div className="font-bold text-emerald-600 break-words"><span className="text-xs opacity-70 mr-0.5">¥</span>{formatAmount(row.amountCny || '0')}</div>
-      </>}
+      <div className="text-sm sm:text-base text-gray-600">{formatAppDate(row.date) || row.date || '-'}</div>
+      <div className="text-gray-600 break-words">{row.supplier || '-'}</div>
+      <div className="font-bold text-emerald-600 break-words"><span className="text-xs opacity-70 mr-0.5">¥</span>{formatAmount(row.amountCny || '0')}</div>
     </div>
     <div className="p-2 flex items-center justify-center border-r border-gray-100/50">
       <NewMenuImage link={row.firstImage} label="Column F" column="F" rowNumber={row.sheetRowNumber} onUpdated={onUpdated} />
     </div>
     <div className="p-3 flex flex-col justify-center gap-1 border-r border-gray-100/50 bg-gray-50/30 min-w-0 text-xs sm:text-sm">
-      {generationMode ? <>
-        <div className="text-gray-600 break-words">{row.supplier || '-'}</div>
-        <div className="text-gray-600 break-words">{row.reference || '-'}</div>
-        <div className="font-bold text-emerald-600 break-words">{product(row.cbmSellPrice, row.cbm)}</div>
-      </> : <>
-        <div className="text-gray-600 break-words">{row.reference || '-'}</div>
-        <div className="text-gray-600 break-words">{row.cbm || '-'}</div>
-      </>}
+      <div className="text-gray-600 break-words">{row.reference || '-'}</div>
+      <div className="text-gray-600 break-words">{row.cbm || '-'}</div>
     </div>
     <div className="p-2 flex items-center justify-center">
       <NewMenuImage link={row.secondImage} label="Column H" column="H" rowNumber={row.sheetRowNumber} onUpdated={onUpdated} />
@@ -157,10 +132,10 @@ const NewMenuTable: React.FC<{ generationMode: 'newgenbill' | null }> = ({ gener
 
   return <>
     <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[137px] z-20 shadow-sm">
-      <div className="p-3 border-r border-gray-200/50 text-left">{generationMode ? 'Date' : 'Date / Supplier / CNY'}</div>
-      <div className="p-3 border-r border-gray-200/50 text-center">{generationMode ? 'Items DR' : 'Image F'}</div>
-      <div className="p-3 border-r border-gray-200/50 text-left">{generationMode ? 'Supplier' : 'Reference / CBM'}</div>
-      <div className="p-3 text-center">{generationMode ? 'CBM DR' : 'Image H'}</div>
+      <div className="p-3 border-r border-gray-200/50 text-left">Date / Supplier / CNY</div>
+      <div className="p-3 border-r border-gray-200/50 text-center">Image F</div>
+      <div className="p-3 border-r border-gray-200/50 text-center">Reference / CBM</div>
+      <div className="p-3 text-center">Image H</div>
     </div>
     <div className="divide-y divide-gray-50 min-h-[300px] rounded-b-2xl overflow-hidden bg-white">
       {loading ? <div className="flex flex-col items-center justify-center py-20 text-gray-400"><RefreshCw size={32} className="animate-spin mb-3 opacity-50" /><p className="text-sm">Loading New Menu...</p></div>
