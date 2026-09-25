@@ -126,5 +126,24 @@ export const generateBuyRows = async (accessToken: string, selectedRows: NewMenu
     const error = await writeResponse.json().catch(() => ({}));
     throw new Error(error.error?.message || 'Could not generate GenBUY rows.');
   }
+
+  const startRowIndex = firstRow - 1;
+  const endRowIndex = startRowIndex + values.length;
+  const alignByColumn: Array<{ index: number; alignment: 'CENTER' | 'LEFT' | 'RIGHT' }> = [
+    ...[0, 1, 7, 10, 13, 17].map(index => ({ index, alignment: 'CENTER' as const })),
+    ...[2, 3, 18].map(index => ({ index, alignment: 'LEFT' as const })),
+    ...[4, 5, 6, 8, 9, 11, 12, 14, 15, 19].map(index => ({ index, alignment: 'RIGHT' as const })),
+  ];
+  const formatResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${NEW_MENU_SHEET_ID}:batchUpdate`, {
+    method: 'POST', headers, body: JSON.stringify({ requests: alignByColumn.map(({ index, alignment }) => ({ repeatCell: {
+      range: { sheetId: Number(GEN_BUY_GID), startRowIndex, endRowIndex, startColumnIndex: index, endColumnIndex: index + 1 },
+      cell: { userEnteredFormat: { horizontalAlignment: alignment, textFormat: { fontFamily: 'Arial', fontSize: 12 } } },
+      fields: 'userEnteredFormat.horizontalAlignment,userEnteredFormat.textFormat',
+    } })) }),
+  });
+  if (!formatResponse.ok) {
+    const error = await formatResponse.json().catch(() => ({}));
+    throw new Error(error.error?.message || 'GenBUY rows were written, but their formatting could not be applied.');
+  }
   return values.length;
 };

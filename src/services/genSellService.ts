@@ -92,6 +92,11 @@ export const generateSellRows = async (accessToken: string, selectedRows: NewMen
     { index: 12, type: 'NUMBER', pattern: '#,##0' },
     { index: 13, type: 'NUMBER', pattern: '#,##0' },
   ];
+  const alignByColumn: Array<{ index: number; alignment: 'CENTER' | 'LEFT' | 'RIGHT' }> = [
+    ...[0, 1, 6, 8, 9, 10, 11, 14].map(index => ({ index, alignment: 'CENTER' as const })),
+    ...[2, 3].map(index => ({ index, alignment: 'LEFT' as const })),
+    ...[4, 5, 7, 12, 13].map(index => ({ index, alignment: 'RIGHT' as const })),
+  ];
   const startRowIndex = firstRow - 1;
   const endRowIndex = startRowIndex + rows.length;
   const requests = [
@@ -100,6 +105,11 @@ export const generateSellRows = async (accessToken: string, selectedRows: NewMen
       range: { sheetId: Number(GEN_SELL_GID), startRowIndex, endRowIndex, startColumnIndex: index, endColumnIndex: index + 1 },
       cell: { userEnteredFormat: { numberFormat: { type, pattern } } },
       fields: 'userEnteredFormat.numberFormat',
+    } })),
+    ...alignByColumn.map(({ index, alignment }) => ({ repeatCell: {
+      range: { sheetId: Number(GEN_SELL_GID), startRowIndex, endRowIndex, startColumnIndex: index, endColumnIndex: index + 1 },
+      cell: { userEnteredFormat: { horizontalAlignment: alignment, textFormat: { fontFamily: 'Arial', fontSize: 12 } } },
+      fields: 'userEnteredFormat.horizontalAlignment,userEnteredFormat.textFormat',
     } })),
   ];
   const writeResponse = await fetch(`${API_BASE}:batchUpdate`, {
