@@ -54,7 +54,7 @@ export const generateSellRows = async (accessToken: string, selectedRows: NewMen
   const firstRow = Math.max(lastOccupiedRow + 1, 3);
 
   const rows = selectedRows.flatMap((source, index) => {
-    const first = firstRow + index * 2;
+    const first = firstRow + index * 3;
     const second = first + 1;
     const reference = source.reference.trim();
     if (reference.length < 2 || !/A$/i.test(reference)) throw new Error(`Reference "${reference}" must end in A for its GenSELL pair.`);
@@ -77,6 +77,7 @@ export const generateSellRows = async (accessToken: string, selectedRows: NewMen
         formulaCell(`=E${second}*F${second}`), blankCell(), stringCell(`${reference.slice(0, -1)}B`), blankCell(),
         numberCell(share), formulaCell(`=H${second}*L${second}`), formulaCell(`=H${second}-M${second}`),
       ] },
+      { values: Array.from({ length: 14 }, blankCell) },
     ];
   });
 
@@ -119,5 +120,5 @@ export const generateSellRows = async (accessToken: string, selectedRows: NewMen
     const error = await writeResponse.json().catch(() => ({}));
     throw new Error(error.error?.message || 'Could not generate GenSELL rows.');
   }
-  return rows.length;
+  return selectedRows.length * 2;
 };
