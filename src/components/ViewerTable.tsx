@@ -25,6 +25,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierCli
     const [showAddRowModal, setShowAddRowModal] = useState(false);
     const [showNewMenu, setShowNewMenu] = useState(initialNewMenu);
     const [generationMode, setGenerationMode] = useState<'newgenbill' | null>(null);
+    const [newPlaceholder, setNewPlaceholder] = useState<'NEW DR' | 'NEW SOA' | null>(null);
     const [selectedYear] = useState<string>('2026');
     const [selectionModeType, setSelectionModeType] = useState<'DR_CBM' | 'SUPPLIER' | 'ISSUE_DR' | null>(null);
     const [selectedRowIndices, setSelectedRowIndices] = useState<number[]>([]);
@@ -38,6 +39,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierCli
     const toggleSelectionMode = (mode: 'DR_CBM' | 'SUPPLIER' | 'ISSUE_DR') => {
         setShowNewMenu(false);
         setGenerationMode(null);
+        setNewPlaceholder(null);
         setSelectionModeType(currentMode => currentMode === mode ? null : mode);
         setSelectedRowIndices([]);
         setSelectionType(null);
@@ -207,13 +209,14 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierCli
             <div className="flex border-b border-gray-200 bg-white sticky top-[97px] z-20 shadow-sm">
                 <button
                     type="button"
-                    onClick={() => { setShowNewMenu(current => generationMode ? true : !current); setGenerationMode(null); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors ${showNewMenu && !generationMode ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                    onClick={() => { setShowNewMenu(current => generationMode ? true : !current); setGenerationMode(null); setNewPlaceholder(null); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors ${showNewMenu && !generationMode && !newPlaceholder ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                 >New Menu</button>
-                <button type="button" onClick={() => { setShowNewMenu(true); setGenerationMode('newgenbill'); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }} className={`flex-1 py-2 text-sm font-medium transition-colors ${generationMode === 'newgenbill' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>NewGenBill</button>
+                <button type="button" onClick={() => { setShowNewMenu(true); setGenerationMode('newgenbill'); setNewPlaceholder(null); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }} className={`flex-1 py-2 text-sm font-medium transition-colors ${generationMode === 'newgenbill' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>NewGenBill</button>
+                {(['NEW DR', 'NEW SOA'] as const).map(label => <button key={label} type="button" onClick={() => { setShowNewMenu(false); setGenerationMode(null); setNewPlaceholder(label); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }} className={`flex-1 py-2 text-sm font-medium transition-colors ${newPlaceholder === label ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>{label}</button>)}
             </div>
 
-            {showNewMenu ? <NewMenuTable key={generationMode ?? 'browse'} generationMode={generationMode} /> : <>
+            {showNewMenu ? <NewMenuTable key={generationMode ?? 'browse'} generationMode={generationMode} /> : newPlaceholder ? <div className="min-h-[300px] rounded-b-2xl bg-white flex items-center justify-center text-sm text-gray-400">{newPlaceholder} placeholder</div> : <>
             {/* Table Headers */}
             <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[137px] z-20 shadow-sm">
                 <button type="button" onClick={onSupplierClick} className="p-3 border-r border-gray-200/50 text-left hover:text-blue-600 hover:underline" title="Open supplier summary">
