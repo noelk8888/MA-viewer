@@ -81,6 +81,20 @@ export const generateSellRows = async (accessToken: string, selectedRows: NewMen
     ];
   });
 
+  const interestRows = selectedRows.map((source, index) => {
+    const reference = source.reference.trim();
+    const batch = reference.slice(0, 2);
+    const interestRow = firstRow + selectedRows.length * 3 + index;
+    const batchName = source.supplier.match(/^\s*(#\S+)/)?.[1];
+    if (!batchName) throw new Error(`Supplier "${source.supplier}" needs a #batch name for its interest row.`);
+    return { values: [
+      stringCell(batch), blankCell(), stringCell(`${batchName} INTEREST`), blankCell(), blankCell(), blankCell(), blankCell(), blankCell(),
+      blankCell(), stringCell(`${reference.slice(0, -1)}C`), blankCell(), numberCell(percentage(source.sharePercent, reference)),
+      formulaCell(`=H${interestRow}*L${interestRow}`), formulaCell(`=H${interestRow}-M${interestRow}`),
+    ] };
+  });
+  rows.push(...interestRows);
+
   const formatByColumn = [
     { index: 1, type: 'DATE', pattern: 'dd-mmm-yyyy' },
     { index: 4, type: 'NUMBER', pattern: '#,##0' },
@@ -120,5 +134,5 @@ export const generateSellRows = async (accessToken: string, selectedRows: NewMen
     const error = await writeResponse.json().catch(() => ({}));
     throw new Error(error.error?.message || 'Could not generate GenSELL rows.');
   }
-  return selectedRows.length * 2;
+  return selectedRows.length * 3;
 };
