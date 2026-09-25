@@ -121,13 +121,21 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content, onUpload
                                     Click to load image
                                 </a>
                             ) : (
-                                <img
-                                    src={imgSrc}
-                                    alt="Attachment"
-                                    className="w-full h-auto rounded-lg shadow-sm"
-                                    referrerPolicy="no-referrer"
-                                    onError={handleImageError}
-                                />
+                                <a
+                                    href={`https://lh3.googleusercontent.com/d/${driveId}=s3000`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title="Open full-size image in a new tab"
+                                    className="block cursor-zoom-in"
+                                >
+                                    <img
+                                        src={imgSrc}
+                                        alt="Attachment — click to open full size in a new tab"
+                                        className="w-full h-auto rounded-lg shadow-sm"
+                                        referrerPolicy="no-referrer"
+                                        onError={handleImageError}
+                                    />
+                                </a>
                             )}
                         </div>
                     ) : (

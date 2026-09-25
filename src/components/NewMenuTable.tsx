@@ -19,12 +19,6 @@ const displayDate = (value: string): string => {
   return `${day}-${monthName}-${year}`;
 };
 
-const product = (...values: string[]): string => {
-  if (values.some(value => !value.trim())) return '-';
-  const parsed = values.map(value => Number(value.replace(/,/g, '').trim()));
-  return parsed.every(Number.isFinite) ? formatAmount(parsed.reduce((result, value) => result * value, 1)) : '-';
-};
-
 const NewMenuImage: React.FC<{
   link: string;
   label: string;
@@ -71,7 +65,7 @@ const NewMenuItem: React.FC<{
       {generationMode && <label className="flex items-center gap-2 mb-1 text-blue-600 cursor-pointer"><input type="checkbox" checked={selected} onChange={onToggle} aria-label={`Select ${row.reference || row.supplier} for NewGenBill`} className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" /><span className="text-xs">NewGenBill</span></label>}
       <div className="text-sm sm:text-base text-gray-600">{displayDate(row.date)}</div>
       <div className="text-gray-600 break-words">{row.reference || '-'}</div>
-      <div className="font-bold text-emerald-600 break-words">{product(row.amountCny, row.sellRate, '1.05')}</div>
+      <div className="font-bold text-emerald-600 break-words">{formatAmount(row.amountCny) || '-'}</div>
     </div>
     <div className="p-2 flex items-center justify-center border-r border-gray-100/50">
       <NewMenuImage link={row.firstImage} label="Items DR" column="F" rowNumber={row.sheetRowNumber} onUpdated={onUpdated} />
@@ -79,7 +73,7 @@ const NewMenuItem: React.FC<{
     <div className="p-3 flex flex-col justify-center gap-1 border-r border-gray-100/50 bg-gray-50/30 min-w-0 text-xs sm:text-sm">
       <div className="text-gray-600 break-words">{row.supplier || '-'}</div>
       <div className="text-gray-600 break-words">{row.reference || '-'}</div>
-      <div className="font-bold text-emerald-600 break-words">{product(row.cbmSellPrice, row.cbm)}</div>
+      <div className="font-bold text-emerald-600 break-words">{row.cbm || '-'}</div>
     </div>
     <div className="p-2 flex items-center justify-center">
       <NewMenuImage link={row.secondImage} label="CBM DR" column="H" rowNumber={row.sheetRowNumber} onUpdated={onUpdated} />
