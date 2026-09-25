@@ -24,7 +24,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierCli
     const [error, setError] = useState<string | null>(null);
     const [showAddRowModal, setShowAddRowModal] = useState(false);
     const [showNewMenu, setShowNewMenu] = useState(initialNewMenu);
-    const [generationMode, setGenerationMode] = useState<'buy' | 'sell' | null>(null);
+    const [generationMode, setGenerationMode] = useState<'newgenbill' | null>(null);
     const [selectedYear] = useState<string>('2026');
     const [selectionModeType, setSelectionModeType] = useState<'DR_CBM' | 'SUPPLIER' | 'ISSUE_DR' | null>(null);
     const [selectedRowIndices, setSelectedRowIndices] = useState<number[]>([]);
@@ -210,8 +210,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierCli
                     onClick={() => { setShowNewMenu(current => generationMode ? true : !current); setGenerationMode(null); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }}
                     className={`flex-1 py-2 text-sm font-medium transition-colors ${showNewMenu && !generationMode ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                 >New Menu</button>
-                <button type="button" onClick={() => { setShowNewMenu(true); setGenerationMode('buy'); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }} className={`flex-1 py-2 text-sm font-medium transition-colors ${generationMode === 'buy' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>GenBUY</button>
-                <button type="button" onClick={() => { setShowNewMenu(true); setGenerationMode('sell'); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }} className={`flex-1 py-2 text-sm font-medium transition-colors ${generationMode === 'sell' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>GenSELL</button>
+                <button type="button" onClick={() => { setShowNewMenu(true); setGenerationMode('newgenbill'); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }} className={`flex-1 py-2 text-sm font-medium transition-colors ${generationMode === 'newgenbill' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>NewGenBill</button>
             </div>
 
             {showNewMenu ? <NewMenuTable key={generationMode ?? 'browse'} generationMode={generationMode} /> : <>

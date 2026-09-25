@@ -48,13 +48,13 @@ const NewMenuImage: React.FC<{
 const NewMenuItem: React.FC<{
   row: NewMenuRow;
   onUpdated: () => void;
-  generationMode: 'buy' | 'sell' | null;
+  generationMode: 'newgenbill' | null;
   selected: boolean;
   onToggle: () => void;
 }> = ({ row, onUpdated, generationMode, selected, onToggle }) => (
   <div className="grid grid-cols-4 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors min-h-28">
     <div className="p-3 flex flex-col justify-center gap-1 border-r border-gray-100/50 min-w-0 text-xs sm:text-sm">
-      {generationMode && <label className="flex items-center gap-2 mb-1 text-blue-600 cursor-pointer"><input type="checkbox" checked={selected} onChange={onToggle} aria-label={`Select ${row.reference || row.supplier} for Gen${generationMode === 'buy' ? 'BUY' : 'SELL'}`} className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" /><span className="text-xs">Gen{generationMode === 'buy' ? 'BUY' : 'SELL'}</span></label>}
+      {generationMode && <label className="flex items-center gap-2 mb-1 text-blue-600 cursor-pointer"><input type="checkbox" checked={selected} onChange={onToggle} aria-label={`Select ${row.reference || row.supplier} for NewGenBill`} className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" /><span className="text-xs">NewGenBill</span></label>}
       <div className="text-sm sm:text-base text-gray-600">{formatAppDate(row.date) || row.date || '-'}</div>
       <div className="text-gray-600 break-words">{row.supplier || '-'}</div>
       <div className="font-bold text-emerald-600 break-words"><span className="text-xs opacity-70 mr-0.5">¥</span>{formatAmount(row.amountCny || '0')}</div>
@@ -72,7 +72,7 @@ const NewMenuItem: React.FC<{
   </div>
 );
 
-const NewMenuTable: React.FC<{ generationMode: 'buy' | 'sell' | null }> = ({ generationMode }) => {
+const NewMenuTable: React.FC<{ generationMode: 'newgenbill' | null }> = ({ generationMode }) => {
   const { accessToken, login } = useGoogleAuth();
   const [rows, setRows] = useState<NewMenuRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +80,7 @@ const NewMenuTable: React.FC<{ generationMode: 'buy' | 'sell' | null }> = ({ gen
   const [selectedRowNumbers, setSelectedRowNumbers] = useState<number[]>([]);
   const [generating, setGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
-  const [generatedCount, setGeneratedCount] = useState(0);
+  const [generationStatus, setGenerationStatus] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -94,7 +94,7 @@ const NewMenuTable: React.FC<{ generationMode: 'buy' | 'sell' | null }> = ({ gen
 
   const toggleSelected = (rowNumber: number) => {
     setGenerationError(null);
-    setGeneratedCount(0);
+    setGenerationStatus(null);
     setSelectedRowNumbers(current => current.includes(rowNumber)
       ? current.filter(value => value !== rowNumber)
       : [...current, rowNumber]);
@@ -104,7 +104,8 @@ const NewMenuTable: React.FC<{ generationMode: 'buy' | 'sell' | null }> = ({ gen
     if (!accessToken || selectedRowNumbers.length === 0 || generating) return;
     setGenerating(true);
     setGenerationError(null);
-    setGeneratedCount(0);
+    setGenerationStatus('Preparing NewGenBill...');
+    let buyCompleted = false;
     try {
       const freshRows = await fetchNewMenuRows();
       const selected = freshRows.filter(row => selectedRowNumbers.includes(row.sheetRowNumber));
@@ -112,13 +113,18 @@ const NewMenuTable: React.FC<{ generationMode: 'buy' | 'sell' | null }> = ({ gen
       if (selected.some(row => rows.find(original => original.sheetRowNumber === row.sheetRowNumber)?.reference !== row.reference)) {
         throw new Error('Some selected rows moved or changed. Refresh and select them again.');
       }
-      const count = generationMode === 'sell'
-        ? await generateSellRows(accessToken, selected)
-        : await generateBuyRows(accessToken, selected);
-      setGeneratedCount(count);
+      const buyCount = await generateBuyRows(accessToken, selected);
+      buyCompleted = true;
+      setGenerationStatus(`GenBUY done: ${buyCount} row${buyCount === 1 ? '' : 's'} generated. Proceeding to GenSELL...`);
+      await new Promise(resolve => window.setTimeout(resolve, 0));
+      const sellCount = await generateSellRows(accessToken, selected);
+      setGenerationStatus(`GenSELL done: ${sellCount} rows generated. NewGenBill complete. GenBUY: ${buyCount} rows. GenSELL: ${sellCount} rows.`);
       setSelectedRowNumbers([]);
     } catch (cause) {
-      setGenerationError(cause instanceof Error ? cause.message : 'Could not generate rows.');
+      const message = cause instanceof Error ? cause.message : 'Could not generate rows.';
+      setGenerationError(buyCompleted
+        ? `GenBUY completed, but GenSELL failed: ${message}`
+        : message);
     } finally {
       setGenerating(false);
     }
@@ -140,11 +146,11 @@ const NewMenuTable: React.FC<{ generationMode: 'buy' | 'sell' | null }> = ({ gen
     {generationMode && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[min(90vw,36rem)] rounded-2xl border border-gray-200 bg-white shadow-xl px-4 py-3 flex items-center gap-3">
       <div className="flex-1 min-w-0 text-sm text-gray-700">
         {generationError ? <span className="text-red-600">{generationError}</span>
-          : generatedCount ? <span className="text-green-700">Generated {generatedCount} Gen{generationMode === 'buy' ? 'BUY' : 'SELL'} row{generatedCount === 1 ? '' : 's'}. <a className="underline" href={`https://docs.google.com/spreadsheets/d/${NEW_MENU_SHEET_ID}/edit?gid=${generationMode === 'buy' ? GEN_BUY_GID : GEN_SELL_GID}`} target="_blank" rel="noopener noreferrer">Open sheet</a></span>
+          : generationStatus ? <span className={generationStatus.includes('complete') ? 'text-green-700' : 'text-blue-700'}>{generationStatus}{generationStatus.includes('complete') && <> <a className="underline" href={`https://docs.google.com/spreadsheets/d/${NEW_MENU_SHEET_ID}/edit?gid=${GEN_BUY_GID}`} target="_blank" rel="noopener noreferrer">GenBUY</a> · <a className="underline" href={`https://docs.google.com/spreadsheets/d/${NEW_MENU_SHEET_ID}/edit?gid=${GEN_SELL_GID}`} target="_blank" rel="noopener noreferrer">GenSELL</a></>}</span>
           : `${selectedRowNumbers.length} row${selectedRowNumbers.length === 1 ? '' : 's'} selected`}
       </div>
       {!accessToken ? <button type="button" onClick={login} className="shrink-0 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white">Sign in to generate</button>
-        : <button type="button" onClick={generate} disabled={selectedRowNumbers.length === 0 || generating} className="shrink-0 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40">{generating ? 'Generating...' : `Generate Gen${generationMode === 'buy' ? 'BUY' : 'SELL'}`}</button>}
+        : <button type="button" onClick={generate} disabled={selectedRowNumbers.length === 0 || generating} className="shrink-0 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40">{generating ? 'Generating...' : 'Generate NewGenBill'}</button>}
     </div>}
   </>;
 };
