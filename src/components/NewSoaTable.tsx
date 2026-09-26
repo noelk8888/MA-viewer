@@ -32,6 +32,7 @@ const NewSoaTable: React.FC = () => {
   const selected = useMemo(() => selectedRows
     .map(rowNumber => rows.find(row => row.sheetRowNumber === rowNumber))
     .filter((row): row is NewSoaRow => Boolean(row)), [rows, selectedRows]);
+  const visibleRows = useMemo(() => rows.filter(row => row.category !== 'CBM'), [rows]);
 
   const toggle = (row: NewSoaRow) => {
     const isSelected = selectedRows.includes(row.sheetRowNumber);
@@ -110,8 +111,8 @@ const NewSoaTable: React.FC = () => {
     <div className="min-h-[300px] rounded-b-2xl overflow-hidden bg-white divide-y divide-gray-100">
       {loading ? <div className="flex flex-col items-center justify-center py-20 text-gray-400"><RefreshCw size={32} className="animate-spin mb-3 opacity-50" /><p className="text-sm">Loading SELL data...</p></div>
         : error ? <div className="text-center py-20 text-red-500"><p className="font-medium mb-2">Unavailable</p><p className="text-xs opacity-70">{error}</p><button onClick={load} className="mt-4 px-4 py-2 bg-gray-900 text-white text-xs rounded-lg">Retry</button></div>
-        : rows.length === 0 ? <div className="text-center py-20 text-gray-400 text-sm">No SELL entries found.</div>
-        : rows.map(row => {
+        : visibleRows.length === 0 ? <div className="text-center py-20 text-gray-400 text-sm">No SELL entries found.</div>
+        : visibleRows.map(row => {
           const checked = selectedRows.includes(row.sheetRowNumber);
           const disabled = !checked && ((selectedCategory !== null && selectedCategory !== row.category) || selectedRows.length >= 3);
           return <label key={row.sheetRowNumber} className={`grid grid-cols-[0.7fr_2fr_1fr_1.2fr] min-h-20 items-center text-sm cursor-pointer transition-colors ${checked ? 'bg-blue-50/60' : 'hover:bg-gray-50/60'} ${disabled ? 'opacity-45' : ''}`}>
