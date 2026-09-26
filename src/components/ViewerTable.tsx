@@ -6,7 +6,7 @@ import NewDrTable from './NewDrTable';
 import AddNewMenuModal from './AddNewMenuModal';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 import { formatAppDate } from '../utils/formatters';
-import { fetchNewSeriesHeader } from '../services/newMenuService';
+import { fetchNewSeriesHeader, type NewMenuRow } from '../services/newMenuService';
 
 interface ViewerTableProps {
   onSupplierClick?: () => void;
@@ -26,6 +26,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
   const [headerLoading, setHeaderLoading] = useState(true);
   const [contentKey, setContentKey] = useState(0);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingRow, setEditingRow] = useState<NewMenuRow | null>(null);
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
   const [trend, setTrend] = useState<'up' | 'down' | 'neutral'>('neutral');
 
@@ -85,7 +86,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
           </a>
           <button
             type="button"
-            onClick={() => setShowAddForm(true)}
+            onClick={() => { setEditingRow(null); setShowAddForm(true); }}
             className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-sm transition-colors hover:bg-emerald-700"
             title="Add"
             aria-label="Add"
@@ -119,8 +120,8 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
 
       {section === 'newdr' ? <NewDrTable key={`dr-${contentKey}`} />
         : section === 'newsoa' ? <NewSoaTable key={`soa-${contentKey}`} />
-          : <NewMenuTable key={`${section ?? 'menu'}-${contentKey}`} generationMode={section === 'newgenbill' ? 'newgenbill' : null} onSupplierClick={onSupplierClick} />}
-      <AddNewMenuModal isOpen={showAddForm} onClose={() => setShowAddForm(false)} onAdded={() => setContentKey(value => value + 1)} />
+          : <NewMenuTable key={`${section ?? 'menu'}-${contentKey}`} generationMode={section === 'newgenbill' ? 'newgenbill' : null} onSupplierClick={onSupplierClick} onEditRow={row => { setEditingRow(row); setShowAddForm(true); }} />}
+      <AddNewMenuModal isOpen={showAddForm} editingRow={editingRow} onClose={() => { setShowAddForm(false); setEditingRow(null); }} onSaved={() => setContentKey(value => value + 1)} />
     </div>
   );
 };

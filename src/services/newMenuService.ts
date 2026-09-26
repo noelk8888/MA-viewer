@@ -66,6 +66,22 @@ const shareValue = (value: string): number | '' => {
   return parsed / 100;
 };
 
+const newMenuInputValues = (input: NewMenuInput): Array<string | number> => [
+  input.reference.trim(),
+  sheetDate(input.date),
+  optionalNumber(input.cnyRate, 'CNY'),
+  optionalNumber(input.marketRate, 'MRATE'),
+  input.supplier.trim(),
+  input.itemLink.trim(),
+  optionalNumber(input.cnyAmount, 'CNY AMT'),
+  input.cbmLink.trim(),
+  optionalNumber(input.volume, 'VOL'),
+  '',
+  optionalNumber(input.cbmA, 'CBM A'),
+  optionalNumber(input.cbmB, 'CBM B'),
+  shareValue(input.share),
+];
+
 export const appendNewMenuRow = async (accessToken: string, input: NewMenuInput): Promise<number> => {
   const sheetName = await getSheetNameByGid(accessToken, NEW_MENU_SHEET_ID, NEW_MENU_GID);
   const quotedName = `'${sheetName.replace(/'/g, "''")}'`;
@@ -116,21 +132,7 @@ export const appendNewMenuRow = async (accessToken: string, input: NewMenuInput)
     throw new Error(error.error?.message || 'Could not apply NEW 2026 cell formatting.');
   }
 
-  const values: Array<string | number> = [
-    input.reference.trim(),
-    sheetDate(input.date),
-    optionalNumber(input.cnyRate, 'CNY'),
-    optionalNumber(input.marketRate, 'MRATE'),
-    input.supplier.trim(),
-    input.itemLink.trim(),
-    optionalNumber(input.cnyAmount, 'CNY AMT'),
-    input.cbmLink.trim(),
-    optionalNumber(input.volume, 'VOL'),
-    '',
-    optionalNumber(input.cbmA, 'CBM A'),
-    optionalNumber(input.cbmB, 'CBM B'),
-    shareValue(input.share),
-  ];
+  const values = newMenuInputValues(input);
   const targetRange = `${quotedName}!A${targetRow}:M${targetRow}`;
   const writeResponse = await fetch(`${valuesBase}/${encodeURIComponent(targetRange)}?valueInputOption=USER_ENTERED`, {
     method: 'PUT',
@@ -142,6 +144,22 @@ export const appendNewMenuRow = async (accessToken: string, input: NewMenuInput)
     throw new Error(error.error?.message || 'Could not add the NEW 2026 row.');
   }
   return targetRow;
+};
+
+export const updateNewMenuRow = async (accessToken: string, rowNumber: number, input: NewMenuInput): Promise<void> => {
+  if (!Number.isInteger(rowNumber) || rowNumber < 2) throw new Error('The NEW 2026 row number is invalid.');
+  const sheetName = await getSheetNameByGid(accessToken, NEW_MENU_SHEET_ID, NEW_MENU_GID);
+  const quotedName = `'${sheetName.replace(/'/g, "''")}'`;
+  const range = `${quotedName}!A${rowNumber}:M${rowNumber}`;
+  const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${NEW_MENU_SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ range, majorDimension: 'ROWS', values: [newMenuInputValues(input)] }),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || 'Could not update the NEW 2026 row.');
+  }
 };
 
 export interface NewMenuRow {
