@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FileText, RefreshCw } from 'lucide-react';
 import Modal from './Modal';
 import ImageUploadModal from './ImageUploadModal';
@@ -58,10 +58,11 @@ const NewMenuItem: React.FC<{
   row: NewMenuRow;
   onUpdated: () => void;
   generationMode: 'newgenbill' | null;
+  completed: boolean;
   selected: boolean;
   onToggle: () => void;
-}> = ({ row, onUpdated, generationMode, selected, onToggle }) => (
-  <div className="grid grid-cols-4 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors min-h-28">
+}> = ({ row, onUpdated, generationMode, completed, selected, onToggle }) => (
+  <div className={`grid grid-cols-4 border-b border-gray-100 last:border-0 transition-colors min-h-28 ${completed ? 'bg-gray-100 opacity-45 grayscale' : 'hover:bg-gray-50/50'}`}>
     <div className="p-3 flex flex-col justify-center gap-1 border-r border-gray-100/50 min-w-0 text-xs sm:text-sm">
       {generationMode && <label className="flex items-center gap-2 mb-1 text-blue-600 cursor-pointer"><input type="checkbox" checked={selected} onChange={onToggle} aria-label={`Select ${row.reference || row.supplier} for NewGenBill`} className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" /><span className="text-xs">NewGenBill</span></label>}
       <div className="text-sm sm:text-base text-gray-600">{displayDate(row.date)}</div>
@@ -109,6 +110,10 @@ const NewMenuTable: React.FC<{
 
   useEffect(() => { void load(); }, [load]);
 
+  const visibleRows = useMemo(() => generationMode
+    ? rows.filter(row => !row.cbmFactor.trim())
+    : rows, [generationMode, rows]);
+
   const toggleSelected = (rowNumber: number) => {
     setGenerationError(null);
     setGenerationStatus(null);
@@ -127,6 +132,7 @@ const NewMenuTable: React.FC<{
       const freshRows = await fetchNewMenuRows();
       const selected = freshRows.filter(row => selectedRowNumbers.includes(row.sheetRowNumber));
       if (selected.length !== selectedRowNumbers.length) throw new Error('Some selected rows changed. Refresh and select them again.');
+      if (selected.some(row => row.cbmFactor.trim())) throw new Error('A selected row is already completed. Refresh and select again.');
       if (selected.some(row => rows.find(original => original.sheetRowNumber === row.sheetRowNumber)?.reference !== row.reference)) {
         throw new Error('Some selected rows moved or changed. Refresh and select them again.');
       }
@@ -157,8 +163,8 @@ const NewMenuTable: React.FC<{
     <div className="divide-y divide-gray-50 min-h-[300px] rounded-b-2xl overflow-hidden bg-white">
       {loading ? <div className="flex flex-col items-center justify-center py-20 text-gray-400"><RefreshCw size={32} className="animate-spin mb-3 opacity-50" /><p className="text-sm">Loading New Menu...</p></div>
         : error ? <div className="text-center py-20 text-red-500"><p className="font-medium mb-2">Unavailable</p><p className="text-xs opacity-70">{error}</p><button onClick={load} className="mt-4 px-4 py-2 bg-gray-900 text-white text-xs rounded-lg">Retry</button></div>
-        : rows.length === 0 ? <div className="text-center py-20 text-gray-400 text-sm">No items found.</div>
-        : rows.map(row => <NewMenuItem key={row.sheetRowNumber} row={row} onUpdated={load} generationMode={generationMode} selected={selectedRowNumbers.includes(row.sheetRowNumber)} onToggle={() => toggleSelected(row.sheetRowNumber)} />)}
+        : visibleRows.length === 0 ? <div className="text-center py-20 text-gray-400 text-sm">No items found.</div>
+        : visibleRows.map(row => <NewMenuItem key={row.sheetRowNumber} row={row} onUpdated={load} generationMode={generationMode} completed={Boolean(row.cbmFactor.trim())} selected={selectedRowNumbers.includes(row.sheetRowNumber)} onToggle={() => toggleSelected(row.sheetRowNumber)} />)}
     </div>
     {generationMode && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[min(90vw,36rem)] rounded-2xl border border-gray-200 bg-white shadow-xl px-4 py-3 flex items-center gap-3">
       <div className="flex-1 min-w-0 text-sm text-gray-700">
