@@ -13,6 +13,21 @@ export interface NewSeriesHeader {
   total: string;
 }
 
+export interface NewMenuInput {
+  reference: string;
+  date: string;
+  cnyRate: string;
+  marketRate: string;
+  supplier: string;
+  itemLink: string;
+  cnyAmount: string;
+  cbmLink: string;
+  volume: string;
+  cbmA: string;
+  cbmB: string;
+  share: string;
+}
+
 export const fetchNewSeriesHeader = async (): Promise<NewSeriesHeader> => {
   const url = `https://docs.google.com/spreadsheets/d/${NEW_MENU_SHEET_ID}/export?format=csv&gid=${BUY_GID}&range=D1:H1&t=${Date.now()}`;
   return new Promise((resolve, reject) => {
@@ -30,6 +45,103 @@ export const fetchNewSeriesHeader = async (): Promise<NewSeriesHeader> => {
       error: () => reject(new Error('Could not load BUY header values.')),
     });
   });
+};
+
+const optionalNumber = (value: string, label: string): number | '' => {
+  if (!value.trim()) return '';
+  const parsed = Number(value.replace(/,/g, '').trim());
+  if (!Number.isFinite(parsed)) throw new Error(`${label} must be numeric.`);
+  return parsed;
+};
+
+const sheetDate = (value: string): string => {
+  const match = value.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return match ? `${match[2]}/${match[3]}/${match[1]}` : value.trim();
+};
+
+const shareValue = (value: string): number | '' => {
+  if (!value.trim()) return '';
+  const parsed = Number(value.replace(/%/g, '').replace(/,/g, '').trim());
+  if (!Number.isFinite(parsed)) throw new Error('SHARE must be numeric.');
+  return parsed / 100;
+};
+
+export const appendNewMenuRow = async (accessToken: string, input: NewMenuInput): Promise<number> => {
+  const sheetName = await getSheetNameByGid(accessToken, NEW_MENU_SHEET_ID, NEW_MENU_GID);
+  const quotedName = `'${sheetName.replace(/'/g, "''")}'`;
+  const headers = { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
+  const valuesBase = `https://sheets.googleapis.com/v4/spreadsheets/${NEW_MENU_SHEET_ID}/values`;
+  const readRange = `${quotedName}!A:M`;
+  const readResponse = await fetch(`${valuesBase}/${encodeURIComponent(readRange)}?valueRenderOption=FORMULA`, { headers });
+  if (!readResponse.ok) {
+    const error = await readResponse.json().catch(() => ({}));
+    throw new Error(error.error?.message || 'Could not inspect NEW 2026 rows.');
+  }
+  const existing = await readResponse.json() as { values?: unknown[][] };
+  const lastOccupiedRow = (existing.values || []).reduce((last, row, index) =>
+    row.some(value => String(value ?? '').trim() !== '') ? index + 1 : last, 0);
+  const sourceRow = Math.max(lastOccupiedRow, 1);
+  const targetRow = sourceRow + 2;
+
+  const formatRange = `${quotedName}!A${sourceRow}:M${sourceRow}`;
+  const formatFields = 'sheets(data(rowData(values(userEnteredFormat,dataValidation))))';
+  const formatResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${NEW_MENU_SHEET_ID}?includeGridData=true&ranges=${encodeURIComponent(formatRange)}&fields=${encodeURIComponent(formatFields)}`, { headers });
+  if (!formatResponse.ok) {
+    const error = await formatResponse.json().catch(() => ({}));
+    throw new Error(error.error?.message || 'Could not read NEW 2026 cell formatting.');
+  }
+  const formatData = await formatResponse.json() as any;
+  const sourceCells: any[] = formatData.sheets?.[0]?.data?.[0]?.rowData?.[0]?.values || [];
+  const formattedCells = Array.from({ length: 13 }, (_, index) => {
+    const sourceCell = sourceCells[index] || {};
+    const userEnteredFormat = structuredClone(sourceCell.userEnteredFormat || {});
+    if (userEnteredFormat.textFormat?.link) delete userEnteredFormat.textFormat.link;
+    return {
+      userEnteredFormat,
+      ...(sourceCell.dataValidation ? { dataValidation: sourceCell.dataValidation } : {}),
+    };
+  });
+
+  const formatWriteResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${NEW_MENU_SHEET_ID}:batchUpdate`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ requests: [{ updateCells: {
+      range: { sheetId: Number(NEW_MENU_GID), startRowIndex: targetRow - 1, endRowIndex: targetRow, startColumnIndex: 0, endColumnIndex: 13 },
+      rows: [{ values: formattedCells }],
+      fields: 'userEnteredFormat,dataValidation',
+    } }] }),
+  });
+  if (!formatWriteResponse.ok) {
+    const error = await formatWriteResponse.json().catch(() => ({}));
+    throw new Error(error.error?.message || 'Could not apply NEW 2026 cell formatting.');
+  }
+
+  const values: Array<string | number> = [
+    input.reference.trim(),
+    sheetDate(input.date),
+    optionalNumber(input.cnyRate, 'CNY'),
+    optionalNumber(input.marketRate, 'MRATE'),
+    input.supplier.trim(),
+    input.itemLink.trim(),
+    optionalNumber(input.cnyAmount, 'CNY AMT'),
+    input.cbmLink.trim(),
+    optionalNumber(input.volume, 'VOL'),
+    '',
+    optionalNumber(input.cbmA, 'CBM A'),
+    optionalNumber(input.cbmB, 'CBM B'),
+    shareValue(input.share),
+  ];
+  const targetRange = `${quotedName}!A${targetRow}:M${targetRow}`;
+  const writeResponse = await fetch(`${valuesBase}/${encodeURIComponent(targetRange)}?valueInputOption=USER_ENTERED`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({ range: targetRange, majorDimension: 'ROWS', values: [values] }),
+  });
+  if (!writeResponse.ok) {
+    const error = await writeResponse.json().catch(() => ({}));
+    throw new Error(error.error?.message || 'Could not add the NEW 2026 row.');
+  }
+  return targetRow;
 };
 
 export interface NewMenuRow {
