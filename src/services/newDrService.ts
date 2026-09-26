@@ -128,7 +128,7 @@ export const generateNewDrSheet = async (accessToken: string, payload: NewDrPrin
   if (interest) set(18, 1, driveImageFormula(primary.image));
   set(25, 2, 'ITEMS:'); set(25, 3, `Ref# ${itemReference}`);
   if (!interest) {
-    set(26, 2, 'CBM:'); set(26, 3, `Ref# ${itemReference} (1)`);
+    set(26, 2, 'CBM:'); set(26, 3, `Ref# ${cbm?.reference || `${itemReference.slice(0, -1)}B`}`);
     set(29, 2, 'CNY:'); set(29, 3, cnyRate);
     set(30, 2, 'factor:'); set(30, 3, factor);
     set(31, 2, 'RATE:'); set(31, 3, itemRate);
@@ -138,11 +138,11 @@ export const generateNewDrSheet = async (accessToken: string, payload: NewDrPrin
   set(42, 5, 'Signature Over Printed Name / Date');
 
   if (cbm) {
-    const printedCbmReference = `${itemReference} (1)`;
+    const printedCbmReference = cbm.reference;
     set(1, 7, 'J2N');
     set(2, 7, 'Transfer to:'); set(2, 9, 'DMC - Marlon'); set(2, 10, 'Ref #'); set(2, 11, printedCbmReference);
     set(3, 9, '22 Ford Ave., Doña Manuela Subd.,'); set(3, 10, 'Date'); set(3, 11, dateFormula(cbm.issueDate));
-    set(4, 9, 'Pamplona Tres, Las Piñas'); set(4, 10, 'Page:'); set(4, 11, 3);
+    set(4, 9, 'Pamplona Tres, Las Piñas'); set(4, 10, 'Page:'); set(4, 11, 1);
     set(6, 7, 'Quantity'); set(6, 9, 'Description'); set(6, 10, 'Unit Price'); set(6, 11, 'Subtotal');
     set(7, 7, numeric(cbm.quantity, `${cbm.reference} quantity`));
     set(7, 9, cbm.description);
