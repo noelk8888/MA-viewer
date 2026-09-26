@@ -72,7 +72,15 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
     <div className="w-full max-w-2xl mx-auto bg-white shadow-xl rounded-2xl border border-gray-100 my-4 sm:my-8 relative">
       <div className="p-4 bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-30 backdrop-blur-md bg-white/80 rounded-t-2xl shadow-sm">
         <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-3">
-          <span>{today}</span>
+          <a
+            href="https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=216870307#gid=216870307"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline"
+            title="Open NEW 2026"
+          >
+            {today}
+          </a>
           <span className="text-gray-300 font-light">|</span>
           <span className={`flex items-center gap-1 ${headerLoading ? 'opacity-50 animate-pulse' : ''}`}>
             <button type="button" onClick={logout} className="hover:underline cursor-pointer" title="Sign out and sign in again">
