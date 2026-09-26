@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
-import { fetchSupplierMonthSummaries, fetchSupplierSpecialTotals, type SupplierDateColumn, type SupplierMonthSummary, type SupplierSpecialTotals } from '../services/googleSheetsService';
+import { fetchSupplierMonthSummaries, fetchSupplierSpecialTotals, type SupplierDateColumn, type SupplierMonthSummary, type SupplierSpecialKind, type SupplierSpecialTotals } from '../services/googleSheetsService';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 
 const fmt = (value: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
@@ -15,8 +15,9 @@ export const SupplierSummaryPage: React.FC<{
   cutoffDate: string;
   onCutoffDateChange: (date: string) => void;
   onMonthClick: (month: string) => void;
+  onSpecialClick?: (kind: SupplierSpecialKind, label: string) => void;
   onNckClick?: () => void;
-}> = ({ onBack, dateColumn = 'K', cutoffDate, onCutoffDateChange, onMonthClick, onNckClick }) => {
+}> = ({ onBack, dateColumn = 'K', cutoffDate, onCutoffDateChange, onMonthClick, onSpecialClick, onNckClick }) => {
   const isNckSummary = dateColumn === 'O';
   const { accessToken } = useGoogleAuth();
   const [data, setData] = useState<SupplierMonthSummary[]>([]);
@@ -45,8 +46,8 @@ export const SupplierSummaryPage: React.FC<{
   useEffect(() => { void load(); }, [accessToken, cutoffDate, dateColumn]);
 
   const specialRows = isNckSummary ? [] : [
-    { label: 'FOR COLLECTION', ...specials.forCollection },
-    { label: 'CHINA (for DR)', ...specials.chinaForDr },
+    { kind: 'forCollection' as const, label: 'FOR COLLECTION', ...specials.forCollection },
+    { kind: 'chinaForDr' as const, label: 'CHINA (for DR)', ...specials.chinaForDr },
   ];
   const total = [...data, ...specialRows].reduce((sum, item) => ({
     amount: sum.amount + item.amount,
@@ -73,7 +74,7 @@ export const SupplierSummaryPage: React.FC<{
         </div> : <div className="text-[15px]">
           <div className="grid grid-cols-4 border-b border-gray-300 bg-gray-50 font-bold"><div className="p-3">MONTH</div><div className="p-3 text-right">AMOUNT</div><div className="p-3 text-right">JKB</div>{onNckClick ? <button type="button" onClick={onNckClick} className="p-3 text-right hover:text-blue-600 hover:underline">NCK</button> : <div className="p-3 text-right">NCK</div>}</div>
           {data.map((item) => <button key={item.label} type="button" onClick={() => onMonthClick(item.label)} className="grid grid-cols-4 w-full text-left border-b border-gray-100 hover:bg-blue-50"><div className="p-3 font-medium">{item.label}</div><div className="p-3 text-right">{fmt(item.amount)}</div><div className="p-3 text-right">{fmt(item.jkb)}</div><div className="p-3 text-right">{fmt(item.nck)}</div></button>)}
-          {specialRows.map((item) => <div key={item.label} className="grid grid-cols-4 border-b border-gray-100"><div className="p-3 font-medium">{item.label}</div><div className="p-3 text-right">{fmt(item.amount)}</div><div className="p-3 text-right">{fmt(item.jkb)}</div><div className="p-3 text-right">{fmt(item.nck)}</div></div>)}
+          {specialRows.map((item) => <button key={item.label} type="button" onClick={() => onSpecialClick?.(item.kind, item.label)} className="grid grid-cols-4 w-full text-left border-b border-gray-100 hover:bg-blue-50"><div className="p-3 font-medium">{item.label}</div><div className="p-3 text-right">{fmt(item.amount)}</div><div className="p-3 text-right">{fmt(item.jkb)}</div><div className="p-3 text-right">{fmt(item.nck)}</div></button>)}
           <div className="grid grid-cols-4 bg-gray-50/50 border-t-2 border-gray-900 font-bold"><div className="p-3">TOTAL</div><div className="p-3 text-right">{fmt(total.amount)}</div><div className="p-3 text-right">{fmt(total.jkb)}</div><div className="p-3 text-right">{fmt(total.nck)}</div></div>
         </div>}
   </div>;

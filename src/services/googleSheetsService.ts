@@ -97,6 +97,19 @@ export interface SupplierSpecialTotals {
   chinaForDr: { amount: number; jkb: number; nck: number };
 }
 
+export type SupplierSpecialKind = 'forCollection' | 'chinaForDr';
+
+const supplierSpecialKind = (row: string[]): SupplierSpecialKind | null => {
+  const h = String(row[7] || '').trim();
+  const i = String(row[8] || '').trim();
+  const j = String(row[9] || '').trim();
+  const k = String(row[10] || '').trim();
+  if (!h || k) return null;
+  if (i && j) return 'forCollection';
+  if (!i && !j) return 'chinaForDr';
+  return null;
+};
+
 export const fetchSupplierSpecialTotals = async (accessToken: string): Promise<SupplierSpecialTotals> => {
   const rows = await fetchSupplierSheetRows(accessToken);
   const totals = {
@@ -104,18 +117,39 @@ export const fetchSupplierSpecialTotals = async (accessToken: string): Promise<S
     chinaForDr: { amount: 0, jkb: 0, nck: 0 },
   };
   rows.forEach((row) => {
-    const h = String(row[7] || '').trim();
-    const i = String(row[8] || '').trim();
-    const j = String(row[9] || '').trim();
-    const k = String(row[10] || '').trim();
-    if (!h || k) return;
-    const target = i && j ? totals.forCollection : !i && !j ? totals.chinaForDr : null;
-    if (!target) return;
+    const kind = supplierSpecialKind(row);
+    if (!kind) return;
+    const target = totals[kind];
     target.amount += parseSupplierNumber(row[7]);
     target.jkb += parseSupplierNumber(row[12]);
     target.nck += parseSupplierNumber(row[13]);
   });
   return totals;
+};
+
+export const fetchSupplierSpecialDetails = async (accessToken: string, kind: SupplierSpecialKind): Promise<SupplierMonthSummary> => {
+  const rows = await fetchSupplierSheetRows(accessToken);
+  const label = kind === 'forCollection' ? 'FOR COLLECTION' : 'CHINA (for DR)';
+  const items = rows.flatMap((row, index): SupplierMonthItem[] => {
+    if (supplierSpecialKind(row) !== kind) return [];
+    const identifier = kind === 'forCollection'
+      ? [String(row[8] || '').trim(), String(row[9] || '').trim()].filter(Boolean).join(' · ')
+      : String(row[2] || row[0] || `Row ${index + 1}`).trim();
+    return [{
+      date: identifier,
+      amount: parseSupplierNumber(row[7]),
+      jkb: parseSupplierNumber(row[12]),
+      nck: parseSupplierNumber(row[13]),
+      sourceRow: index + 1,
+    }];
+  });
+  return items.reduce<SupplierMonthSummary>((summary, item) => {
+    summary.items.push(item);
+    summary.amount += item.amount;
+    summary.jkb += item.jkb;
+    summary.nck += item.nck;
+    return summary;
+  }, { label, items: [], amount: 0, jkb: 0, nck: 0 });
 };
 
 export const fetchSupplierMonthSummaries = async (accessToken: string, cutoffDate?: string, referenceDateColumn: SupplierDateColumn = 'K'): Promise<SupplierMonthSummary[]> => {
