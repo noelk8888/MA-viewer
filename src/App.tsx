@@ -1,7 +1,4 @@
 import ViewerTable from './components/ViewerTable'
-import { SummaryPage } from './components/SummaryPage'
-import { MonthDetailPage } from './components/MonthDetailPage'
-import { AccountPage } from './components/AccountPage'
 import { SupplierSummaryPage } from './components/SupplierSummaryPage'
 import { SupplierMonthDetailPage } from './components/SupplierMonthDetailPage'
 import { GoogleAuthProvider, useGoogleAuth } from './contexts/GoogleAuthContext'
@@ -19,9 +16,7 @@ const todayInputValue = () => {
 function AppContent() {
   const localNewMenuPreview = import.meta.env.DEV && new URLSearchParams(window.location.search).has('previewNewMenu');
   const { isAuthenticated, isInitializing } = useGoogleAuth();
-  const [view, setView] = useState<'viewer' | 'summary' | 'month' | 'account' | 'supplierSummary' | 'nckSummary' | 'supplierMonth'>('viewer');
-  const [selectedMonth, setSelectedMonth] = useState<{ index: number; label: string } | null>(null);
-  const [monthBackView, setMonthBackView] = useState<'summary' | 'supplierSummary' | 'nckSummary'>('summary');
+  const [view, setView] = useState<'viewer' | 'supplierSummary' | 'nckSummary' | 'supplierMonth'>('viewer');
   const [selectedSupplierMonth, setSelectedSupplierMonth] = useState<string | null>(null);
   const [supplierCutoffDate, setSupplierCutoffDate] = useState(todayInputValue);
   const [supplierDateColumn, setSupplierDateColumn] = useState<SupplierDateColumn>('K');
@@ -55,24 +50,7 @@ function AppContent() {
   return (
     <div className="min-h-screen w-full bg-[#f8f9fa] sm:py-8 sm:px-4">
       {view === 'viewer' ? (
-        <ViewerTable onSummaryClick={() => setView('summary')} onSupplierClick={() => setView('supplierSummary')} />
-      ) : view === 'summary' ? (
-        <SummaryPage
-          onBack={() => setView('viewer')}
-          onMonthClick={(index, label) => {
-            setSelectedMonth({ index, label });
-            setMonthBackView('summary');
-            setView('month');
-          }}
-        />
-      ) : view === 'month' && selectedMonth ? (
-        <MonthDetailPage
-          monthIndex={selectedMonth.index}
-          monthLabel={selectedMonth.label}
-          onBack={() => setView(monthBackView)}
-        />
-      ) : view === 'account' ? (
-        <AccountPage onBack={() => setView('viewer')} />
+        <ViewerTable onSupplierClick={() => setView('supplierSummary')} />
       ) : view === 'supplierSummary' ? (
         <SupplierSummaryPage
           onBack={() => setView('viewer')}
@@ -81,11 +59,6 @@ function AppContent() {
           onCutoffDateChange={setSupplierCutoffDate}
           onMonthClick={(month) => { setSelectedSupplierMonth(month); setSupplierDateColumn('K'); setSupplierMonthBackView('supplierSummary'); setView('supplierMonth'); }}
           onNckClick={() => setView('nckSummary')}
-          onSpecialClick={(index, label) => {
-            setSelectedMonth({ index, label });
-            setMonthBackView('supplierSummary');
-            setView('month');
-          }}
         />
       ) : view === 'nckSummary' ? (
         <SupplierSummaryPage
@@ -94,29 +67,12 @@ function AppContent() {
           cutoffDate={supplierCutoffDate}
           onCutoffDateChange={setSupplierCutoffDate}
           onMonthClick={(month) => { setSelectedSupplierMonth(month); setSupplierDateColumn('O'); setSupplierMonthBackView('nckSummary'); setView('supplierMonth'); }}
-          onSpecialClick={(index, label) => {
-            setSelectedMonth({ index, label });
-            setMonthBackView('nckSummary');
-            setView('month');
-          }}
         />
       ) : view === 'supplierMonth' && selectedSupplierMonth ? (
         <SupplierMonthDetailPage month={selectedSupplierMonth} cutoffDate={supplierCutoffDate} dateColumn={supplierDateColumn} onBack={() => setView(supplierMonthBackView)} />
       ) : null}
 
-      <footer className="py-6 text-center text-xs text-gray-400">
-        <button
-          type="button"
-          onClick={() => {
-            setSelectedMonth(null);
-            setView('account');
-          }}
-          className="hover:text-blue-600 hover:underline transition-colors"
-          title="Open account summary"
-        >
-          Inventory Viewer App • {new Date().getFullYear()}
-        </button>
-      </footer>
+      <footer className="py-6 text-center text-xs text-gray-400">Inventory Viewer App • {new Date().getFullYear()}</footer>
     </div>
   );
 }

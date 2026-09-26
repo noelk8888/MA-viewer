@@ -5,6 +5,26 @@ export const NEW_MENU_SHEET_ID = '1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM';
 export const NEW_MENU_GID = '216870307';
 export const GEN_BUY_GID = '1755470891';
 export const GEN_SELL_GID = '1307953980';
+export const BUY_GID = '979211971';
+
+export interface NewSeriesHeader {
+  rate: string;
+  total: string;
+}
+
+export const fetchNewSeriesHeader = async (accessToken: string): Promise<NewSeriesHeader> => {
+  const sheetName = await getSheetNameByGid(accessToken, NEW_MENU_SHEET_ID, BUY_GID);
+  const range = `'${sheetName.replace(/'/g, "''")}'!D1:H1`;
+  const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${NEW_MENU_SHEET_ID}/values/${encodeURIComponent(range)}?valueRenderOption=FORMATTED_VALUE`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || 'Could not load BUY header values.');
+  }
+  const row = (await response.json() as { values?: string[][] }).values?.[0] || [];
+  return { total: String(row[0] || '0'), rate: String(row[4] || '') };
+};
 
 export interface NewMenuRow {
   reference: string;

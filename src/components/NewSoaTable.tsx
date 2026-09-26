@@ -102,7 +102,7 @@ const NewSoaTable: React.FC = () => {
   };
 
   return <>
-    <div className="grid grid-cols-[0.7fr_2fr_1fr_1.2fr] bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[137px] z-20 shadow-sm">
+    <div className="grid grid-cols-[0.7fr_2fr_1fr_1.2fr] bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[109px] z-20 shadow-sm">
       <div className="p-3 text-center border-r border-gray-200/50">Batch</div>
       <div className="p-3 text-left border-r border-gray-200/50">Description</div>
       <div className="p-3 text-center border-r border-gray-200/50">Reference</div>

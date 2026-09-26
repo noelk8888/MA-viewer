@@ -48,7 +48,6 @@ const NewMenuImage: React.FC<{
       imageType={column === 'F' ? 'DR' : 'CBM'}
       imageLabel={label}
       sheetRowNumber={rowNumber}
-      selectedYear="2026"
       targetSheet={{ spreadsheetId: NEW_MENU_SHEET_ID, gid: NEW_MENU_GID, column }}
       onUploadComplete={() => { onUpdated(); setShowUpload(false); }}
     />}
@@ -145,7 +144,7 @@ const NewMenuTable: React.FC<{
   };
 
   return <>
-    <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[137px] z-20 shadow-sm">
+    <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[109px] z-20 shadow-sm">
       <div className="p-3 border-r border-gray-200/50 text-left">Date</div>
       <div className="p-3 border-r border-gray-200/50 text-center">Items DR</div>
       <button type="button" onClick={onSupplierClick} className="p-3 border-r border-gray-200/50 text-left hover:text-blue-600 hover:underline" title="Open supplier summary">Supplier</button>

@@ -2,8 +2,9 @@ import React, { useState, useRef, useCallback } from 'react';
 import { X, Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 import { uploadImageToDrive } from '../services/googleDriveService';
-import { updateSheetCell, updateSheetCellByGid } from '../services/googleSheetsService';
-import type { ImageType } from '../services/googleSheetsService';
+import { updateSheetCellByGid } from '../services/googleSheetsService';
+
+type ImageType = 'DR' | 'CBM';
 
 interface ImageUploadModalProps {
   isOpen: boolean;
@@ -11,8 +12,7 @@ interface ImageUploadModalProps {
   imageType: ImageType;
   sheetRowNumber: number;
   onUploadComplete: () => void;
-  selectedYear: string;
-  targetSheet?: { spreadsheetId: string; gid: string; column: 'F' | 'H' };
+  targetSheet: { spreadsheetId: string; gid: string; column: 'F' | 'H' };
   imageLabel?: string;
 }
 
@@ -24,7 +24,6 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
   imageType,
   sheetRowNumber,
   onUploadComplete,
-  selectedYear,
   targetSheet,
   imageLabel,
 }) => {
@@ -65,10 +64,8 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
     if (!selectedFile || !accessToken) return;
 
     const folderId = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
-    const sheetId = import.meta.env.VITE_GOOGLE_SHEET_ID;
-
-    if (!folderId || (!targetSheet && !sheetId)) {
-      setError('Upload configuration missing (Drive Folder ID or Sheet ID)');
+    if (!folderId) {
+      setError('Upload configuration missing (Drive Folder ID)');
       return;
     }
 
@@ -79,11 +76,7 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
       const uploadResult = await uploadImageToDrive(selectedFile, accessToken, folderId);
 
       setUploadState('updating-sheet');
-      if (targetSheet) {
-        await updateSheetCellByGid(accessToken, targetSheet.spreadsheetId, targetSheet.gid, sheetRowNumber, targetSheet.column, uploadResult.driveLink);
-      } else {
-        await updateSheetCell(accessToken, sheetId, sheetRowNumber, imageType, uploadResult.driveLink, selectedYear);
-      }
+      await updateSheetCellByGid(accessToken, targetSheet.spreadsheetId, targetSheet.gid, sheetRowNumber, targetSheet.column, uploadResult.driveLink);
 
       setUploadState('success');
       onUploadComplete();
@@ -103,7 +96,7 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
         setError(errorMessage);
       }
     }
-  }, [selectedFile, accessToken, sheetRowNumber, imageType, onUploadComplete, onClose, selectedYear, targetSheet, resetState]);
+  }, [selectedFile, accessToken, sheetRowNumber, onUploadComplete, onClose, targetSheet, resetState]);
 
   const handleClose = useCallback(() => {
     if (uploadState !== 'uploading' && uploadState !== 'updating-sheet') {

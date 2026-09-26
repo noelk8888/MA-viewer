@@ -1,475 +1,110 @@
-import { RefreshCw, Plus, X, TrendingUp, TrendingDown } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-import { fetchSheetData, type SheetRow } from '../services/sheetService';
-import { generateSOA, generateBill } from '../services/googleSheetsService';
-import RowItem from './RowItem';
+import { RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
 import NewMenuTable from './NewMenuTable';
 import NewSoaTable from './NewSoaTable';
 import NewDrTable from './NewDrTable';
-import AddRowModal from './AddRowModal';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 import { formatAppDate } from '../utils/formatters';
-
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=311571294#gid=311571294';
+import { fetchNewSeriesHeader } from '../services/newMenuService';
 
 interface ViewerTableProps {
-  onSummaryClick?: () => void;
   onSupplierClick?: () => void;
   initialNewMenu?: boolean;
 }
 
-const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierClick, initialNewMenu = false }) => {
-    const [data, setData] = useState<SheetRow[]>([]);
-    const [rate, setRate] = useState<string>('0');
-    const [i1Value, setI1Value] = useState<string>('0');
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [showAddRowModal, setShowAddRowModal] = useState(false);
-    const [showNewMenu, setShowNewMenu] = useState(initialNewMenu);
-    const [generationMode, setGenerationMode] = useState<'newgenbill' | null>(null);
-    const [newPlaceholder, setNewPlaceholder] = useState<'NEW DR' | 'NEW SOA' | null>(null);
-    const [selectedYear] = useState<string>('2026');
-    const [selectionModeType, setSelectionModeType] = useState<'DR_CBM' | 'SUPPLIER' | 'ISSUE_DR' | null>(null);
-    const [selectedRowIndices, setSelectedRowIndices] = useState<number[]>([]);
-    const [selectionType, setSelectionType] = useState<'DR' | 'CBM' | 'SUPPLIER' | 'ISSUE_DR' | null>(null);
-    const [isProcessingSoa, setIsProcessingSoa] = useState(false);
-    const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
-    const [trend, setTrend] = useState<'up' | 'down' | 'neutral'>('neutral');
+type NewSection = 'newgenbill' | 'newdr' | 'newsoa' | null;
 
-    const { accessToken, login, logout, isAuthenticated } = useGoogleAuth();
+const RATE_CACHE_KEY = 'new_series_cny_rate_data';
+const isValidRate = (value: string) => Number.isFinite(Number(value.replace(/,/g, ''))) && Number(value.replace(/,/g, '')) > 0;
 
-    const toggleSelectionMode = (mode: 'DR_CBM' | 'SUPPLIER' | 'ISSUE_DR') => {
-        setShowNewMenu(false);
-        setGenerationMode(null);
-        setNewPlaceholder(null);
-        setSelectionModeType(currentMode => currentMode === mode ? null : mode);
-        setSelectedRowIndices([]);
-        setSelectionType(null);
-    };
+const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
+  const { accessToken } = useGoogleAuth();
+  const [section, setSection] = useState<NewSection>(null);
+  const [rate, setRate] = useState(() => localStorage.getItem(RATE_CACHE_KEY) || '0');
+  const [total, setTotal] = useState('0');
+  const [headerLoading, setHeaderLoading] = useState(true);
+  const [contentKey, setContentKey] = useState(0);
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+  const [trend, setTrend] = useState<'up' | 'down' | 'neutral'>('neutral');
 
-    // Toggle dark mode
-    const toggleDarkMode = () => {
-        const next = !isDark;
-        setIsDark(next);
-        if (next) document.documentElement.classList.add('dark');
-        else document.documentElement.classList.remove('dark');
-    };
-
-    // Get Today's Date formatted
-    const today = formatAppDate(new Date().toISOString().slice(0, 10));
-
-    const loadData = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const result = await fetchSheetData(selectedYear);
-            setData(result.rows);
-            setRate(result.rate);
-            setI1Value(result.i1Value);
-        } catch (err) {
-            console.error(err);
-            setError('Failed to load data from Google Sheets.');
-        } finally {
-            setLoading(false);
+  const loadHeader = useCallback(async () => {
+    if (!accessToken) {
+      setHeaderLoading(false);
+      return;
+    }
+    setHeaderLoading(true);
+    try {
+      const next = await fetchNewSeriesHeader(accessToken);
+      setTotal(next.total || '0');
+      if (isValidRate(next.rate)) {
+        const previous = localStorage.getItem(RATE_CACHE_KEY) || '';
+        if (isValidRate(previous)) {
+          const previousNumber = Number(previous.replace(/,/g, ''));
+          const nextNumber = Number(next.rate.replace(/,/g, ''));
+          setTrend(nextNumber > previousNumber ? 'up' : nextNumber < previousNumber ? 'down' : 'neutral');
         }
-    };
+        setRate(next.rate);
+        localStorage.setItem(RATE_CACHE_KEY, next.rate);
+      }
+    } catch (error) {
+      console.error('Failed to load BUY header values', error);
+    } finally {
+      setHeaderLoading(false);
+    }
+  }, [accessToken]);
 
-    useEffect(() => {
-        loadData();
-    }, [selectedYear]);
+  useEffect(() => { void loadHeader(); }, [loadHeader]);
 
-    useEffect(() => {
-        if (!rate || rate === '0') return;
+  const toggleDarkMode = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle('dark', next);
+  };
 
-        try {
-            const todayStr = new Date().toDateString();
-            const stored = JSON.parse(localStorage.getItem('cny_rate_data') || '{"rate": "0", "previousRate": "0", "date": ""}');
-            let prevRate = stored.previousRate;
-            let currRate = stored.rate;
+  const selectSection = (next: Exclude<NewSection, null>) => {
+    setSection(current => current === next ? null : next);
+  };
 
-            if (rate !== currRate) {
-                if (stored.date !== todayStr) prevRate = currRate;
-                currRate = rate;
-                localStorage.setItem('cny_rate_data', JSON.stringify({ rate: currRate, previousRate: prevRate, date: todayStr }));
-            } else if (stored.date !== todayStr) {
-                localStorage.setItem('cny_rate_data', JSON.stringify({ rate: currRate, previousRate: prevRate, date: todayStr }));
-            }
+  const refresh = () => {
+    void loadHeader();
+    setContentKey(value => value + 1);
+  };
 
-            const currNum = parseFloat(currRate.replace(/,/g, ''));
-            const prevNum = parseFloat(prevRate.replace(/,/g, ''));
-            if (!isNaN(prevNum) && prevNum > 0 && !isNaN(currNum)) {
-                if (currNum > prevNum) setTrend('up');
-                else if (currNum < prevNum) setTrend('down');
-                else setTrend('neutral');
-            }
-        } catch (e) {
-            console.error('Error tracking rate history', e);
-        }
-    }, [rate]);
+  const today = formatAppDate(new Date().toISOString().slice(0, 10));
 
-    return (
-        <div className="w-full max-w-2xl mx-auto bg-white shadow-xl rounded-2xl border border-gray-100 my-4 sm:my-8 relative">
-            {/* Header Bar */}
-            <div className="p-4 bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-20 backdrop-blur-md bg-white/80 rounded-t-2xl shadow-sm">
-                <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-3">
-                    <a
-                        href={SHEET_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:underline cursor-pointer"
-                    >
-                        {today}
-                    </a>
-                    <button
-                        onClick={() => setShowAddRowModal(true)}
-                        className="p-1 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors"
-                        title="Add new entry"
-                    >
-                        <Plus size={14} />
-                    </button>
-                    <span className="text-gray-300 font-light">|</span>
-                    <span className="flex items-center gap-1">
-                        <button
-                            type="button"
-                            onClick={logout}
-                            className={`hover:underline cursor-pointer ${loading ? 'opacity-50 animate-pulse' : ''}`}
-                            title="Sign out"
-                        >
-                            {rate}
-                        </button>
-                        {trend === 'up' && <TrendingUp size={16} className="text-green-500" />}
-                        {trend === 'down' && <TrendingDown size={16} className="text-red-500" />}
-                    </span>
-                    <span className="text-gray-300 font-light">|</span>
-                    <button
-                        type="button"
-                        className={`${loading ? 'opacity-50 animate-pulse' : ''} hover:underline cursor-pointer`}
-                        onClick={onSummaryClick}
-                        title="Open J2N, JKB, and NCK summary"
-                    >
-                        {i1Value}
-                    </button>
-                </h1>
-                <button
-                    onClick={loadData}
-                    disabled={loading}
-                    className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                >
-                    <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
-                </button>
-            </div>
+  return (
+    <div className="w-full max-w-2xl mx-auto bg-white shadow-xl rounded-2xl border border-gray-100 my-4 sm:my-8 relative">
+      <div className="p-4 bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-30 backdrop-blur-md bg-white/80 rounded-t-2xl shadow-sm">
+        <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-3">
+          <span>{today}</span>
+          <span className="text-gray-300 font-light">|</span>
+          <span className={`flex items-center gap-1 ${headerLoading ? 'opacity-50 animate-pulse' : ''}`} title="CNY/PHP from BUY H1">
+            {rate}
+            {trend === 'up' && <TrendingUp size={16} className="text-green-500" />}
+            {trend === 'down' && <TrendingDown size={16} className="text-red-500" />}
+          </span>
+          <span className="text-gray-300 font-light">|</span>
+          <button type="button" onClick={onSupplierClick} className={`${headerLoading ? 'opacity-50 animate-pulse' : ''} hover:underline cursor-pointer`} title="Open supplier summary">
+            {total}
+          </button>
+        </h1>
+        <button type="button" onClick={refresh} disabled={headerLoading} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Refresh">
+          <RefreshCw size={20} className={headerLoading ? 'animate-spin' : ''} />
+        </button>
+      </div>
 
-            {/* Year Tabs */}
-            <div className="flex border-b border-gray-200 bg-white sticky top-[60px] z-20 shadow-sm">
-                <button
-                    onClick={() => toggleSelectionMode('SUPPLIER')}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                        selectionModeType === 'SUPPLIER'
-                            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                    }`}
-                    title="Toggle Supplier Selection Mode"
-                >
-                    GenBill
-                </button>
-                <button
-                    onClick={() => toggleSelectionMode('ISSUE_DR')}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                        selectionModeType === 'ISSUE_DR'
-                            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                    }`}
-                    title="Select an entry to issue a DR"
-                >
-                    Issue DR
-                </button>
-                <button
-                    onClick={() => toggleSelectionMode('DR_CBM')}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                        selectionModeType === 'DR_CBM'
-                            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                    }`}
-                    title="Toggle DR Selection Mode"
-                >
-                    Issue SOA
-                </button>
-                <button
-                    onClick={toggleDarkMode}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                        isDark
-                            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                    }`}
-                    title="Toggle dark mode"
-                >
-                    {isDark ? 'DARK' : 'LIGHT'}
-                </button>
-            </div>
+      <div className="flex border-b border-gray-200 bg-white sticky top-[60px] z-20 shadow-sm">
+        <button type="button" onClick={() => selectSection('newgenbill')} className={`flex-1 py-3 text-sm font-medium transition-colors ${section === 'newgenbill' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>NEW GENBILL</button>
+        <button type="button" onClick={() => selectSection('newdr')} className={`flex-1 py-3 text-sm font-medium transition-colors ${section === 'newdr' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>NEW DR</button>
+        <button type="button" onClick={() => selectSection('newsoa')} className={`flex-1 py-3 text-sm font-medium transition-colors ${section === 'newsoa' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>NEW SOA</button>
+        <button type="button" onClick={toggleDarkMode} className={`flex-1 py-3 text-sm font-medium transition-colors ${isDark ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>DARK</button>
+      </div>
 
-            {/* New menu row */}
-            <div className="flex border-b border-gray-200 bg-white sticky top-[97px] z-20 shadow-sm">
-                <button
-                    type="button"
-                    onClick={() => { setShowNewMenu(current => generationMode ? true : !current); setGenerationMode(null); setNewPlaceholder(null); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors ${showNewMenu && !generationMode && !newPlaceholder ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-                >New Menu</button>
-                <button type="button" onClick={() => { setShowNewMenu(true); setGenerationMode('newgenbill'); setNewPlaceholder(null); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }} className={`flex-1 py-2 text-sm font-medium transition-colors ${generationMode === 'newgenbill' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>NewGenBill</button>
-                {(['NEW DR', 'NEW SOA'] as const).map(label => <button key={label} type="button" onClick={() => { setShowNewMenu(false); setGenerationMode(null); setNewPlaceholder(label); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }} className={`flex-1 py-2 text-sm font-medium transition-colors ${newPlaceholder === label ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>{label}</button>)}
-            </div>
-
-            {showNewMenu ? <NewMenuTable key={generationMode ?? 'browse'} generationMode={generationMode} onSupplierClick={onSupplierClick} /> : newPlaceholder === 'NEW SOA' ? <NewSoaTable /> : newPlaceholder === 'NEW DR' ? <NewDrTable /> : <>
-            {/* Table Headers */}
-            <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[137px] z-20 shadow-sm">
-                <button type="button" onClick={onSupplierClick} className="p-3 border-r border-gray-200/50 text-left hover:text-blue-600 hover:underline" title="Open supplier summary">
-                    Supplier
-                </button>
-                <div className="p-3 text-center border-r border-gray-200/50">
-                    DR
-                </div>
-                <div className="p-3 text-right border-r border-gray-200/50">RMB / PHP</div>
-                <div className="p-3 text-center">CBM</div>
-            </div>
-
-            {/* Data List */}
-            <div className="divide-y divide-gray-50 min-h-[300px] rounded-b-2xl overflow-hidden bg-white">
-                {loading ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                        <RefreshCw size={32} className="animate-spin mb-3 opacity-50" />
-                        <p className="text-sm">Loading inventory...</p>
-                    </div>
-                ) : error ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-red-500">
-                        <p className="font-medium mb-2">Unavailable</p>
-                        <p className="text-xs opacity-70">{error}</p>
-                        <button onClick={loadData} className="mt-4 px-4 py-2 bg-gray-900 text-white text-xs rounded-lg">Retry</button>
-                    </div>
-                ) : data.length === 0 ? (
-                    <div className="text-center py-20 text-gray-400 text-sm">
-                        No items found.
-                    </div>
-                ) : (
-                    data.map((row, index) => (
-                        <RowItem 
-                            key={index} 
-                            row={row} 
-                            onImageUpdated={loadData} 
-                            selectedYear={selectedYear} 
-                            selectionModeType={selectionModeType}
-                            isSelected={selectedRowIndices.includes(row.originalIndex)}
-                            selectionType={selectionType}
-                            selectedCount={selectedRowIndices.length}
-                            onToggleSelect={(rowIndex, type) => {
-                                setSelectedRowIndices(prev => {
-                                    const isSelected = prev.includes(rowIndex);
-                                    const selectionLimit = selectionModeType === 'ISSUE_DR' ? 1 : 3;
-                                    
-                                    if (!isSelected && prev.length >= selectionLimit) {
-                                        alert(selectionModeType === 'ISSUE_DR'
-                                            ? "You can only select one entry to issue a DR."
-                                            : "You can only select up to 3 items.");
-                                        return prev;
-                                    }
-
-                                    const newSelection = isSelected 
-                                        ? prev.filter(i => i !== rowIndex)
-                                        : [...prev, rowIndex];
-                                    
-                                    if (newSelection.length === 0) {
-                                        setSelectionType(null);
-                                    } else {
-                                        setSelectionType(type);
-                                    }
-                                    return newSelection;
-                                });
-                            }}
-                        />
-                    ))
-                )}
-            </div>
-            </>}
-
-            {/* Add Row Modal */}
-            <AddRowModal
-                isOpen={showAddRowModal}
-                onClose={() => setShowAddRowModal(false)}
-                onRowAdded={loadData}
-                selectedYear={selectedYear}
-            />
-
-            {/* Floating Action Bar */}
-            {!showNewMenu && selectionModeType && (
-                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 px-6 py-3 flex items-center gap-4 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
-                    <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                        {selectedRowIndices.length} selected
-                    </span>
-                    <div className="w-px h-6 bg-gray-200"></div>
-                    {selectionModeType === 'DR_CBM' ? (
-                        <>
-                            <button
-                                onClick={async () => {
-                                    if (!isAuthenticated || !accessToken) {
-                                        alert("Please sign in with Google to issue an SOA.");
-                                        login();
-                                        return;
-                                    }
-                                    
-                                    const sheetId = import.meta.env.VITE_GOOGLE_SHEET_ID;
-                                    if (!sheetId) {
-                                        alert("Sheet ID not configured.");
-                                        return;
-                                    }
-
-                                    if (selectionType !== 'DR' && selectionType !== 'CBM') return;
-
-                                    try {
-                                        setIsProcessingSoa(true);
-                                        const selectedRowsData = selectedRowIndices.map(id => 
-                                            data.find(r => r.originalIndex === id)
-                                        ).filter(Boolean);
-                                        
-                                        await generateSOA(accessToken, sheetId, selectedRowsData, selectionType);
-                                        
-                                        // Open SOA tab
-                                        window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=1049592506', '_blank');
-                                        
-                                        setSelectionModeType(null);
-                                        setSelectedRowIndices([]);
-                                        setSelectionType(null);
-                                    } catch (err: any) {
-                                        alert("Error generating SOA: " + err.message);
-                                        if (err.message.includes('expired')) {
-                                            logout();
-                                            login();
-                                        }
-                                    } finally {
-                                        setIsProcessingSoa(false);
-                                    }
-                                }}
-                                disabled={selectedRowIndices.length === 0 || isProcessingSoa}
-                                className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                            >
-                                {isProcessingSoa ? 'PROCESSING...' : 'ISSUE SOA'}
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    if (!isAuthenticated || !accessToken) {
-                                        alert("Please sign in with Google to print the SOA.");
-                                        login();
-                                        return;
-                                    }
-                                    
-                                    const sheetId = import.meta.env.VITE_GOOGLE_SHEET_ID;
-                                    if (!sheetId) {
-                                        alert("Sheet ID not configured.");
-                                        return;
-                                    }
-
-                                    if (selectionType !== 'DR' && selectionType !== 'CBM') return;
-
-                                    try {
-                                        setIsProcessingSoa(true);
-                                        const selectedRowsData = selectedRowIndices.map(id => 
-                                            data.find(r => r.originalIndex === id)
-                                        ).filter(Boolean);
-                                        
-                                        await generateSOA(accessToken, sheetId, selectedRowsData, selectionType);
-                                        
-                                        // Open PDF export for printing (A1:D35) fitted to A4 without gridlines
-                                        window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/export?format=pdf&gid=1049592506&range=A1:D35&size=A4&portrait=true&scale=4&gridlines=false', '_blank');
-                                        
-                                        setSelectionModeType(null);
-                                        setSelectedRowIndices([]);
-                                        setSelectionType(null);
-                                    } catch (err: any) {
-                                        alert("Error printing SOA: " + err.message);
-                                        if (err.message.includes('expired')) {
-                                            logout();
-                                            login();
-                                        }
-                                    } finally {
-                                        setIsProcessingSoa(false);
-                                    }
-                                }}
-                                disabled={selectedRowIndices.length === 0 || isProcessingSoa}
-                                className="px-4 py-1.5 bg-gray-800 text-white text-sm font-medium rounded-full hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                            >
-                                PRINT
-                            </button>
-                        </>
-                    ) : selectionModeType === 'SUPPLIER' ? (
-                        <button
-                            onClick={async () => {
-                                if (!isAuthenticated || !accessToken) {
-                                    alert("Please sign in with Google to generate a bill.");
-                                    login();
-                                    return;
-                                }
-                                
-                                const sheetId = import.meta.env.VITE_GOOGLE_SHEET_ID;
-                                if (!sheetId) {
-                                    alert("Sheet ID not configured.");
-                                    return;
-                                }
-
-                                try {
-                                    setIsProcessingSoa(true);
-                                    const selectedRowsData = selectedRowIndices.map(id => 
-                                        data.find(r => r.originalIndex === id)
-                                    ).filter(Boolean);
-                                    
-                                    // PUSH DATA - Implement generateBill in googleSheetsService
-                                    await generateBill(accessToken, sheetId, selectedRowsData, selectedYear);
-                                    
-                                    window.open('https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=837323267#gid=837323267', '_blank');
-                                    
-                                    setSelectionModeType(null);
-                                    setSelectedRowIndices([]);
-                                    setSelectionType(null);
-                                } catch (err: any) {
-                                    alert("Error generating bill: " + err.message);
-                                } finally {
-                                    setIsProcessingSoa(false);
-                                }
-                            }}
-                            disabled={selectedRowIndices.length === 0 || isProcessingSoa}
-                            className="px-4 py-1.5 bg-purple-600 text-white text-sm font-medium rounded-full hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                        >
-                            {isProcessingSoa ? 'PROCESSING...' : 'GENERATE BILL'}
-                        </button>
-                    ) : (
-                        <button
-                            onClick={() => {
-                                const rowNumber = selectedRowIndices[0];
-                                if (!rowNumber) return;
-
-                                window.open(`https://drsheet.vercel.app/?row=${rowNumber}`, '_blank');
-                                setSelectionModeType(null);
-                                setSelectedRowIndices([]);
-                                setSelectionType(null);
-                            }}
-                            disabled={selectedRowIndices.length !== 1}
-                            className="px-4 py-1.5 bg-red-600 text-white text-sm font-medium rounded-full hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                        >
-                            ISSUE DR
-                        </button>
-                    )}
-                    <button
-                        onClick={() => {
-                            setSelectionModeType(null);
-                            setSelectedRowIndices([]);
-                            setSelectionType(null);
-                        }}
-                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors ml-2"
-                        title="Cancel Selection Mode"
-                        disabled={isProcessingSoa}
-                    >
-                        <X size={16} />
-                    </button>
-                </div>
-            )}
-        </div>
-    );
+      {section === 'newdr' ? <NewDrTable key={`dr-${contentKey}`} />
+        : section === 'newsoa' ? <NewSoaTable key={`soa-${contentKey}`} />
+          : <NewMenuTable key={`${section ?? 'menu'}-${contentKey}`} generationMode={section === 'newgenbill' ? 'newgenbill' : null} onSupplierClick={onSupplierClick} />}
+    </div>
+  );
 };
 
 export default ViewerTable;
