@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import NewMenuTable from './NewMenuTable';
 import NewSoaTable from './NewSoaTable';
 import NewDrTable from './NewDrTable';
-import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 import { formatAppDate } from '../utils/formatters';
 import { fetchNewSeriesHeader } from '../services/newMenuService';
 
@@ -18,7 +17,6 @@ const RATE_CACHE_KEY = 'new_series_cny_rate_data';
 const isValidRate = (value: string) => Number.isFinite(Number(value.replace(/,/g, ''))) && Number(value.replace(/,/g, '')) > 0;
 
 const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
-  const { accessToken } = useGoogleAuth();
   const [section, setSection] = useState<NewSection>(null);
   const [rate, setRate] = useState(() => localStorage.getItem(RATE_CACHE_KEY) || '0');
   const [total, setTotal] = useState('0');
@@ -28,13 +26,9 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
   const [trend, setTrend] = useState<'up' | 'down' | 'neutral'>('neutral');
 
   const loadHeader = useCallback(async () => {
-    if (!accessToken) {
-      setHeaderLoading(false);
-      return;
-    }
     setHeaderLoading(true);
     try {
-      const next = await fetchNewSeriesHeader(accessToken);
+      const next = await fetchNewSeriesHeader();
       setTotal(next.total || '0');
       if (isValidRate(next.rate)) {
         const previous = localStorage.getItem(RATE_CACHE_KEY) || '';
@@ -51,7 +45,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
     } finally {
       setHeaderLoading(false);
     }
-  }, [accessToken]);
+  }, []);
 
   useEffect(() => { void loadHeader(); }, [loadHeader]);
 

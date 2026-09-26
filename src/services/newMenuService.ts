@@ -12,18 +12,23 @@ export interface NewSeriesHeader {
   total: string;
 }
 
-export const fetchNewSeriesHeader = async (accessToken: string): Promise<NewSeriesHeader> => {
-  const sheetName = await getSheetNameByGid(accessToken, NEW_MENU_SHEET_ID, BUY_GID);
-  const range = `'${sheetName.replace(/'/g, "''")}'!D1:H1`;
-  const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${NEW_MENU_SHEET_ID}/values/${encodeURIComponent(range)}?valueRenderOption=FORMATTED_VALUE`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+export const fetchNewSeriesHeader = async (): Promise<NewSeriesHeader> => {
+  const url = `https://docs.google.com/spreadsheets/d/${NEW_MENU_SHEET_ID}/export?format=csv&gid=${BUY_GID}&range=D1:H1&t=${Date.now()}`;
+  return new Promise((resolve, reject) => {
+    Papa.parse<string[]>(url, {
+      download: true,
+      header: false,
+      complete: ({ data, errors }) => {
+        if (errors.length) {
+          reject(new Error(errors[0].message));
+          return;
+        }
+        const row = data[0] || [];
+        resolve({ total: String(row[0] || '0'), rate: String(row[4] || '') });
+      },
+      error: () => reject(new Error('Could not load BUY header values.')),
+    });
   });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error?.message || 'Could not load BUY header values.');
-  }
-  const row = (await response.json() as { values?: string[][] }).values?.[0] || [];
-  return { total: String(row[0] || '0'), rate: String(row[4] || '') };
 };
 
 export interface NewMenuRow {
