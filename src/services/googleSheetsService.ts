@@ -100,13 +100,14 @@ export interface SupplierSpecialTotals {
 export type SupplierSpecialKind = 'forCollection' | 'chinaForDr';
 
 const supplierSpecialKind = (row: string[]): SupplierSpecialKind | null => {
+  const a = String(row[0] || '').trim();
   const h = String(row[7] || '').trim();
   const i = String(row[8] || '').trim();
   const j = String(row[9] || '').trim();
   const k = String(row[10] || '').trim();
   if (!h || k) return null;
   if (i && j) return 'forCollection';
-  if (!i && !j) return 'chinaForDr';
+  if (a && !i && !j) return 'chinaForDr';
   return null;
 };
 
