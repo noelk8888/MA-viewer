@@ -18,30 +18,40 @@ const directImageUrl = (value: string): string => {
 
 interface InvoiceSheetProps {
   row: NewDrRow;
+  page: number;
   interest?: boolean;
 }
 
-const InvoiceSheet: React.FC<InvoiceSheetProps> = ({ row, interest = false }) => {
-  const quantity = interest ? '' : row.price;
+const InvoiceSheet: React.FC<InvoiceSheetProps> = ({ row, page, interest = false }) => {
+  const isCbm = row.category === 'CBM';
+  const itemReference = isCbm ? `${row.reference.slice(0, -1)}A` : row.reference;
+  const printedReference = isCbm ? `${itemReference} (1)` : row.reference;
+  const quantity = interest ? '' : isCbm ? row.quantity : row.price;
   const cnyRate = Number(row.quantity.replace(/,/g, ''));
   const factor = Number(row.factor.replace(/,/g, '') || 1);
-  const unitPrice = interest ? 0 : cnyRate * factor;
+  const unitPrice = interest ? 0 : isCbm ? Number(row.price.replace(/,/g, '')) : cnyRate * factor;
+  const printedQuantity = quantity
+    ? isCbm
+      ? Number(quantity.replace(/,/g, '')).toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
+      : Number(quantity.replace(/,/g, '')).toLocaleString('en-US', { maximumFractionDigits: 2 })
+    : '';
+  const printedUnitPrice = unitPrice ? isCbm ? formatAmount(unitPrice) : unitPrice.toFixed(4) : '';
   const emptyRows = Array.from({ length: 18 }, (_, index) => index);
   return <section className="dr-sheet">
     <div className="dr-brand">J2N</div>
     <div className="dr-meta">
       <div className="dr-address"><span>Transfer to:</span><span>DMC - Marlon</span><span></span><span>22 Ford Ave., Doña Manuela Subd.,</span><span></span><span>Pamplona Tres, Las Piñas</span></div>
-      <div className="dr-reference"><span>Ref #</span><span>{row.reference}</span><span>Date</span><span>{formatDate(row.issueDate)}</span><span>Page:</span><span>1</span></div>
+      <div className="dr-reference"><span>Ref #</span><span>{printedReference}</span><span>Date</span><span>{formatDate(row.issueDate)}</span><span>Page:</span><span>{page}</span></div>
     </div>
     <div className="dr-form">
       <div className="dr-table dr-table-head"><span>Quantity</span><span>Description</span><span>Unit Price</span><span>Subtotal</span></div>
-      <div className="dr-table dr-line"><span>{quantity ? Number(quantity.replace(/,/g, '')).toLocaleString('en-US', { maximumFractionDigits: 2 }) : ''}</span><span>{row.description}</span><span>{unitPrice ? unitPrice.toFixed(4) : ''}</span><span>{formatAmount(row.amount)}</span></div>
-      <div className="dr-table dr-description-line"><span></span><span>{interest ? 'INTEREST' : 'ITEMS'}</span><span></span><span></span></div>
+      <div className="dr-table dr-line"><span>{printedQuantity}</span><span>{row.description}</span><span>{printedUnitPrice}</span><span>{formatAmount(row.amount)}</span></div>
+      <div className="dr-table dr-description-line"><span></span><span>{interest ? 'INTEREST' : isCbm ? 'CBM' : 'ITEMS'}</span><span></span><span></span></div>
       {emptyRows.map(index => <div className="dr-table dr-empty" key={index}><span></span><span></span><span></span><span></span></div>)}
       <div className="dr-details">
-        <div><b>ITEMS:</b><span>Ref# {row.reference}</span></div>
-        {!interest ? <div><b>CBM:</b><span>Ref# {row.reference} (1)</span></div> : null}
-        {!interest ? <div className="dr-rate-details"><b>CNY:</b><span>{cnyRate.toFixed(4)}</span><b>factor:</b><span>{factor.toFixed(2)}</span><b>RATE:</b><span>{unitPrice.toFixed(4)}</span></div> : null}
+        <div><b>ITEMS:</b><span>Ref# {itemReference}</span></div>
+        {!interest ? <div><b>CBM:</b><span>Ref# {itemReference} (1)</span></div> : null}
+        {!interest && !isCbm ? <div className="dr-rate-details"><b>CNY:</b><span>{cnyRate.toFixed(4)}</span><b>factor:</b><span>{factor.toFixed(2)}</span><b>RATE:</b><span>{unitPrice.toFixed(4)}</span></div> : null}
       </div>
     </div>
     <div className="dr-total"><b>TOTAL</b><b>{formatAmount(row.amount)}</b></div>
@@ -101,8 +111,9 @@ const NewDrPrintPage: React.FC<{ storageKey: string }> = ({ storageKey }) => {
       }
     `}</style>
     <div className="dr-toolbar"><button type="button" onClick={() => window.print()}><Printer size={18} />Print</button><button type="button" onClick={() => window.close()}><X size={18} />Close</button></div>
-    <InvoiceSheet row={payload.primary} interest={interest} />
+    <InvoiceSheet row={payload.primary} page={1} interest={interest} />
     <ImagePage row={payload.primary} />
+    {payload.cbm ? <><InvoiceSheet row={payload.cbm} page={3} /><ImagePage row={payload.cbm} /></> : null}
   </div>;
 };
 
