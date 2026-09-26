@@ -1,13 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FileText, RefreshCw, X } from 'lucide-react';
-import { fetchNewDrRows, openNewDrPrintPreview, type NewDrRow } from '../services/newDrService';
+import { FileSpreadsheet, RefreshCw, X } from 'lucide-react';
+import { fetchNewDrRows, generateNewDrSheet, NEW_DR_URL, type NewDrRow } from '../services/newDrService';
 import { formatAmount } from '../utils/formatters';
+import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 
 const NewDrTable: React.FC = () => {
+  const { accessToken, isAuthenticated, login, logout } = useGoogleAuth();
   const [rows, setRows] = useState<NewDrRow[]>([]);
   const [selectedRowNumber, setSelectedRowNumber] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -22,20 +25,39 @@ const NewDrTable: React.FC = () => {
   const visibleRows = useMemo(() => rows.filter(row => row.category !== 'CBM'), [rows]);
   const selected = rows.find(row => row.sheetRowNumber === selectedRowNumber) || null;
 
-  const preview = () => {
+  const issue = async () => {
     if (!selected) return;
+    if (!isAuthenticated || !accessToken) {
+      window.alert('Please sign in with Google to issue a NEW DR.');
+      login();
+      return;
+    }
+    let cbm: NewDrRow | undefined;
     if (selected.category === 'INTEREST') {
-      openNewDrPrintPreview({ primary: selected });
-      return;
+      cbm = undefined;
+    } else {
+      const cbmReference = `${selected.reference.slice(0, -1)}B`;
+      cbm = rows.find(row => row.reference === cbmReference);
+      if (!cbm) {
+        window.alert(`Could not find matching CBM row ${cbmReference}.`);
+        return;
+      }
     }
-
-    const cbmReference = `${selected.reference.slice(0, -1)}B`;
-    const cbm = rows.find(row => row.reference === cbmReference);
-    if (!cbm) {
-      window.alert(`Could not find matching CBM row ${cbmReference}.`);
-      return;
+    try {
+      setProcessing(true);
+      await generateNewDrSheet(accessToken, { primary: selected, cbm });
+      window.open(NEW_DR_URL, '_blank', 'noopener,noreferrer');
+      setSelectedRowNumber(null);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Could not generate NEW DR.';
+      window.alert(`Error generating NEW DR: ${message}`);
+      if (message.includes('expired') || message.includes('authentication')) {
+        logout();
+        login();
+      }
+    } finally {
+      setProcessing(false);
     }
-    openNewDrPrintPreview({ primary: selected, cbm });
   };
 
   return <>
@@ -61,8 +83,8 @@ const NewDrTable: React.FC = () => {
     </div>
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[min(94vw,36rem)] rounded-2xl border border-gray-200 bg-white shadow-xl px-4 py-3 flex items-center gap-3">
       <div className="flex-1 min-w-0 text-sm text-gray-700">{selected ? `1 selected · ${selected.category}` : '0 selected'}</div>
-      <button type="button" onClick={preview} disabled={!selected} className="shrink-0 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40 flex items-center gap-2"><FileText size={16} />Issue DR</button>
-      <button type="button" onClick={() => setSelectedRowNumber(null)} disabled={!selected} className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30" title="Clear selection"><X size={16} /></button>
+      <button type="button" onClick={() => void issue()} disabled={!selected || processing} className="shrink-0 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40 flex items-center gap-2"><FileSpreadsheet size={16} />{processing ? 'Generating...' : 'Issue DR'}</button>
+      <button type="button" onClick={() => setSelectedRowNumber(null)} disabled={!selected || processing} className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30" title="Clear selection"><X size={16} /></button>
     </div>
   </>;
 };

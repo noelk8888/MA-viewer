@@ -9,7 +9,6 @@ import { LoginScreen } from './components/LoginScreen'
 import { Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react';
 import type { SupplierDateColumn } from './services/googleSheetsService';
-import NewDrPrintPage from './components/NewDrPrintPage';
 
 const todayInputValue = () => {
   const today = new Date();
@@ -18,7 +17,6 @@ const todayInputValue = () => {
 };
 
 function AppContent() {
-  const newDrPrintKey = new URLSearchParams(window.location.search).get('newDrPrint');
   const localNewMenuPreview = import.meta.env.DEV && new URLSearchParams(window.location.search).has('previewNewMenu');
   const { isAuthenticated, isInitializing } = useGoogleAuth();
   const [view, setView] = useState<'viewer' | 'summary' | 'month' | 'account' | 'supplierSummary' | 'nckSummary' | 'supplierMonth'>('viewer');
@@ -31,10 +29,6 @@ function AppContent() {
   useEffect(() => {
     // Keep this for any future initialization if needed, or remove completely if not
   }, [isAuthenticated]);
-
-  if (newDrPrintKey) {
-    return <NewDrPrintPage storageKey={newDrPrintKey} />;
-  }
 
   if (localNewMenuPreview) {
     return <div className="min-h-screen w-full bg-[#f8f9fa] sm:py-8 sm:px-4"><ViewerTable initialNewMenu /></div>;
