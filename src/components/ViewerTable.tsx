@@ -5,6 +5,7 @@ import { generateSOA, generateBill } from '../services/googleSheetsService';
 import RowItem from './RowItem';
 import NewMenuTable from './NewMenuTable';
 import NewSoaTable from './NewSoaTable';
+import NewDrTable from './NewDrTable';
 import AddRowModal from './AddRowModal';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 import { formatAppDate } from '../utils/formatters';
@@ -217,7 +218,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSummaryClick, onSupplierCli
                 {(['NEW DR', 'NEW SOA'] as const).map(label => <button key={label} type="button" onClick={() => { setShowNewMenu(false); setGenerationMode(null); setNewPlaceholder(label); setSelectionModeType(null); setSelectedRowIndices([]); setSelectionType(null); }} className={`flex-1 py-2 text-sm font-medium transition-colors ${newPlaceholder === label ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>{label}</button>)}
             </div>
 
-            {showNewMenu ? <NewMenuTable key={generationMode ?? 'browse'} generationMode={generationMode} /> : newPlaceholder === 'NEW SOA' ? <NewSoaTable /> : newPlaceholder ? <div className="min-h-[300px] rounded-b-2xl bg-white flex items-center justify-center text-sm text-gray-400">{newPlaceholder} placeholder</div> : <>
+            {showNewMenu ? <NewMenuTable key={generationMode ?? 'browse'} generationMode={generationMode} /> : newPlaceholder === 'NEW SOA' ? <NewSoaTable /> : newPlaceholder === 'NEW DR' ? <NewDrTable /> : <>
             {/* Table Headers */}
             <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[137px] z-20 shadow-sm">
                 <button type="button" onClick={onSupplierClick} className="p-3 border-r border-gray-200/50 text-left hover:text-blue-600 hover:underline" title="Open supplier summary">
