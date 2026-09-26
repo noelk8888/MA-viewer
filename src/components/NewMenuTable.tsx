@@ -111,7 +111,7 @@ const NewMenuTable: React.FC<{
   useEffect(() => { void load(); }, [load]);
 
   const visibleRows = useMemo(() => generationMode
-    ? rows.filter(row => !row.cbmFactor.trim())
+    ? rows.filter(row => !row.buyColKFilled)
     : rows, [generationMode, rows]);
 
   const toggleSelected = (rowNumber: number) => {
@@ -132,7 +132,7 @@ const NewMenuTable: React.FC<{
       const freshRows = await fetchNewMenuRows();
       const selected = freshRows.filter(row => selectedRowNumbers.includes(row.sheetRowNumber));
       if (selected.length !== selectedRowNumbers.length) throw new Error('Some selected rows changed. Refresh and select them again.');
-      if (selected.some(row => row.cbmFactor.trim())) throw new Error('A selected row is already completed. Refresh and select again.');
+      if (selected.some(row => row.buyColKFilled)) throw new Error('A selected row is already present in BUY with column K filled. Refresh and select again.');
       if (selected.some(row => rows.find(original => original.sheetRowNumber === row.sheetRowNumber)?.reference !== row.reference)) {
         throw new Error('Some selected rows moved or changed. Refresh and select them again.');
       }
@@ -164,7 +164,7 @@ const NewMenuTable: React.FC<{
       {loading ? <div className="flex flex-col items-center justify-center py-20 text-gray-400"><RefreshCw size={32} className="animate-spin mb-3 opacity-50" /><p className="text-sm">Loading New Menu...</p></div>
         : error ? <div className="text-center py-20 text-red-500"><p className="font-medium mb-2">Unavailable</p><p className="text-xs opacity-70">{error}</p><button onClick={load} className="mt-4 px-4 py-2 bg-gray-900 text-white text-xs rounded-lg">Retry</button></div>
         : visibleRows.length === 0 ? <div className="text-center py-20 text-gray-400 text-sm">No items found.</div>
-        : visibleRows.map(row => <NewMenuItem key={row.sheetRowNumber} row={row} onUpdated={load} generationMode={generationMode} completed={Boolean(row.cbmFactor.trim())} selected={selectedRowNumbers.includes(row.sheetRowNumber)} onToggle={() => toggleSelected(row.sheetRowNumber)} />)}
+        : visibleRows.map(row => <NewMenuItem key={row.sheetRowNumber} row={row} onUpdated={load} generationMode={generationMode} completed={row.buyColKFilled} selected={selectedRowNumbers.includes(row.sheetRowNumber)} onToggle={() => toggleSelected(row.sheetRowNumber)} />)}
     </div>
     {generationMode && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[min(90vw,36rem)] rounded-2xl border border-gray-200 bg-white shadow-xl px-4 py-3 flex items-center gap-3">
       <div className="flex-1 min-w-0 text-sm text-gray-700">

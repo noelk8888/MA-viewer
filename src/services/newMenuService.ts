@@ -44,6 +44,7 @@ export interface NewMenuRow {
   cbmFactor: string;
   cbmSellPrice: string;
   sharePercent: string;
+  buyColKFilled: boolean;
   sheetRowNumber: number;
 }
 
@@ -64,8 +65,9 @@ export const sortNewMenuRows = <T extends Pick<NewMenuRow, 'reference' | 'sheetR
   });
 };
 
-export const fetchNewMenuRows = async (): Promise<NewMenuRow[]> => {
-  const url = `https://docs.google.com/spreadsheets/d/${NEW_MENU_SHEET_ID}/export?format=csv&gid=${NEW_MENU_GID}&t=${Date.now()}`;
+const fetchCsvRows = (gid: string, range?: string): Promise<string[][]> => {
+  const rangeQuery = range ? `&range=${encodeURIComponent(range)}` : '';
+  const url = `https://docs.google.com/spreadsheets/d/${NEW_MENU_SHEET_ID}/export?format=csv&gid=${gid}${rangeQuery}&t=${Date.now()}`;
   return new Promise((resolve, reject) => {
     Papa.parse<string[]>(url, {
       download: true,
@@ -76,31 +78,48 @@ export const fetchNewMenuRows = async (): Promise<NewMenuRow[]> => {
           return;
         }
 
-        const rows = data.map((row, index) => ({
-          reference: row[0]?.trim() || '',
-          date: row[1]?.trim() || '',
-          supplier: row[4]?.trim() || '',
-          cnyRate: row[2]?.trim() || '',
-          sellRate: row[3]?.trim() || '',
-          firstImage: row[5]?.trim() || '',
-          amountCny: row[6]?.trim() || '',
-          secondImage: row[7]?.trim() || '',
-          cbm: row[8]?.trim() || '',
-          cbmFactor: row[10]?.trim() || '',
-          cbmSellPrice: row[11]?.trim() || '',
-          sharePercent: row[12]?.trim() || '',
-          sheetRowNumber: index + 1,
-        })).filter(row => {
-          const isHeader = ['reference', 'ref'].includes(row.reference.toLowerCase())
-            && row.date.toLowerCase() === 'date';
-          return !isHeader && Boolean(row.reference || row.date || row.supplier || row.amountCny || row.firstImage || row.secondImage || row.cbm);
-        });
-
-        resolve(sortNewMenuRows(rows));
+        resolve(data);
       },
       error: reject,
     });
   });
+};
+
+export const fetchNewMenuRows = async (): Promise<NewMenuRow[]> => {
+  const [newMenuRows, buyRows] = await Promise.all([
+    fetchCsvRows(NEW_MENU_GID),
+    fetchCsvRows(BUY_GID, 'A:K'),
+  ]);
+  const completedBuyRows = buyRows.filter(row => String(row[10] || '').trim() !== '');
+  const completedLinks = new Set(completedBuyRows.map(row => String(row[3] || '').trim()).filter(Boolean));
+  const completedReferences = new Set(completedBuyRows.map(row => String(row[0] || '').trim()).filter(Boolean));
+
+  const rows = newMenuRows.map((row, index) => {
+    const reference = row[0]?.trim() || '';
+    const firstImage = row[5]?.trim() || '';
+    return {
+      reference,
+      date: row[1]?.trim() || '',
+      supplier: row[4]?.trim() || '',
+      cnyRate: row[2]?.trim() || '',
+      sellRate: row[3]?.trim() || '',
+      firstImage,
+      amountCny: row[6]?.trim() || '',
+      secondImage: row[7]?.trim() || '',
+      cbm: row[8]?.trim() || '',
+      cbmFactor: row[10]?.trim() || '',
+      cbmSellPrice: row[11]?.trim() || '',
+      sharePercent: row[12]?.trim() || '',
+      buyColKFilled: (Boolean(firstImage) && completedLinks.has(firstImage)) || completedReferences.has(reference),
+      sheetRowNumber: index + 1,
+    };
+  }).filter(row => {
+    const isHeader = ['reference', 'ref'].includes(row.reference.toLowerCase())
+      && row.date.toLowerCase() === 'date';
+    return !isHeader && Boolean(row.reference || row.date || row.supplier || row.amountCny || row.firstImage || row.secondImage || row.cbm);
+  });
+
+  return sortNewMenuRows(rows);
 };
 
 export const generateBuyRows = async (accessToken: string, selectedRows: NewMenuRow[]): Promise<number> => {
