@@ -42,9 +42,10 @@ export const fetchNewDrRows = async (): Promise<NewDrRow[]> => {
 
         const rows = data.flatMap((row, index) => {
           const batch = row[0]?.trim() || '';
+          const amount = row[7]?.trim() || '';
           const isCompleted = Boolean(row[10]?.trim());
-          // NEW DR lists every SELL row whose column A is filled and column K is empty.
-          if (!batch || isCompleted) return [];
+          // NEW DR lists SELL rows whose columns A and H are filled and column K is empty.
+          if (!batch || !amount || isCompleted) return [];
 
           const reference = row[9]?.trim().toUpperCase() || '';
           const description = row[2]?.trim() || '';
@@ -60,7 +61,7 @@ export const fetchNewDrRows = async (): Promise<NewDrRow[]> => {
             price: row[4]?.trim() || '',
             quantity: row[5]?.trim() || '',
             factor: row[6]?.trim() || '',
-            amount: row[7]?.trim() || '',
+            amount,
             issueDate,
             reference,
             category,
