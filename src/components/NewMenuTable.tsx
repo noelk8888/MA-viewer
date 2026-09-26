@@ -75,7 +75,9 @@ const NewMenuItem: React.FC<{
     </div>
     <div className="p-3 flex flex-col justify-center gap-1 border-r border-gray-100/50 bg-gray-50/30 min-w-0 text-xs sm:text-sm">
       <div className="text-gray-600 break-words">{row.supplier || '-'}</div>
-      <div className="text-gray-600 break-words">{cbmPartnerReference(row.reference) || '-'}</div>
+      <div className="text-gray-600 break-words">
+        {cbmPartnerReference(row.reference) || '-'}{row.sharePercent ? ` (${row.sharePercent})` : ''}
+      </div>
       <div className="font-bold text-emerald-600 break-words">{row.cbm || '-'}</div>
     </div>
     <div className="p-2 flex items-center justify-center">
