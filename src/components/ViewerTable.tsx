@@ -1,4 +1,4 @@
-import { RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
+import { Plus, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import NewMenuTable from './NewMenuTable';
 import NewSoaTable from './NewSoaTable';
@@ -81,6 +81,14 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
           >
             {today}
           </a>
+          <button
+            type="button"
+            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-sm transition-colors hover:bg-emerald-700"
+            title="Add"
+            aria-label="Add"
+          >
+            <Plus size={18} strokeWidth={2.5} />
+          </button>
           <span className="text-gray-300 font-light">|</span>
           <span className={`flex items-center gap-1 ${headerLoading ? 'opacity-50 animate-pulse' : ''}`}>
             <button type="button" onClick={logout} className="hover:underline cursor-pointer" title="Sign out and sign in again">
