@@ -6,6 +6,7 @@ export const NEW_MENU_GID = '216870307';
 export const GEN_BUY_GID = '1755470891';
 export const GEN_SELL_GID = '1307953980';
 export const BUY_GID = '979211971';
+export const SELL_GID = '164287476';
 
 export interface NewSeriesHeader {
   rate: string;
@@ -44,7 +45,7 @@ export interface NewMenuRow {
   cbmFactor: string;
   cbmSellPrice: string;
   sharePercent: string;
-  buyColKFilled: boolean;
+  sellColKFilled: boolean;
   sheetRowNumber: number;
 }
 
@@ -86,13 +87,13 @@ const fetchCsvRows = (gid: string, range?: string): Promise<string[][]> => {
 };
 
 export const fetchNewMenuRows = async (): Promise<NewMenuRow[]> => {
-  const [newMenuRows, buyRows] = await Promise.all([
+  const [newMenuRows, sellRows] = await Promise.all([
     fetchCsvRows(NEW_MENU_GID),
-    fetchCsvRows(BUY_GID, 'A:K'),
+    fetchCsvRows(SELL_GID, 'A:K'),
   ]);
-  const completedBuyRows = buyRows.filter(row => String(row[10] || '').trim() !== '');
-  const completedLinks = new Set(completedBuyRows.map(row => String(row[3] || '').trim()).filter(Boolean));
-  const completedReferences = new Set(completedBuyRows.map(row => String(row[0] || '').trim()).filter(Boolean));
+  const completedSellRows = sellRows.filter(row => String(row[10] || '').trim() !== '');
+  const completedLinks = new Set(completedSellRows.map(row => String(row[3] || '').trim()).filter(Boolean));
+  const completedReferences = new Set(completedSellRows.map(row => String(row[9] || '').trim()).filter(Boolean));
 
   const rows = newMenuRows.map((row, index) => {
     const reference = row[0]?.trim() || '';
@@ -110,7 +111,7 @@ export const fetchNewMenuRows = async (): Promise<NewMenuRow[]> => {
       cbmFactor: row[10]?.trim() || '',
       cbmSellPrice: row[11]?.trim() || '',
       sharePercent: row[12]?.trim() || '',
-      buyColKFilled: (Boolean(firstImage) && completedLinks.has(firstImage)) || completedReferences.has(reference),
+      sellColKFilled: completedReferences.has(reference) || (Boolean(firstImage) && completedLinks.has(firstImage)),
       sheetRowNumber: index + 1,
     };
   }).filter(row => {
