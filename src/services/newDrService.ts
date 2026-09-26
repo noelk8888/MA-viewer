@@ -22,11 +22,10 @@ export interface NewDrRow {
   category: NewSoaCategory;
 }
 
-const categoryFor = (reference: string, description: string): NewSoaCategory | null => {
+const categoryFor = (reference: string, description: string): NewSoaCategory => {
   if (/C$/i.test(reference) || /\bINTEREST\b/i.test(description)) return 'INTEREST';
   if (/B$/i.test(reference) || /\bCBM\b/i.test(description)) return 'CBM';
-  if (/A$/i.test(reference)) return 'ITEMS';
-  return null;
+  return 'ITEMS';
 };
 
 export const fetchNewDrRows = async (): Promise<NewDrRow[]> => {
@@ -42,17 +41,19 @@ export const fetchNewDrRows = async (): Promise<NewDrRow[]> => {
         }
 
         const rows = data.flatMap((row, index) => {
+          const batch = row[0]?.trim() || '';
+          const isCompleted = Boolean(row[10]?.trim());
+          // NEW DR lists every SELL row whose column A is filled and column K is empty.
+          if (!batch || isCompleted) return [];
+
           const reference = row[9]?.trim().toUpperCase() || '';
           const description = row[2]?.trim() || '';
           const category = categoryFor(reference, description);
           const issueDate = toIsoDate(row[8]?.trim() || '');
-          const hasAmount = Boolean(row[7]?.trim());
-          const hasCompletionDate = Boolean(row[10]?.trim());
-          if (!category || !reference || !description || !hasAmount || !issueDate || hasCompletionDate) return [];
 
           return [{
             sheetRowNumber: index + 1,
-            batch: row[0]?.trim() || '',
+            batch,
             sourceDate: toIsoDate(row[1]?.trim() || ''),
             description,
             image: row[3]?.trim() || '',

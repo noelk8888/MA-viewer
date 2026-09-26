@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { FileSpreadsheet, RefreshCw, X } from 'lucide-react';
 import { fetchNewDrRows, generateNewDrSheet, NEW_DR_URL, type NewDrRow } from '../services/newDrService';
 import { formatAmount } from '../utils/formatters';
@@ -22,7 +22,6 @@ const NewDrTable: React.FC = () => {
 
   useEffect(() => { void load(); }, [load]);
 
-  const visibleRows = useMemo(() => rows.filter(row => row.category !== 'CBM'), [rows]);
   const selected = rows.find(row => row.sheetRowNumber === selectedRowNumber) || null;
 
   const issue = async () => {
@@ -32,9 +31,19 @@ const NewDrTable: React.FC = () => {
       login();
       return;
     }
+    let primary = selected;
     let cbm: NewDrRow | undefined;
     if (selected.category === 'INTEREST') {
       cbm = undefined;
+    } else if (selected.category === 'CBM') {
+      const itemReference = `${selected.reference.slice(0, -1)}A`;
+      const item = rows.find(row => row.reference === itemReference);
+      if (!item) {
+        window.alert(`Could not find matching ITEMS row ${itemReference}.`);
+        return;
+      }
+      primary = item;
+      cbm = selected;
     } else {
       const cbmReference = `${selected.reference.slice(0, -1)}B`;
       cbm = rows.find(row => row.reference === cbmReference);
@@ -45,7 +54,7 @@ const NewDrTable: React.FC = () => {
     }
     try {
       setProcessing(true);
-      await generateNewDrSheet(accessToken, { primary: selected, cbm });
+      await generateNewDrSheet(accessToken, { primary, cbm });
       window.open(NEW_DR_URL, '_blank', 'noopener,noreferrer');
       setSelectedRowNumber(null);
     } catch (cause) {
@@ -70,8 +79,8 @@ const NewDrTable: React.FC = () => {
     <div className="min-h-[300px] rounded-b-2xl overflow-hidden bg-white divide-y divide-gray-100">
       {loading ? <div className="flex flex-col items-center justify-center py-20 text-gray-400"><RefreshCw size={32} className="animate-spin mb-3 opacity-50" /><p className="text-sm">Loading SELL data...</p></div>
         : error ? <div className="text-center py-20 text-red-500"><p className="font-medium mb-2">Unavailable</p><p className="text-xs opacity-70">{error}</p><button onClick={load} className="mt-4 px-4 py-2 bg-gray-900 text-white text-xs rounded-lg">Retry</button></div>
-        : visibleRows.length === 0 ? <div className="text-center py-20 text-gray-400 text-sm">No entries are ready for a NEW DR.</div>
-        : visibleRows.map(row => {
+        : rows.length === 0 ? <div className="text-center py-20 text-gray-400 text-sm">No SELL rows have column A filled while column K is empty.</div>
+        : rows.map(row => {
           const checked = selectedRowNumber === row.sheetRowNumber;
           return <label key={row.sheetRowNumber} className={`grid grid-cols-[0.7fr_2fr_1fr_1.2fr] min-h-20 items-center text-sm cursor-pointer transition-colors ${checked ? 'bg-blue-50/60' : 'hover:bg-gray-50/60'}`}>
             <div className="p-3 flex items-center justify-center gap-2 border-r border-gray-100"><input type="checkbox" checked={checked} onChange={() => setSelectedRowNumber(checked ? null : row.sheetRowNumber)} className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" /><span>{row.batch || '-'}</span></div>
