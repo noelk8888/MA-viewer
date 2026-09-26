@@ -24,18 +24,7 @@ const NewDrTable: React.FC = () => {
 
   const preview = () => {
     if (!selected) return;
-    if (selected.category === 'INTEREST') {
-      openNewDrPrintPreview({ primary: selected });
-      return;
-    }
-
-    const cbmReference = `${selected.reference.slice(0, -1)}B`;
-    const cbm = rows.find(row => row.reference === cbmReference);
-    if (!cbm) {
-      window.alert(`Could not find matching CBM row ${cbmReference}.`);
-      return;
-    }
-    openNewDrPrintPreview({ primary: selected, cbm });
+    openNewDrPrintPreview({ primary: selected });
   };
 
   return <>
