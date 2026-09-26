@@ -24,8 +24,6 @@ const categoryFor = (reference: string, description: string): NewSoaCategory | n
   return null;
 };
 
-const cleanDescription = (description: string): string => description.replace(/\s+bags?\s*$/i, '').trim();
-
 export const fetchNewSoaRows = async (): Promise<NewSoaRow[]> => {
   const url = `https://docs.google.com/spreadsheets/d/${NEW_MENU_SHEET_ID}/export?format=csv&gid=${SELL_GID}&t=${Date.now()}`;
   return new Promise((resolve, reject) => {
@@ -89,7 +87,7 @@ export const fetchNewSoaRows = async (): Promise<NewSoaRow[]> => {
             sheetRowNumber: index + 1,
             issueDate,
             batch,
-            description: cleanDescription(rawDescription),
+            description: rawDescription,
             reference,
             amount: row[7]?.trim() || '',
             category,
