@@ -42,15 +42,14 @@ export const fetchNewDrRows = async (): Promise<NewDrRow[]> => {
 
         const rows = data.flatMap((row, index) => {
           const batch = row[0]?.trim() || '';
-          const deliveryDate = row[8]?.trim() || '';
           const isCompleted = Boolean(row[10]?.trim());
-          // NEW DR lists SELL rows whose columns A and I are filled and column K is empty.
-          if (!batch || !deliveryDate || isCompleted) return [];
+          // NEW DR lists every SELL row whose column A is filled and column K is empty.
+          if (!batch || isCompleted) return [];
 
           const reference = row[9]?.trim().toUpperCase() || '';
           const description = row[2]?.trim() || '';
           const category = categoryFor(reference, description);
-          const issueDate = toIsoDate(deliveryDate);
+          const issueDate = toIsoDate(row[8]?.trim() || '');
 
           return [{
             sheetRowNumber: index + 1,
