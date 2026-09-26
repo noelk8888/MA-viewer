@@ -24,8 +24,8 @@ export const SupplierSummaryPage: React.FC<{
   const load = async () => { if (!accessToken) return; setLoading(true); setError(null); try { const [months, accounts] = await Promise.all([fetchSupplierMonthSummaries(accessToken, cutoffDate, dateColumn), isNckSummary ? Promise.resolve(null) : fetchSummaryData(SHEET_ID)]); setData(months); setAccountData(accounts); } catch (e: any) { setError(e.message || 'Failed to load supplier data'); } finally { setLoading(false); } };
   useEffect(() => { load(); }, [accessToken, cutoffDate, dateColumn]);
   const specialRows = !isNckSummary && accountData ? [
-    { label: 'FOR DR', detailLabel: 'DR' as const, index: -1, jkb: accountData.dr.jkb, nck: accountData.dr.nck },
-    { label: 'CHINA', detailLabel: 'CHINA' as const, index: -2, jkb: accountData.china.jkb, nck: accountData.china.nck },
+    { label: 'FOR COLLECTION', detailLabel: 'DR' as const, index: -1, jkb: accountData.dr.jkb, nck: accountData.dr.nck },
+    { label: 'CHINA (for DR)', detailLabel: 'CHINA' as const, index: -2, jkb: accountData.china.jkb, nck: accountData.china.nck },
   ] : [];
   const total = [...data.map(({ amount, jkb, nck }) => ({ amount, jkb, nck })), ...specialRows.map(({ jkb, nck }) => ({ amount: jkb + nck, jkb, nck }))]
     .reduce((s, x) => ({ amount: s.amount + x.amount, jkb: s.jkb + x.jkb, nck: s.nck + x.nck }), { amount: 0, jkb: 0, nck: 0 });
