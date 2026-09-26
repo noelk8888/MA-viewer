@@ -48,6 +48,7 @@ export const fetchNewSoaRows = async (): Promise<NewSoaRow[]> => {
           const issueDate = toIsoDate(row[8]?.trim() || '');
           const hasIssueDate = Boolean(issueDate);
           const hasCompletionDate = Boolean(row[10]?.trim());
+          const hasAmount = Boolean(row[7]?.trim());
           const category = categoryFor(rawReference, rawDescription);
           if (!category || !rawReference || !rawDescription || !batch) return [];
 
@@ -82,7 +83,7 @@ export const fetchNewSoaRows = async (): Promise<NewSoaRow[]> => {
             reference = `${batchCode}${String(sequence).padStart(2, '0')}C`;
           }
 
-          if (!hasIssueDate || hasCompletionDate) return [];
+          if (!hasIssueDate || hasCompletionDate || (!hasAmount && category !== 'INTEREST')) return [];
           return [{
             sheetRowNumber: index + 1,
             issueDate,
