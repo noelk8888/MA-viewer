@@ -83,7 +83,7 @@ export const fetchNewSoaRows = async (): Promise<NewSoaRow[]> => {
             reference = `${batchCode}${String(sequence).padStart(2, '0')}C`;
           }
 
-          if (!hasIssueDate || hasCompletionDate || (!hasAmount && category !== 'INTEREST')) return [];
+          if (!hasAmount || !hasIssueDate || hasCompletionDate) return [];
           return [{
             sheetRowNumber: index + 1,
             issueDate,
