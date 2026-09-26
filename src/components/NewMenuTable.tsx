@@ -83,7 +83,10 @@ const NewMenuItem: React.FC<{
   </div>
 );
 
-const NewMenuTable: React.FC<{ generationMode: 'newgenbill' | null }> = ({ generationMode }) => {
+const NewMenuTable: React.FC<{
+  generationMode: 'newgenbill' | null;
+  onSupplierClick?: () => void;
+}> = ({ generationMode, onSupplierClick }) => {
   const { accessToken, login } = useGoogleAuth();
   const [rows, setRows] = useState<NewMenuRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,7 +148,7 @@ const NewMenuTable: React.FC<{ generationMode: 'newgenbill' | null }> = ({ gener
     <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-[137px] z-20 shadow-sm">
       <div className="p-3 border-r border-gray-200/50 text-left">Date</div>
       <div className="p-3 border-r border-gray-200/50 text-center">Items DR</div>
-      <div className="p-3 border-r border-gray-200/50 text-left">Supplier</div>
+      <button type="button" onClick={onSupplierClick} className="p-3 border-r border-gray-200/50 text-left hover:text-blue-600 hover:underline" title="Open supplier summary">Supplier</button>
       <div className="p-3 text-center">CBM DR</div>
     </div>
     <div className="divide-y divide-gray-50 min-h-[300px] rounded-b-2xl overflow-hidden bg-white">
