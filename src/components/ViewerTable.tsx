@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import NewMenuTable from './NewMenuTable';
 import NewSoaTable from './NewSoaTable';
 import NewDrTable from './NewDrTable';
+import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 import { formatAppDate } from '../utils/formatters';
 import { fetchNewSeriesHeader } from '../services/newMenuService';
 
@@ -17,6 +18,7 @@ const RATE_CACHE_KEY = 'new_series_cny_rate_data';
 const isValidRate = (value: string) => Number.isFinite(Number(value.replace(/,/g, ''))) && Number(value.replace(/,/g, '')) > 0;
 
 const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
+  const { logout } = useGoogleAuth();
   const [section, setSection] = useState<NewSection>(null);
   const [rate, setRate] = useState(() => localStorage.getItem(RATE_CACHE_KEY) || '0');
   const [total, setTotal] = useState('0');
@@ -72,8 +74,10 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
         <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-3">
           <span>{today}</span>
           <span className="text-gray-300 font-light">|</span>
-          <span className={`flex items-center gap-1 ${headerLoading ? 'opacity-50 animate-pulse' : ''}`} title="CNY/PHP from BUY H1">
-            {rate}
+          <span className={`flex items-center gap-1 ${headerLoading ? 'opacity-50 animate-pulse' : ''}`}>
+            <button type="button" onClick={logout} className="hover:underline cursor-pointer" title="Sign out and sign in again">
+              {rate}
+            </button>
             {trend === 'up' && <TrendingUp size={16} className="text-green-500" />}
             {trend === 'down' && <TrendingDown size={16} className="text-red-500" />}
           </span>
