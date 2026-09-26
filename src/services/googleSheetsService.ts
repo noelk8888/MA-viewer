@@ -805,7 +805,7 @@ export const generateSOA = async (
   spreadsheetId: string,
   selectedRowsData: any[],
   selectionType: 'DR' | 'CBM',
-  options: { formatSourceDates?: boolean } = {}
+  options: { formatSourceDates?: boolean; secondPageRows?: any[] } = {}
 ): Promise<void> => {
   const soaGid = '1049592506';
   const sheetName = await getSheetNameByGid(accessToken, spreadsheetId, soaGid);
@@ -820,25 +820,29 @@ export const generateSOA = async (
     b7Value = 'CBM';
   }
 
-  const rowsData = [];
-  for (let i = 0; i < 3; i++) {
-    if (i < selectedRowsData.length) {
-      const row = selectedRowsData[i];
-      let c8Value = '';
-      if (selectionType === 'DR') {
-        c8Value = (row.Remarks || '').substring(0, 6);
+  const buildRowsData = (sourceRows: any[], type: 'DR' | 'CBM') => {
+    const output = [];
+    for (let i = 0; i < 3; i++) {
+      if (i < sourceRows.length) {
+        const row = sourceRows[i];
+        let reference = '';
+        if (type === 'DR') {
+          reference = (row.Remarks || '').substring(0, 6);
+        } else {
+          const remarks = row.Remarks || '';
+          reference = remarks.length >= 6 ? remarks.substring(0, 3) + remarks.slice(-3) : remarks;
+        }
+
+        const amount = type === 'DR' ? (row.PHP || '') : (row.CBMPHP || '');
+        output.push([row.Color || '', row.Description || '', reference, amount]);
       } else {
-        const remarks = row.Remarks || '';
-        c8Value = remarks.length >= 6 ? remarks.substring(0, 3) + remarks.slice(-3) : remarks;
+        output.push(['', '', '', '']);
       }
-
-      const d8Value = selectionType === 'DR' ? (row.PHP || '') : (row.CBMPHP || '');
-
-      rowsData.push([row.Color || '', row.Description || '', c8Value, d8Value]);
-    } else {
-      rowsData.push(['', '', '', '']);
     }
-  }
+    return output;
+  };
+
+  const rowsData = buildRowsData(selectedRowsData, selectionType);
 
   const data = [
     { range: `'${sheetName}'!D2`, values: [[todayIso]] },
@@ -846,6 +850,16 @@ export const generateSOA = async (
     { range: `'${sheetName}'!A8:D10`, values: rowsData },
     { range: `'${sheetName}'!D11`, values: [['=SUM(D8:D10)']] }
   ];
+
+  if (options.secondPageRows !== undefined) {
+    const secondRowsData = buildRowsData(options.secondPageRows, 'CBM');
+    data.push(
+      { range: `'${sheetName}'!I2`, values: [[todayIso]] },
+      { range: `'${sheetName}'!G7`, values: [[options.secondPageRows.length ? 'CBM' : '']] },
+      { range: `'${sheetName}'!F8:I10`, values: secondRowsData },
+      { range: `'${sheetName}'!I11`, values: [['=SUM(I8:I10)']] },
+    );
+  }
 
   const response = await fetch(
     `${SHEETS_API_BASE}/${spreadsheetId}/values:batchUpdate`,
@@ -905,6 +919,27 @@ export const generateSOA = async (
                 endRowIndex: 10,
                 startColumnIndex: 0,
                 endColumnIndex: 1,
+              },
+              cell: {
+                userEnteredFormat: {
+                  horizontalAlignment: 'CENTER',
+                  numberFormat: {
+                    type: 'DATE',
+                    pattern: 'dd-mmm-yyyy',
+                  },
+                },
+              },
+              fields: 'userEnteredFormat.horizontalAlignment,userEnteredFormat.numberFormat',
+            },
+          }] : []),
+          ...(options.formatSourceDates && options.secondPageRows !== undefined ? [{
+            repeatCell: {
+              range: {
+                sheetId: Number(soaGid),
+                startRowIndex: 7,
+                endRowIndex: 10,
+                startColumnIndex: 5,
+                endColumnIndex: 6,
               },
               cell: {
                 userEnteredFormat: {

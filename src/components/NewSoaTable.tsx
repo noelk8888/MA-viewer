@@ -59,17 +59,32 @@ const NewSoaTable: React.FC = () => {
     if (!selectedCategory || selected.length === 0) return;
 
     const selectionType = selectedCategory === 'CBM' ? 'CBM' : 'DR';
-    const sourceRows = selected.map(row => ({
+    const toSoaSource = (row: NewSoaRow) => ({
       Color: row.issueDate,
       Description: row.description,
       Remarks: row.reference,
       PHP: row.amount,
       CBMPHP: row.amount,
-    }));
+    });
+    const sourceRows = selected.map(toSoaSource);
+    const matchedCbmRows = selectedCategory === 'ITEMS'
+      ? selected.map(row => rows.find(candidate => candidate.reference === `${row.reference.slice(0, -1)}B`))
+      : [];
+    const missingMatches = selectedCategory === 'ITEMS'
+      ? selected.filter((_, index) => !matchedCbmRows[index]).map(row => `${row.reference.slice(0, -1)}B`)
+      : [];
+    if (missingMatches.length) {
+      window.alert(`Could not find matching CBM row${missingMatches.length === 1 ? '' : 's'}: ${missingMatches.join(', ')}`);
+      return;
+    }
+    const secondPageRows = matchedCbmRows.filter((row): row is NewSoaRow => Boolean(row)).map(toSoaSource);
 
     try {
       setProcessing(true);
-      await generateSOA(accessToken, NEW_MENU_SHEET_ID, sourceRows, selectionType, { formatSourceDates: true });
+      await generateSOA(accessToken, NEW_MENU_SHEET_ID, sourceRows, selectionType, {
+        formatSourceDates: true,
+        secondPageRows,
+      });
       window.open(print ? COUNTER_PDF_URL : COUNTER_URL, '_blank', 'noopener,noreferrer');
       setSelectedRows([]);
       setSelectedCategory(null);
