@@ -1,5 +1,6 @@
 import Papa from 'papaparse';
 import { NEW_MENU_SHEET_ID } from './newMenuService';
+import { toIsoDate } from '../utils/formatters';
 
 export const SELL_GID = '164287476';
 
@@ -7,6 +8,7 @@ export type NewSoaCategory = 'ITEMS' | 'CBM' | 'INTEREST';
 
 export interface NewSoaRow {
   sheetRowNumber: number;
+  issueDate: string;
   batch: string;
   description: string;
   reference: string;
@@ -36,10 +38,14 @@ export const fetchNewSoaRows = async (): Promise<NewSoaRow[]> => {
         const rows = data.flatMap((row, index) => {
           const reference = row[9]?.trim() || '';
           const description = row[2]?.trim() || '';
+          const issueDate = toIsoDate(row[8]?.trim() || '');
+          const hasIssueDate = Boolean(issueDate);
+          const hasCompletionDate = Boolean(row[10]?.trim());
           const category = categoryFor(reference, description);
-          if (!category || !reference || !description) return [];
+          if (!category || !reference || !description || !hasIssueDate || hasCompletionDate) return [];
           return [{
             sheetRowNumber: index + 1,
+            issueDate,
             batch: row[0]?.trim() || '',
             description,
             reference,
@@ -54,4 +60,3 @@ export const fetchNewSoaRows = async (): Promise<NewSoaRow[]> => {
     });
   });
 };
-

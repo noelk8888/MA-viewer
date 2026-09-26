@@ -60,7 +60,7 @@ const NewSoaTable: React.FC = () => {
 
     const selectionType = selectedCategory === 'CBM' ? 'CBM' : 'DR';
     const sourceRows = selected.map(row => ({
-      Color: row.batch,
+      Color: row.issueDate,
       Description: row.description,
       Remarks: row.reference,
       PHP: row.amount,
@@ -69,7 +69,7 @@ const NewSoaTable: React.FC = () => {
 
     try {
       setProcessing(true);
-      await generateSOA(accessToken, NEW_MENU_SHEET_ID, sourceRows, selectionType);
+      await generateSOA(accessToken, NEW_MENU_SHEET_ID, sourceRows, selectionType, { formatSourceDates: true });
       window.open(print ? COUNTER_PDF_URL : COUNTER_URL, '_blank', 'noopener,noreferrer');
       setSelectedRows([]);
       setSelectedCategory(null);

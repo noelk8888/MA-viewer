@@ -804,7 +804,8 @@ export const generateSOA = async (
   accessToken: string,
   spreadsheetId: string,
   selectedRowsData: any[],
-  selectionType: 'DR' | 'CBM'
+  selectionType: 'DR' | 'CBM',
+  options: { formatSourceDates?: boolean } = {}
 ): Promise<void> => {
   const soaGid = '1049592506';
   const sheetName = await getSheetNameByGid(accessToken, spreadsheetId, soaGid);
@@ -896,6 +897,27 @@ export const generateSOA = async (
               fields: 'userEnteredFormat.numberFormat',
             },
           },
+          ...(options.formatSourceDates ? [{
+            repeatCell: {
+              range: {
+                sheetId: Number(soaGid),
+                startRowIndex: 7,
+                endRowIndex: 10,
+                startColumnIndex: 0,
+                endColumnIndex: 1,
+              },
+              cell: {
+                userEnteredFormat: {
+                  horizontalAlignment: 'CENTER',
+                  numberFormat: {
+                    type: 'DATE',
+                    pattern: 'dd-mmm-yyyy',
+                  },
+                },
+              },
+              fields: 'userEnteredFormat.horizontalAlignment,userEnteredFormat.numberFormat',
+            },
+          }] : []),
         ],
       }),
     }
