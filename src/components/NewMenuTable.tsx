@@ -65,7 +65,9 @@ const NewMenuItem: React.FC<{
     <div className="p-3 flex flex-col justify-center gap-1 border-r border-gray-100/50 min-w-0 text-xs sm:text-sm">
       {generationMode && <label className="flex items-center gap-2 mb-1 text-blue-600 cursor-pointer"><input type="checkbox" checked={selected} onChange={onToggle} aria-label={`Select ${row.reference || row.supplier} for NewGenBill`} className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" /><span className="text-xs">NewGenBill</span></label>}
       <div className="text-sm sm:text-base text-gray-600">{displayDate(row.date)}</div>
-      <div className="text-gray-600 break-words">{row.reference || '-'}</div>
+      <div className="text-gray-600 break-words">
+        {row.reference || '-'}{row.sellRate ? ` (${row.sellRate})` : ''}
+      </div>
       <div className="font-bold text-emerald-600 break-words">{formatAmount(row.amountCny) || '-'}</div>
     </div>
     <div className="p-2 flex items-center justify-center border-r border-gray-100/50">
