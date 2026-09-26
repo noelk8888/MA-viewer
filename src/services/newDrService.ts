@@ -123,9 +123,6 @@ export const generateNewDrSheet = async (accessToken: string, payload: NewDrPrin
   set(6, 1, 'Quantity'); set(6, 3, 'Description'); set(6, 4, 'Unit Price'); set(6, 5, 'Subtotal');
   set(7, 1, itemQuantity); set(7, 3, primary.description); set(7, 4, interest ? '' : itemRate); set(7, 5, itemAmount);
   set(8, 3, interest ? 'INTEREST' : 'ITEMS');
-  // Interest rows keep their supporting calculation image inside the invoice,
-  // matching the existing DR output. Item images occupy printable page 2.
-  if (interest) set(18, 1, driveImageFormula(primary.image));
   set(25, 2, 'ITEMS:'); set(25, 3, `Ref# ${itemReference}`);
   if (!interest) {
     set(26, 2, 'CBM:'); set(26, 3, `Ref# ${cbm?.reference || `${itemReference.slice(0, -1)}B`}`);
@@ -179,7 +176,7 @@ export const generateNewDrSheet = async (accessToken: string, payload: NewDrPrin
   }
 
   const imageWrites: Array<{ range: string; values: string[][] }> = [];
-  if (!interest && primary.image) imageWrites.push({ range: `${quotedName}!B45`, values: [[driveImageFormula(primary.image)]] });
+  if (primary.image) imageWrites.push({ range: `${quotedName}!B45`, values: [[driveImageFormula(primary.image)]] });
   if (cbm?.image) imageWrites.push({ range: `${quotedName}!H45`, values: [[driveImageFormula(cbm.image)]] });
   if (imageWrites.length) {
     const imageResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${NEW_MENU_SHEET_ID}/values:batchUpdate`, {
