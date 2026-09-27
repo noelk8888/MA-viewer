@@ -29,22 +29,30 @@ export interface NewMenuInput {
 }
 
 export const fetchNewSeriesHeader = async (): Promise<NewSeriesHeader> => {
-  const url = `https://docs.google.com/spreadsheets/d/${NEW_MENU_SHEET_ID}/export?format=csv&gid=${BUY_GID}&range=D1:H1&t=${Date.now()}`;
-  return new Promise((resolve, reject) => {
-    Papa.parse<string[]>(url, {
-      download: true,
-      header: false,
-      complete: ({ data, errors }) => {
-        if (errors.length) {
-          reject(new Error(errors[0].message));
-          return;
-        }
-        const row = data[0] || [];
-        resolve({ total: String(row[0] || '0'), rate: String(row[4] || '') });
-      },
-      error: () => reject(new Error('Could not load BUY header values.')),
+  const fetchCell = (gid: string, range: string, label: string): Promise<string> => {
+    const url = `https://docs.google.com/spreadsheets/d/${NEW_MENU_SHEET_ID}/export?format=csv&gid=${gid}&range=${range}&t=${Date.now()}`;
+    return new Promise((resolve, reject) => {
+      Papa.parse<string[]>(url, {
+        download: true,
+        header: false,
+        delimiter: ',',
+        complete: ({ data, errors }) => {
+          if (errors.length) {
+            reject(new Error(errors[0].message));
+            return;
+          }
+          resolve(String(data[0]?.[0] || ''));
+        },
+        error: () => reject(new Error(`Could not load ${label}.`)),
+      });
     });
-  });
+  };
+
+  const [rate, total] = await Promise.all([
+    fetchCell(BUY_GID, 'H1', 'BUY H1'),
+    fetchCell(SELL_GID, 'AA1', 'SELL AA1'),
+  ]);
+  return { rate, total: total || '0' };
 };
 
 const optionalNumber = (value: string, label: string): number | '' => {

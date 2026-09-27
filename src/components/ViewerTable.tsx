@@ -46,7 +46,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
         localStorage.setItem(RATE_CACHE_KEY, next.rate);
       }
     } catch (error) {
-      console.error('Failed to load BUY header values', error);
+      console.error('Failed to load header values', error);
     } finally {
       setHeaderLoading(false);
     }
