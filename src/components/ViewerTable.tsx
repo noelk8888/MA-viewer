@@ -6,6 +6,7 @@ import NewDrTable from './NewDrTable';
 import AddNewMenuModal from './AddNewMenuModal';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
 import { formatAppDate } from '../utils/formatters';
+import { getPhilippineIsoDate } from '../utils/philippineDate';
 import { fetchNewSeriesHeader, type NewMenuRow } from '../services/newMenuService';
 
 interface ViewerTableProps {
@@ -29,6 +30,12 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
   const [editingRow, setEditingRow] = useState<NewMenuRow | null>(null);
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
   const [trend, setTrend] = useState<'up' | 'down' | 'neutral'>('neutral');
+  const [todayIso, setTodayIso] = useState(getPhilippineIsoDate);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setTodayIso(getPhilippineIsoDate()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const loadHeader = useCallback(async () => {
     setHeaderLoading(true);
@@ -69,7 +76,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
     setContentKey(value => value + 1);
   };
 
-  const today = formatAppDate(new Date().toISOString().slice(0, 10));
+  const today = formatAppDate(todayIso);
 
   return (
     <div className="w-full max-w-2xl mx-auto bg-white shadow-xl rounded-2xl border border-gray-100 my-4 sm:my-8 relative">

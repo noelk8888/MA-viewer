@@ -1,6 +1,7 @@
 import React from 'react';
 import { Loader2, Package } from 'lucide-react';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
+import { getPhilippineIsoDate } from '../utils/philippineDate';
 
 export const LoginScreen: React.FC = () => {
     const { login, isLoading, error, isConfigured } = useGoogleAuth();
@@ -87,7 +88,7 @@ export const LoginScreen: React.FC = () => {
                     {/* Footer */}
                     <div className="text-center">
                         <p className="text-xs text-gray-400">
-                            © {new Date().getFullYear()} Inventory Viewer App
+                            © {getPhilippineIsoDate().slice(0, 4)} Inventory Viewer App
                         </p>
                     </div>
                 </div>

@@ -6,12 +6,7 @@ import { LoginScreen } from './components/LoginScreen'
 import { Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react';
 import type { SupplierDateColumn, SupplierSpecialKind } from './services/googleSheetsService';
-
-const todayInputValue = () => {
-  const today = new Date();
-  const offset = today.getTimezoneOffset();
-  return new Date(today.getTime() - offset * 60_000).toISOString().slice(0, 10);
-};
+import { getPhilippineIsoDate } from './utils/philippineDate';
 
 function AppContent() {
   const localNewMenuPreview = import.meta.env.DEV && new URLSearchParams(window.location.search).has('previewNewMenu');
@@ -19,7 +14,7 @@ function AppContent() {
   const [view, setView] = useState<'viewer' | 'supplierSummary' | 'nckSummary' | 'supplierMonth'>('viewer');
   const [selectedSupplierMonth, setSelectedSupplierMonth] = useState<string | null>(null);
   const [selectedSupplierSpecial, setSelectedSupplierSpecial] = useState<SupplierSpecialKind | null>(null);
-  const [supplierCutoffDate, setSupplierCutoffDate] = useState(todayInputValue);
+  const [supplierCutoffDate, setSupplierCutoffDate] = useState(getPhilippineIsoDate);
   const [supplierDateColumn, setSupplierDateColumn] = useState<SupplierDateColumn>('K');
   const [supplierMonthBackView, setSupplierMonthBackView] = useState<'supplierSummary' | 'nckSummary'>('supplierSummary');
   useEffect(() => {
@@ -74,7 +69,7 @@ function AppContent() {
         <SupplierMonthDetailPage month={selectedSupplierMonth} cutoffDate={supplierCutoffDate} dateColumn={supplierDateColumn} specialKind={selectedSupplierSpecial} onBack={() => setView(supplierMonthBackView)} />
       ) : null}
 
-      <footer className="py-6 text-center text-xs text-gray-400">Inventory Viewer App • {new Date().getFullYear()}</footer>
+      <footer className="py-6 text-center text-xs text-gray-400">Inventory Viewer App • {getPhilippineIsoDate().slice(0, 4)}</footer>
     </div>
   );
 }

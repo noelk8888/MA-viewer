@@ -1,3 +1,5 @@
+import { getPhilippineIsoDate } from '../utils/philippineDate';
+
 const SHEETS_API_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
 
 export const updateSheetCellByGid = async (
@@ -208,7 +210,7 @@ export const generateSOA = async (
   const soaGid = '1049592506';
   const sheetName = await getSheetNameByGid(accessToken, spreadsheetId, soaGid);
 
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = getPhilippineIsoDate();
   
   let b7Value = '';
   if (selectionType === 'DR') {
