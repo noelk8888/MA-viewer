@@ -7,6 +7,7 @@ export const GEN_BUY_GID = '1755470891';
 export const GEN_SELL_GID = '1307953980';
 export const BUY_GID = '979211971';
 export const SELL_GID = '164287476';
+export const NCK_GID = '145121612';
 
 export interface NewSeriesHeader {
   rate: string;
@@ -50,7 +51,7 @@ export const fetchNewSeriesHeader = async (): Promise<NewSeriesHeader> => {
 
   const [rate, total] = await Promise.all([
     fetchCell(BUY_GID, 'H1', 'BUY H1'),
-    fetchCell(SELL_GID, 'AA1', 'SELL AA1'),
+    fetchCell(NCK_GID, 'L1', 'NCK L1'),
   ]);
   return { rate, total: total || '0' };
 };
