@@ -12,7 +12,7 @@ interface ImageUploadModalProps {
   imageType: ImageType;
   sheetRowNumber: number;
   onUploadComplete: () => void;
-  targetSheet: { spreadsheetId: string; gid: string; column: 'F' | 'H' };
+  targetSheet: { spreadsheetId: string; gid: string; column: 'D' | 'F' | 'H' };
   imageLabel?: string;
 }
 

@@ -7,7 +7,7 @@ export const updateSheetCellByGid = async (
   spreadsheetId: string,
   gid: string,
   sheetRowNumber: number,
-  column: 'F' | 'H',
+  column: 'D' | 'F' | 'H',
   driveLink: string
 ): Promise<void> => {
   const sheetName = await getSheetNameByGid(accessToken, spreadsheetId, gid);

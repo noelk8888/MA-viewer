@@ -185,6 +185,8 @@ export interface NewMenuRow {
   cbmSellPrice: string;
   sharePercent: string;
   sellColKFilled: boolean;
+  interestImage: string;
+  interestSheetRowNumber: number | null;
   sheetRowNumber: number;
 }
 
@@ -233,10 +235,16 @@ export const fetchNewMenuRows = async (): Promise<NewMenuRow[]> => {
   const completedSellRows = sellRows.filter(row => String(row[10] || '').trim() !== '');
   const completedLinks = new Set(completedSellRows.map(row => String(row[3] || '').trim()).filter(Boolean));
   const completedReferences = new Set(completedSellRows.map(row => String(row[9] || '').trim()).filter(Boolean));
+  const sellRowsByReference = new Map<string, { image: string; sheetRowNumber: number }>();
+  sellRows.forEach((row, index) => {
+    const reference = String(row[9] || '').trim().toUpperCase();
+    if (reference) sellRowsByReference.set(reference, { image: String(row[3] || '').trim(), sheetRowNumber: index + 1 });
+  });
 
   const rows = newMenuRows.map((row, index) => {
     const reference = row[0]?.trim() || '';
     const firstImage = row[5]?.trim() || '';
+    const interest = sellRowsByReference.get(reference.replace(/A$/i, 'C').toUpperCase());
     return {
       reference,
       date: row[1]?.trim() || '',
@@ -251,6 +259,8 @@ export const fetchNewMenuRows = async (): Promise<NewMenuRow[]> => {
       cbmSellPrice: row[11]?.trim() || '',
       sharePercent: row[12]?.trim() || '',
       sellColKFilled: completedReferences.has(reference) || (Boolean(firstImage) && completedLinks.has(firstImage)),
+      interestImage: interest?.image || '',
+      interestSheetRowNumber: interest?.sheetRowNumber || null,
       sheetRowNumber: index + 1,
     };
   }).filter(row => {

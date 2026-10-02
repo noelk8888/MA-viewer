@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FileText, RefreshCw } from 'lucide-react';
 import Modal from './Modal';
 import ImageUploadModal from './ImageUploadModal';
-import { fetchNewMenuRows, generateBuyRows, GEN_BUY_GID, GEN_SELL_GID, NEW_MENU_GID, NEW_MENU_SHEET_ID, type NewMenuRow } from '../services/newMenuService';
+import { fetchNewMenuRows, generateBuyRows, GEN_BUY_GID, GEN_SELL_GID, NEW_MENU_GID, NEW_MENU_SHEET_ID, SELL_GID, type NewMenuRow } from '../services/newMenuService';
 import { generateSellRows } from '../services/genSellService';
 import { formatAmount, toIsoDate } from '../utils/formatters';
 import { useGoogleAuth } from '../contexts/GoogleAuthContext';
@@ -24,10 +24,11 @@ const cbmPartnerReference = (reference: string): string => reference.trim().repl
 const NewMenuImage: React.FC<{
   link: string;
   label: string;
-  column: 'F' | 'H';
+  column: 'D' | 'F' | 'H';
+  gid?: string;
   rowNumber: number;
   onUpdated: () => void;
-}> = ({ link, label, column, rowNumber, onUpdated }) => {
+}> = ({ link, label, column, gid = NEW_MENU_GID, rowNumber, onUpdated }) => {
   const [showImage, setShowImage] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [thumbFailed, setThumbFailed] = useState(false);
@@ -45,10 +46,10 @@ const NewMenuImage: React.FC<{
     {showUpload && <ImageUploadModal
       isOpen
       onClose={() => setShowUpload(false)}
-      imageType={column === 'F' ? 'DR' : 'CBM'}
+      imageType={column === 'H' ? 'CBM' : 'DR'}
       imageLabel={label}
       sheetRowNumber={rowNumber}
-      targetSheet={{ spreadsheetId: NEW_MENU_SHEET_ID, gid: NEW_MENU_GID, column }}
+      targetSheet={{ spreadsheetId: NEW_MENU_SHEET_ID, gid, column }}
       onUploadComplete={() => { onUpdated(); setShowUpload(false); }}
     />}
   </>;
@@ -78,8 +79,15 @@ const NewMenuItem: React.FC<{
       <div className="text-sm text-gray-600">{displayDate(row.date)}</div>
       <div className="font-bold text-emerald-600 break-words">{formatAmount(row.amountCny) || '-'}</div>
     </div>
-    <div className="p-2 flex items-center justify-center border-r border-gray-100/50">
-      <NewMenuImage link={row.firstImage} label="Items DR" column="F" rowNumber={row.sheetRowNumber} onUpdated={onUpdated} />
+    <div className="p-2 flex items-center justify-center gap-2 border-r border-gray-100/50">
+      <div className="flex flex-col items-center gap-1">
+        <NewMenuImage link={row.firstImage} label="Items DR" column="F" rowNumber={row.sheetRowNumber} onUpdated={onUpdated} />
+        {row.interestSheetRowNumber && <span className="text-[9px] text-gray-400">Items</span>}
+      </div>
+      {row.interestSheetRowNumber && <div className="flex flex-col items-center gap-1">
+        <NewMenuImage link={row.interestImage} label="Interest DR" column="D" gid={SELL_GID} rowNumber={row.interestSheetRowNumber} onUpdated={onUpdated} />
+        <span className="text-[9px] text-gray-400">Interest</span>
+      </div>}
     </div>
     <div className="p-3 flex flex-col justify-center gap-1 border-r border-gray-100/50 bg-gray-50/30 min-w-0 text-xs sm:text-sm">
       <div className="text-gray-600 break-words">{row.supplier || '-'}</div>
