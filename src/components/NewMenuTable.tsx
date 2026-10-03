@@ -62,10 +62,11 @@ const NewMenuItem: React.FC<{
   completed: boolean;
   selected: boolean;
   onToggle: () => void;
+  separateInterest?: boolean;
   onEdit?: (row: NewMenuRow) => void;
-}> = ({ row, onUpdated, generationMode, completed, selected, onToggle, onEdit }) => (
+}> = ({ row, onUpdated, generationMode, completed, selected, onToggle, separateInterest = false, onEdit }) => (
   <div
-    className={`grid grid-cols-4 border-b border-gray-100 last:border-0 transition-colors min-h-28 ${completed ? 'bg-gray-100 opacity-45 grayscale' : 'hover:bg-gray-50/50'} ${onEdit ? 'cursor-pointer' : ''}`}
+    className={`grid grid-cols-4 border-b border-gray-100 last:border-0 transition-colors min-h-28 ${completed ? 'bg-gray-100' : 'hover:bg-gray-50/50'} ${onEdit ? 'cursor-pointer' : ''}`}
     onClick={() => onEdit?.(row)}
     onKeyDown={(event) => { if (onEdit && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onEdit(row); } }}
     role={onEdit ? 'button' : undefined}
@@ -79,26 +80,44 @@ const NewMenuItem: React.FC<{
       <div className="text-sm text-gray-600">{displayDate(row.date)}</div>
       <div className="font-bold text-emerald-600 break-words">{formatAmount(row.amountCny) || '-'}</div>
     </div>
-    <div className="p-2 flex items-center justify-center gap-2 border-r border-gray-100/50">
+      <div className={`p-2 flex items-center justify-center gap-2 border-r border-gray-100/50 ${completed ? 'opacity-45 grayscale' : ''}`}>
       <div className="flex flex-col items-center gap-1">
         <NewMenuImage link={row.firstImage} label="Items DR" column="F" rowNumber={row.sheetRowNumber} onUpdated={onUpdated} />
-        {row.interestSheetRowNumber && <span className="text-[9px] text-gray-400">Items</span>}
+        {row.interestSheetRowNumber && !separateInterest && <span className="text-[9px] text-gray-400">Items</span>}
       </div>
-      {row.interestSheetRowNumber && <div className="flex flex-col items-center gap-1">
+      {row.interestSheetRowNumber && !separateInterest && <div className="flex flex-col items-center gap-1">
         <NewMenuImage link={row.interestImage} label="Interest DR" column="D" gid={SELL_GID} rowNumber={row.interestSheetRowNumber} onUpdated={onUpdated} />
         <span className="text-[9px] text-gray-400">Interest</span>
       </div>}
     </div>
-    <div className="p-3 flex flex-col justify-center gap-1 border-r border-gray-100/50 bg-gray-50/30 min-w-0 text-xs sm:text-sm">
+    <div className={`p-3 flex flex-col justify-center gap-1 border-r border-gray-100/50 bg-gray-50/30 min-w-0 text-xs sm:text-sm ${completed ? 'opacity-45 grayscale' : ''}`}>
       <div className="text-gray-600 break-words">{row.supplier || '-'}</div>
       <div className="text-gray-600 break-words">
         {cbmPartnerReference(row.reference) || '-'}{row.sharePercent ? ` (${row.sharePercent})` : ''}
       </div>
       <div className="font-bold text-emerald-600 break-words">{row.cbm || '-'}</div>
     </div>
-    <div className="p-2 flex items-center justify-center">
+      <div className={`p-2 flex items-center justify-center ${completed ? 'opacity-45 grayscale' : ''}`}>
       <NewMenuImage link={row.secondImage} label="CBM DR" column="H" rowNumber={row.sheetRowNumber} onUpdated={onUpdated} />
     </div>
+  </div>
+);
+
+const NewMenuInterest: React.FC<{ row: NewMenuRow; onUpdated: () => void }> = ({ row, onUpdated }) => (
+  <div className={`grid grid-cols-4 border-b border-gray-100 last:border-0 transition-colors min-h-28 ${row.interestCompleted ? 'bg-gray-100' : 'hover:bg-gray-50/50'}`}>
+    <div className={`p-3 flex flex-col justify-center gap-1 border-r border-gray-100/50 min-w-0 text-xs sm:text-sm ${row.interestCompleted ? 'opacity-45 grayscale' : ''}`}>
+      <div className="text-base sm:text-lg text-gray-600 break-words">{row.interestReference || `${row.reference.replace(/A$/i, 'C')} INTEREST`}</div>
+      <div className="text-sm text-gray-600">{displayDate(row.interestDate)}</div>
+      <div className="font-bold text-emerald-600 break-words">{formatAmount(row.interestAmount) || '-'}</div>
+    </div>
+    <div className={`p-2 flex items-center justify-center border-r border-gray-100/50 ${row.interestCompleted ? 'opacity-45 grayscale' : ''}`}>
+      <div className="flex flex-col items-center gap-1">
+        <NewMenuImage link={row.interestImage} label="Interest DR" column="D" gid={SELL_GID} rowNumber={row.interestSheetRowNumber || 0} onUpdated={onUpdated} />
+        <span className="text-[9px] text-gray-400">Interest</span>
+      </div>
+    </div>
+    <div className={`p-3 border-r border-gray-100/50 bg-gray-50/30 ${row.interestCompleted ? 'opacity-45 grayscale' : ''}`} />
+    <div className={`p-2 ${row.interestCompleted ? 'opacity-45 grayscale' : ''}`} />
   </div>
 );
 
@@ -180,7 +199,10 @@ const NewMenuTable: React.FC<{
       {loading ? <div className="flex flex-col items-center justify-center py-20 text-gray-400"><RefreshCw size={32} className="animate-spin mb-3 opacity-50" /><p className="text-sm">Loading New Menu...</p></div>
         : error ? <div className="text-center py-20 text-red-500"><p className="font-medium mb-2">Unavailable</p><p className="text-xs opacity-70">{error}</p><button onClick={load} className="mt-4 px-4 py-2 bg-gray-900 text-white text-xs rounded-lg">Retry</button></div>
         : visibleRows.length === 0 ? <div className="text-center py-20 text-gray-400 text-sm">No items found.</div>
-        : visibleRows.map(row => <NewMenuItem key={row.sheetRowNumber} row={row} onUpdated={load} generationMode={generationMode} completed={row.sellColKFilled} selected={selectedRowNumbers.includes(row.sheetRowNumber)} onToggle={() => toggleSelected(row.sheetRowNumber)} onEdit={generationMode ? undefined : onEditRow} />)}
+        : visibleRows.map(row => <React.Fragment key={row.sheetRowNumber}>
+          <NewMenuItem row={row} onUpdated={load} generationMode={generationMode} completed={row.sellColKFilled} selected={selectedRowNumbers.includes(row.sheetRowNumber)} onToggle={() => toggleSelected(row.sheetRowNumber)} separateInterest onEdit={generationMode ? undefined : onEditRow} />
+          {row.interestSheetRowNumber !== null && <NewMenuInterest row={row} onUpdated={load} />}
+        </React.Fragment>)}
     </div>
     {generationMode && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[min(90vw,36rem)] rounded-2xl border border-gray-200 bg-white shadow-xl px-4 py-3 flex items-center gap-3">
       <div className="flex-1 min-w-0 text-sm text-gray-700">

@@ -29,6 +29,7 @@ export interface SupplierMonthItem {
   jkb: number;
   nck: number;
   sourceRow: number;
+  dateSource?: 'collection' | 'nck';
 }
 
 export interface SupplierMonthSummary {
@@ -85,11 +86,27 @@ const fetchSupplierSheetRows = async (accessToken: string): Promise<string[][]> 
 
 const fetchSupplierRows = async (accessToken: string, cutoffDate?: string, referenceDateColumn: SupplierDateColumn = 'K'): Promise<SupplierMonthItem[]> => {
   const rows = await fetchSupplierSheetRows(accessToken);
-  const dateColumnIndex = referenceDateColumn === 'O' ? 14 : 10;
   return rows
-    .map((row: string[], index: number) => ({ date: String(row[dateColumnIndex] || '').trim(), amount: parseSupplierNumber(row[7]), jkb: parseSupplierNumber(row[12]), nck: parseSupplierNumber(row[13]), sourceRow: index + 1 }))
-    // The selected date column is authoritative. Rows with a blank or invalid reference date are excluded.
-    .filter((item: SupplierMonthItem) => item.date !== '' && parseSupplierDate(item.date) !== null)
+    .flatMap((row: string[], index: number): SupplierMonthItem[] => {
+      const collectionDate = String(row[10] || '').trim();
+      const nckDate = String(row[14] || '').trim();
+      const amount = parseSupplierNumber(row[7]);
+      const jkb = parseSupplierNumber(row[12]);
+      const nck = parseSupplierNumber(row[13]);
+      const sourceRow = index + 1;
+      if (referenceDateColumn === 'O') {
+        return nckDate ? [{ date: nckDate, amount, jkb, nck, sourceRow }] : [];
+      }
+      // Collection totals use K for amount/JKB and O for NCK. Split payments
+      // can therefore contribute to different months, as on SELL row 51.
+      const items: SupplierMonthItem[] = [];
+      if (collectionDate) items.push({ date: collectionDate, amount, jkb, nck: collectionDate === nckDate ? nck : 0, sourceRow, dateSource: 'collection' });
+      if (nckDate && nckDate !== collectionDate && String(row[13] || '').trim() && supplierSpecialKind(row) === null) {
+        items.push({ date: nckDate, amount: 0, jkb: 0, nck, sourceRow, dateSource: 'nck' });
+      }
+      return items;
+    })
+    .filter((item: SupplierMonthItem) => parseSupplierDate(item.date) !== null)
     .filter((item: SupplierMonthItem) => parseSupplierDate(item.date)!.sortValue >= cutoffDateValue(cutoffDate))
     .sort((a: SupplierMonthItem, b: SupplierMonthItem) => parseSupplierDate(a.date)!.sortValue - parseSupplierDate(b.date)!.sortValue || a.sourceRow - b.sourceRow);
 };

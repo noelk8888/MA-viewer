@@ -187,6 +187,10 @@ export interface NewMenuRow {
   sellColKFilled: boolean;
   interestImage: string;
   interestSheetRowNumber: number | null;
+  interestReference: string;
+  interestDate: string;
+  interestAmount: string;
+  interestCompleted: boolean;
   sheetRowNumber: number;
 }
 
@@ -235,16 +239,34 @@ export const fetchNewMenuRows = async (): Promise<NewMenuRow[]> => {
   const completedSellRows = sellRows.filter(row => String(row[10] || '').trim() !== '');
   const completedLinks = new Set(completedSellRows.map(row => String(row[3] || '').trim()).filter(Boolean));
   const completedReferences = new Set(completedSellRows.map(row => String(row[9] || '').trim()).filter(Boolean));
-  const sellRowsByReference = new Map<string, { image: string; sheetRowNumber: number }>();
+  type SellInterest = { image: string; sheetRowNumber: number; reference: string; date: string; amount: string; completed: boolean };
+  const sellRowsByReference = new Map<string, SellInterest>();
+  const interestRowsByBatch = new Map<string, SellInterest[]>();
   sellRows.forEach((row, index) => {
     const reference = String(row[9] || '').trim().toUpperCase();
-    if (reference) sellRowsByReference.set(reference, { image: String(row[3] || '').trim(), sheetRowNumber: index + 1 });
+    const interestRow: SellInterest = {
+      image: String(row[3] || '').trim(),
+      sheetRowNumber: index + 1,
+      reference: String(row[9] || '').trim(),
+      date: String(row[8] || '').trim(),
+      amount: String(row[7] || '').trim(),
+      completed: String(row[10] || '').trim() !== '',
+    };
+    if (reference) sellRowsByReference.set(reference, interestRow);
+    if (/\bINTEREST\b/i.test(String(row[2] || ''))) {
+      const batch = String(row[0] || '').trim().padStart(2, '0');
+      interestRowsByBatch.set(batch, [...(interestRowsByBatch.get(batch) || []), interestRow]);
+    }
   });
 
   const rows = newMenuRows.map((row, index) => {
     const reference = row[0]?.trim() || '';
     const firstImage = row[5]?.trim() || '';
-    const interest = sellRowsByReference.get(reference.replace(/A$/i, 'C').toUpperCase());
+    const expectedInterestReference = reference.replace(/A$/i, 'C').toUpperCase();
+    const itemSequence = reference.match(/^\d{2}(\d+)A$/i)?.[1];
+    const batchInterestRows = interestRowsByBatch.get(reference.slice(0, 2)) || [];
+    const interest = sellRowsByReference.get(expectedInterestReference)
+      || (itemSequence ? batchInterestRows[Number(itemSequence) - 1] : undefined);
     return {
       reference,
       date: row[1]?.trim() || '',
@@ -261,6 +283,10 @@ export const fetchNewMenuRows = async (): Promise<NewMenuRow[]> => {
       sellColKFilled: completedReferences.has(reference) || (Boolean(firstImage) && completedLinks.has(firstImage)),
       interestImage: interest?.image || '',
       interestSheetRowNumber: interest?.sheetRowNumber || null,
+      interestReference: interest?.reference || '',
+      interestDate: interest?.date || '',
+      interestAmount: interest?.amount || '',
+      interestCompleted: interest?.completed || false,
       sheetRowNumber: index + 1,
     };
   }).filter(row => {

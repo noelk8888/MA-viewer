@@ -10,6 +10,7 @@ export const NEW_DR_URL = `https://docs.google.com/spreadsheets/d/${NEW_MENU_SHE
 export interface NewDrRow {
   sheetRowNumber: number;
   batch: string;
+  batchOrdinal: number;
   sourceDate: string;
   description: string;
   image: string;
@@ -40,21 +41,29 @@ export const fetchNewDrRows = async (): Promise<NewDrRow[]> => {
           return;
         }
 
+        const ordinalByBatchAndCategory = new Map<string, number>();
         const rows = data.flatMap((row, index) => {
           const batch = row[0]?.trim() || '';
           const amount = row[7]?.trim() || '';
           const isCompleted = Boolean(row[10]?.trim());
-          // NEW DR lists SELL rows whose columns A and H are filled and column K is empty.
-          if (!batch || !amount || isCompleted) return [];
+          const description = row[2]?.trim() || '';
+          if (!batch || !description) return [];
 
           const reference = row[9]?.trim().toUpperCase() || '';
-          const description = row[2]?.trim() || '';
           const category = categoryFor(reference, description);
+          const ordinalKey = `${batch}:${category}`;
+          const batchOrdinal = (ordinalByBatchAndCategory.get(ordinalKey) || 0) + 1;
+          ordinalByBatchAndCategory.set(ordinalKey, batchOrdinal);
+          // Keep each unfinished batch row visible, including CBM and INTEREST rows
+          // whose amount has not been entered yet.
+          if (isCompleted) return [];
+
           const issueDate = toIsoDate(row[8]?.trim() || '');
 
           return [{
             sheetRowNumber: index + 1,
             batch,
+            batchOrdinal,
             sourceDate: toIsoDate(row[1]?.trim() || ''),
             description,
             image: row[3]?.trim() || '',
@@ -80,6 +89,29 @@ export interface NewDrPrintPayload {
   cbm?: NewDrRow;
 }
 
+export const saveNewDrFields = async (
+  accessToken: string,
+  sheetRowNumber: number,
+  issueDate: string,
+  reference: string,
+): Promise<void> => {
+  if (!Number.isInteger(sheetRowNumber) || sheetRowNumber < 3) throw new Error('Invalid SELL row.');
+  const sheetName = await getSheetNameByGid(accessToken, NEW_MENU_SHEET_ID, SELL_GID);
+  const quotedName = `'${sheetName.replace(/'/g, "''")}'`;
+  const range = `${quotedName}!I${sheetRowNumber}:J${sheetRowNumber}`;
+  const date = issueDate.trim();
+  const dateValue = date ? dateFormula(date) : '';
+  const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${NEW_MENU_SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ range, majorDimension: 'ROWS', values: [[dateValue, reference.trim().toUpperCase()]] }),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || `Could not save DATE and DR # for SELL row ${sheetRowNumber}.`);
+  }
+};
+
 const numeric = (value: string, label: string): number => {
   const parsed = Number(value.replace(/,/g, '').trim());
   if (!Number.isFinite(parsed)) throw new Error(`${label} must be numeric before issuing a NEW DR.`);
@@ -101,7 +133,9 @@ const driveImageFormula = (link: string): string => {
 export const generateNewDrSheet = async (accessToken: string, payload: NewDrPrintPayload): Promise<void> => {
   const { primary, cbm } = payload;
   const interest = primary.category === 'INTEREST';
+  if (!primary.issueDate || !primary.reference) throw new Error('The selected SELL row needs DATE and DR # before issuing a NEW DR.');
   if (!interest && !cbm) throw new Error(`Could not find matching CBM row ${primary.reference.slice(0, -1)}B.`);
+  if (cbm && (!cbm.issueDate || !cbm.reference)) throw new Error('The matching CBM row needs DATE and DR # before issuing a NEW DR.');
 
   const sheetName = await getSheetNameByGid(accessToken, NEW_MENU_SHEET_ID, NEW_DR_GID);
   const quotedName = `'${sheetName.replace(/'/g, "''")}'`;

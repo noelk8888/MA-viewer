@@ -1,5 +1,11 @@
 # React + TypeScript + Vite
 
+## Local preview
+
+Run `npm run dev` and open [http://localhost:5173/](http://localhost:5173/).
+Google OAuth uses this exact address as its redirect URI. The app redirects
+`http://127.0.0.1:5173/` to `localhost` before sign-in so either local link works.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

@@ -58,7 +58,7 @@ export const SupplierSummaryPage: React.FC<{
   return <div className="w-full max-w-2xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100 my-4 sm:my-8">
     <div className="p-4 bg-white border-b border-gray-100 flex items-center gap-4 sticky top-0 z-10">
       <button type="button" onClick={onBack} className="p-2 text-gray-500"><ArrowLeft size={20}/></button>
-      <h1 className="text-lg font-bold text-gray-900 flex-1">{isNckSummary ? 'NCK SUMMARY' : 'SUPPLIER SUMMARY'}</h1>
+      <h1 className="text-lg font-bold text-gray-900 flex-1">{isNckSummary ? 'NCK SUMMARY' : 'COLLECTION SUMMARY'}</h1>
       <button type="button" onClick={() => void load()} disabled={loading} className="p-2 text-gray-500"><RefreshCw size={20} className={loading ? 'animate-spin' : ''}/></button>
     </div>
     <div className="flex items-center justify-between gap-4 px-4 py-3 border-b border-gray-200 bg-gray-50">

@@ -79,9 +79,9 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
   const today = formatAppDate(todayIso);
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white shadow-xl rounded-2xl border border-gray-100 my-4 sm:my-8 relative">
-      <div className="p-4 bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-30 backdrop-blur-md bg-white/80 rounded-t-2xl shadow-sm">
-        <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-3">
+    <div className={`w-full ${section === 'newdr' ? 'max-w-5xl' : 'max-w-2xl'} mx-auto bg-white shadow-xl rounded-2xl border border-gray-100 my-4 sm:my-8 relative`}>
+      <div className="p-4 bg-white border-b border-gray-100 flex items-center justify-between sm:sticky sm:top-0 z-30 backdrop-blur-md bg-white/80 rounded-t-2xl shadow-sm">
+        <h1 className="min-w-0 flex-1 text-sm sm:text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex flex-wrap items-center gap-x-2 gap-y-1 sm:gap-3">
           <a
             href="https://docs.google.com/spreadsheets/d/1azRoUDoaCwqpzIftBMrCWGkURmkdLmfdMVJfTkQh3hM/edit?gid=216870307#gid=216870307"
             target="_blank"
@@ -113,16 +113,16 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
             {total}
           </button>
         </h1>
-        <button type="button" onClick={refresh} disabled={headerLoading} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Refresh">
+        <button type="button" onClick={refresh} disabled={headerLoading} className="shrink-0 p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Refresh">
           <RefreshCw size={20} className={headerLoading ? 'animate-spin' : ''} />
         </button>
       </div>
 
-      <div className="flex border-b border-gray-200 bg-white sticky top-[60px] z-20 shadow-sm">
-        <button type="button" onClick={() => selectSection('newgenbill')} className={`flex-1 py-3 text-sm font-medium transition-colors ${section === 'newgenbill' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>NEW GENBILL</button>
-        <button type="button" onClick={() => selectSection('newdr')} className={`flex-1 py-3 text-sm font-medium transition-colors ${section === 'newdr' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>NEW DR</button>
-        <button type="button" onClick={() => selectSection('newsoa')} className={`flex-1 py-3 text-sm font-medium transition-colors ${section === 'newsoa' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>NEW SOA</button>
-        <button type="button" onClick={toggleDarkMode} className={`flex-1 py-3 text-sm font-medium transition-colors ${isDark ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>DARK</button>
+      <div className="flex border-b border-gray-200 bg-white sm:sticky sm:top-[60px] z-20 shadow-sm">
+        <button type="button" onClick={() => selectSection('newgenbill')} className={`min-w-0 flex-1 px-1 py-3 text-xs sm:text-sm font-medium transition-colors ${section === 'newgenbill' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>NEW GENBILL</button>
+        <button type="button" onClick={() => selectSection('newdr')} className={`min-w-0 flex-1 px-1 py-3 text-xs sm:text-sm font-medium transition-colors ${section === 'newdr' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>NEW DR</button>
+        <button type="button" onClick={() => selectSection('newsoa')} className={`min-w-0 flex-1 px-1 py-3 text-xs sm:text-sm font-medium transition-colors ${section === 'newsoa' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>NEW SOA</button>
+        <button type="button" onClick={toggleDarkMode} className={`min-w-0 flex-1 px-1 py-3 text-xs sm:text-sm font-medium transition-colors ${isDark ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>DARK</button>
       </div>
 
       {section === 'newdr' ? <NewDrTable key={`dr-${contentKey}`} />

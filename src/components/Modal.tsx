@@ -1,5 +1,6 @@
 import { X, Upload, Check, Share2 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
     isOpen: boolean;
@@ -94,9 +95,9 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content, onUpload
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div
-                className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 ring-1 ring-gray-900/5 transform transition-all scale-100 animate-in zoom-in-95 duration-200"
+                className="relative w-full max-w-2xl max-h-[95vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-6 ring-1 ring-gray-900/5 transform transition-all scale-100 animate-in zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
                 <button
@@ -186,7 +187,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, content, onUpload
                     </button>
                 </div>
             </div>
-        </div>
+        </div>, document.body)
     );
 };
 
