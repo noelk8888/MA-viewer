@@ -18,6 +18,7 @@ export interface NewDrRow {
   quantity: string;
   factor: string;
   amount: string;
+  readyForSoa: boolean;
   issueDate: string;
   reference: string;
   category: NewSoaCategory;
@@ -71,6 +72,7 @@ export const fetchNewDrRows = async (): Promise<NewDrRow[]> => {
             quantity: row[5]?.trim() || '',
             factor: row[6]?.trim() || '',
             amount,
+            readyForSoa: Boolean(amount && issueDate && reference),
             issueDate,
             reference,
             category,
