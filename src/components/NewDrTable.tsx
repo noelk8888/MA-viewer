@@ -20,6 +20,14 @@ const findCbm = (rows: NewDrRow[], item: NewDrRow): NewDrRow | undefined => {
 };
 
 type NewDrDisplayRow = { row: NewDrRow; description: string };
+type NewDrDisplayGroup = {
+  rows: NewDrDisplayRow[];
+  batch: string;
+  ordinal: number;
+  readyForSoa: boolean;
+  issueDate: string;
+  sourceRow: number;
+};
 
 const interestDescription = (interest: NewDrRow, cbm?: NewDrRow, item?: NewDrRow): string => {
   if (/\bINTEREST\s*-\s*\d+/i.test(interest.description)) return interest.description;
@@ -31,15 +39,25 @@ const interestDescription = (interest: NewDrRow, cbm?: NewDrRow, item?: NewDrRow
 const groupNewDrRows = (rows: NewDrRow[]): NewDrDisplayRow[] => {
   const batches = new Map<string, NewDrRow[]>();
   rows.forEach(row => batches.set(row.batch, [...(batches.get(row.batch) || []), row]));
-  const display: NewDrDisplayRow[] = [];
+  const groups: NewDrDisplayGroup[] = [];
 
   for (const batchRows of batches.values()) {
     const items = batchRows.filter(row => row.category === 'ITEMS').sort((a, b) => a.batchOrdinal - b.batchOrdinal);
     const cbms = batchRows.filter(row => row.category === 'CBM');
     const interests = batchRows.filter(row => row.category === 'INTEREST');
     const shown = new Set<number>();
-    const append = (row: NewDrRow, description = row.description) => {
-      display.push({ row, description });
+    const makeGroup = (primary: NewDrRow, members: NewDrDisplayRow[]) => {
+      groups.push({
+        rows: members,
+        batch: primary.batch,
+        ordinal: primary.batchOrdinal,
+        readyForSoa: primary.readyForSoa,
+        issueDate: primary.issueDate,
+        sourceRow: primary.sheetRowNumber,
+      });
+    };
+    const append = (members: NewDrDisplayRow[], row: NewDrRow, description = row.description) => {
+      members.push({ row, description });
       shown.add(row.sheetRowNumber);
     };
     const matchingInterest = (ordinal: number, reference?: string) => {
@@ -49,20 +67,43 @@ const groupNewDrRows = (rows: NewDrRow[]): NewDrDisplayRow[] => {
     };
 
     items.forEach(item => {
-      append(item);
+      const members: NewDrDisplayRow[] = [];
+      append(members, item);
       const cbm = findCbm(batchRows, item);
-      if (cbm && !shown.has(cbm.sheetRowNumber)) append(cbm);
+      if (cbm && !shown.has(cbm.sheetRowNumber)) append(members, cbm);
       const interest = matchingInterest(item.batchOrdinal, item.reference || cbm?.reference);
-      if (interest) append(interest, interestDescription(interest, cbm, item));
+      if (interest) append(members, interest, interestDescription(interest, cbm, item));
+      makeGroup(item, members);
     });
     cbms.filter(row => !shown.has(row.sheetRowNumber)).forEach(cbm => {
-      append(cbm);
+      const members: NewDrDisplayRow[] = [];
+      append(members, cbm);
       const interest = matchingInterest(cbm.batchOrdinal, cbm.reference);
-      if (interest) append(interest, interestDescription(interest, cbm));
+      if (interest) append(members, interest, interestDescription(interest, cbm));
+      makeGroup(cbm, members);
     });
-    interests.filter(row => !shown.has(row.sheetRowNumber)).forEach(row => append(row));
+    interests.filter(row => !shown.has(row.sheetRowNumber)).forEach(row => {
+      const members: NewDrDisplayRow[] = [];
+      append(members, row);
+      makeGroup(row, members);
+    });
   }
-  return display;
+
+  const batchNumber = (batch: string) => Number(batch) || 0;
+  const dateTime = (date: string) => date ? Date.parse(date) || 0 : 0;
+  groups.sort((left, right) => {
+    if (left.readyForSoa !== right.readyForSoa) return left.readyForSoa ? 1 : -1;
+    if (left.readyForSoa) {
+      return dateTime(right.issueDate) - dateTime(left.issueDate)
+        || batchNumber(left.batch) - batchNumber(right.batch)
+        || left.ordinal - right.ordinal
+        || right.sourceRow - left.sourceRow;
+    }
+    return batchNumber(left.batch) - batchNumber(right.batch)
+      || left.ordinal - right.ordinal
+      || right.sourceRow - left.sourceRow;
+  });
+  return groups.flatMap(group => group.rows);
 };
 
 const NewDrTable: React.FC = () => {

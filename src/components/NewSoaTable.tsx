@@ -38,23 +38,28 @@ const NewSoaTable: React.FC = () => {
       batches.set(row.batch, [...(batches.get(row.batch) || []), row]);
     });
 
-    const ordered: NewSoaRow[] = [];
+    const groups: Array<{ rows: NewSoaRow[]; issueDate: string; sourceRow: number }> = [];
     for (const batchRows of batches.values()) {
       const items = batchRows.filter(row => row.category === 'ITEMS');
       const interests = batchRows.filter(row => row.category === 'INTEREST');
       const shown = new Set<number>();
       items.forEach(item => {
-        ordered.push(item);
+        const group = [item];
         const matchingInterest = interests.find(interest => !shown.has(interest.sheetRowNumber)
           && interest.reference === `${item.reference.slice(0, -1)}C`);
         if (matchingInterest) {
-          ordered.push(matchingInterest);
+          group.push(matchingInterest);
           shown.add(matchingInterest.sheetRowNumber);
         }
+        groups.push({ rows: group, issueDate: item.issueDate, sourceRow: item.sheetRowNumber });
       });
-      interests.filter(interest => !shown.has(interest.sheetRowNumber)).forEach(interest => ordered.push(interest));
+      interests.filter(interest => !shown.has(interest.sheetRowNumber)).forEach(interest => {
+        groups.push({ rows: [interest], issueDate: interest.issueDate, sourceRow: interest.sheetRowNumber });
+      });
     }
-    return ordered;
+    groups.sort((left, right) => (Date.parse(right.issueDate) || 0) - (Date.parse(left.issueDate) || 0)
+      || right.sourceRow - left.sourceRow);
+    return groups.flatMap(group => group.rows);
   }, [rows]);
 
   const toggle = (row: NewSoaRow) => {
