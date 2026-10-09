@@ -79,7 +79,7 @@ const ViewerTable: React.FC<ViewerTableProps> = ({ onSupplierClick }) => {
   const today = formatAppDate(todayIso);
 
   return (
-    <div className={`w-full ${section === 'newdr' ? 'max-w-5xl' : 'max-w-2xl'} mx-auto bg-white shadow-xl rounded-2xl border border-gray-100 my-4 sm:my-8 relative`}>
+    <div className="w-full max-w-2xl mx-auto bg-white shadow-xl rounded-2xl border border-gray-100 my-4 sm:my-8 relative">
       <div className="p-4 bg-white border-b border-gray-100 flex items-center justify-between sm:sticky sm:top-0 z-30 backdrop-blur-md bg-white/80 rounded-t-2xl shadow-sm">
         <h1 className="min-w-0 flex-1 text-sm sm:text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex flex-wrap items-center gap-x-2 gap-y-1 sm:gap-3">
           <a
